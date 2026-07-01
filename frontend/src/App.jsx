@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
+import CRM from './CRM'
 
 const SUPABASE_URL = "https://ybxwoasgiozifzwuijtg.supabase.co"
 const SUPABASE_KEY = "sb_publishable_nLGvd1VM1kLhgWPWr7Q7kA_HM_yzurW"
@@ -436,11 +437,12 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/" element={<CRM />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<MarketingPage user={user} />} />
       <Route path="/crm" element={<CRMPage user={user} />} />
       <Route path="/content" element={<ContentPage user={user} />} />
-      <Route path="*" element={<HomePage user={user} onLogout={handleLogout} />} />
+      <Route path="*" element={<CRM />} />
     </Routes>
   )
 }
