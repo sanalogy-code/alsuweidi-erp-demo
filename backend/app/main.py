@@ -60,10 +60,14 @@ async def login(request: LoginRequest):
 @app.get("/api/crm/companies")
 async def get_companies():
     try:
-        response = get_supabase().table("companies").select("*").execute()
+        client = get_supabase()
+        response = client.table("companies").select("*").execute()
+        print(f"Companies query returned: {len(response.data or [])} rows")
         return response.data if response.data else []
     except Exception as e:
-        print(f"Error fetching companies: {e}")
+        print(f"ERROR fetching companies: {type(e).__name__}: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 @app.get("/api/crm/companies/{company_id}")
