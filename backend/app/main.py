@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 app = FastAPI(title="AL SUWEIDI ERP", version="3.0.0")
 
@@ -23,9 +24,13 @@ async def health():
 async def root():
     return {"message": "AL SUWEIDI ERP API v3"}
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
 # Auth endpoint
 @app.post("/api/auth/login")
-async def login(username: str, password: str):
+async def login(request: LoginRequest):
     USERS = {
         "sales": {"password": "password123", "role": "sales"},
         "marketing": {"password": "password123", "role": "marketing"},
@@ -33,8 +38,8 @@ async def login(username: str, password: str):
         "management": {"password": "password123", "role": "management"},
         "admin": {"password": "password123", "role": "admin"},
     }
-    user = USERS.get(username)
-    if not user or user["password"] != password:
+    user = USERS.get(request.username)
+    if not user or user["password"] != request.password:
         return {"error": "Invalid credentials"}, 401
     return {"access_token": "dummy-token", "token_type": "bearer", "role": user["role"]}
 
