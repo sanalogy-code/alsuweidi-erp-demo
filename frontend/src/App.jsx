@@ -1,9 +1,8 @@
 import { useState } from 'react'
 
-export default function App() {
+function LoginPage({ onLogin }) {
   const [username, setUsername] = useState('sales')
   const [password, setPassword] = useState('password123')
-  const [token, setToken] = useState(null)
   const [error, setError] = useState('')
 
   const handleLogin = async (e) => {
@@ -17,51 +16,13 @@ export default function App() {
       })
       const data = await res.json()
       if (res.ok) {
-        setToken(data.access_token)
-        setError('')
+        onLogin(data)
       } else {
         setError('Invalid credentials')
       }
     } catch (err) {
       setError('Connection error: ' + err.message)
     }
-  }
-
-  if (token) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <nav className="bg-red-700 text-white p-4">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">AL SUWEIDI ERP</h1>
-            <button onClick={() => setToken(null)} className="bg-red-900 px-4 py-2 rounded">Logout</button>
-          </div>
-        </nav>
-        <div className="max-w-7xl mx-auto p-8">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="bg-white p-6 rounded shadow">
-              <p className="text-gray-600 text-sm">Total Followers</p>
-              <p className="text-2xl font-bold text-red-700">180,500</p>
-            </div>
-            <div className="bg-white p-6 rounded shadow">
-              <p className="text-gray-600 text-sm">New This Month</p>
-              <p className="text-2xl font-bold">2,500</p>
-            </div>
-            <div className="bg-white p-6 rounded shadow">
-              <p className="text-gray-600 text-sm">Quality Score</p>
-              <p className="text-2xl font-bold">10.9%</p>
-            </div>
-            <div className="bg-white p-6 rounded shadow">
-              <p className="text-gray-600 text-sm">Growth</p>
-              <p className="text-2xl font-bold">1.4%</p>
-            </div>
-          </div>
-          <div className="mt-8 bg-white p-6 rounded shadow">
-            <h2 className="text-xl font-bold mb-4">Welcome to AL SUWEIDI ERP Phase 3</h2>
-            <p>Backend: {import.meta.env.VITE_API_URL || 'http://localhost:8000'}</p>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -98,4 +59,230 @@ export default function App() {
       </div>
     </div>
   )
+}
+
+function HomePage({ user, onLogout, onNavigate }) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-red-700 text-white p-4 shadow">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold">AL SUWEIDI ERP</h1>
+          <div className="flex gap-4 items-center">
+            <span className="text-sm">Welcome, {user.role}</span>
+            <button onClick={onLogout} className="bg-red-900 px-4 py-2 rounded hover:bg-red-800">
+              Logout
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          <button
+            onClick={() => onNavigate('crm')}
+            className="bg-white p-8 rounded shadow hover:shadow-lg hover:border-red-700 border-2 border-transparent transition"
+          >
+            <div className="text-4xl mb-3">📊</div>
+            <h3 className="text-xl font-bold text-gray-800">CRM</h3>
+            <p className="text-gray-600 text-sm mt-2">Companies, Contacts, Deals</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('marketing')}
+            className="bg-white p-8 rounded shadow hover:shadow-lg hover:border-red-700 border-2 border-transparent transition"
+          >
+            <div className="text-4xl mb-3">📈</div>
+            <h3 className="text-xl font-bold text-gray-800">Marketing</h3>
+            <p className="text-gray-600 text-sm mt-2">Analytics & Insights</p>
+          </button>
+
+          <button
+            onClick={() => onNavigate('content')}
+            className="bg-white p-8 rounded shadow hover:shadow-lg hover:border-red-700 border-2 border-transparent transition"
+          >
+            <div className="text-4xl mb-3">📝</div>
+            <h3 className="text-xl font-bold text-gray-800">Content</h3>
+            <p className="text-gray-600 text-sm mt-2">Calendar & Planning</p>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="bg-white p-6 rounded shadow">
+            <h3 className="text-lg font-bold mb-4">Timesheet</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span>Project Work</span>
+                <span className="font-bold">32 hrs</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Admin</span>
+                <span className="font-bold">8 hrs</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Training</span>
+                <span className="font-bold">5 hrs</span>
+              </div>
+              <div className="border-t pt-3 flex justify-between font-bold">
+                <span>Total This Week</span>
+                <span>45 hrs</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded shadow">
+            <h3 className="text-lg font-bold mb-4">News & Updates</h3>
+            <div className="space-y-3 text-sm">
+              <div className="border-b pb-2">
+                <p className="font-semibold">New CRM Module Live</p>
+                <p className="text-gray-600">2 hours ago</p>
+              </div>
+              <div className="border-b pb-2">
+                <p className="font-semibold">Q3 Planning Session</p>
+                <p className="text-gray-600">Yesterday</p>
+              </div>
+              <div>
+                <p className="font-semibold">System Maintenance</p>
+                <p className="text-gray-600">3 days ago</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded shadow">
+          <h3 className="text-lg font-bold mb-4">Quick Links</h3>
+          <div className="grid grid-cols-4 gap-4">
+            <button className="p-4 border rounded hover:bg-gray-50">📞 Recent Contacts</button>
+            <button className="p-4 border rounded hover:bg-gray-50">💼 Active Deals</button>
+            <button className="p-4 border rounded hover:bg-gray-50">📅 Upcoming Events</button>
+            <button className="p-4 border rounded hover:bg-gray-50">📊 Reports</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MarketingPage({ user, onBack }) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-red-700 text-white p-4 shadow">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <button onClick={onBack} className="text-white hover:text-gray-200">← Back to Hub</button>
+          <h1 className="text-2xl font-bold">Marketing Dashboard</h1>
+          <span className="text-sm">Role: {user.role}</span>
+        </div>
+      </nav>
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-6 rounded shadow">
+            <p className="text-gray-600 text-sm">LinkedIn Followers</p>
+            <p className="text-3xl font-bold text-red-700">180.5K</p>
+          </div>
+          <div className="bg-white p-6 rounded shadow">
+            <p className="text-gray-600 text-sm">New This Month</p>
+            <p className="text-3xl font-bold">2.5K</p>
+          </div>
+          <div className="bg-white p-6 rounded shadow">
+            <p className="text-gray-600 text-sm">Quality Score</p>
+            <p className="text-3xl font-bold">10.9%</p>
+          </div>
+          <div className="bg-white p-6 rounded shadow">
+            <p className="text-gray-600 text-sm">Growth Rate</p>
+            <p className="text-3xl font-bold">1.4%</p>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded shadow">
+          <h2 className="text-xl font-bold mb-4">Seniority Breakdown</h2>
+          <div className="space-y-2">
+            <div className="flex justify-between"><span>Entry Level</span><span>61,652 (34%)</span></div>
+            <div className="flex justify-between"><span>Senior</span><span>49,644 (27%)</span></div>
+            <div className="flex justify-between"><span>Manager</span><span>10,841 (6%)</span></div>
+            <div className="flex justify-between"><span>Director+</span><span>58,363 (33%)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CRMPage({ user, onBack }) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-red-700 text-white p-4 shadow">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <button onClick={onBack} className="text-white hover:text-gray-200">← Back to Hub</button>
+          <h1 className="text-2xl font-bold">CRM Module</h1>
+          <span className="text-sm">Role: {user.role}</span>
+        </div>
+      </nav>
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="bg-white p-6 rounded shadow">
+            <p className="text-gray-600 text-sm">Total Companies</p>
+            <p className="text-3xl font-bold text-red-700">24</p>
+          </div>
+          <div className="bg-white p-6 rounded shadow">
+            <p className="text-gray-600 text-sm">Active Deals</p>
+            <p className="text-3xl font-bold">7</p>
+          </div>
+          <div className="bg-white p-6 rounded shadow">
+            <p className="text-gray-600 text-sm">Pipeline Value</p>
+            <p className="text-3xl font-bold">AED 2.4M</p>
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded shadow">
+          <h2 className="text-xl font-bold mb-4">Recent Companies</h2>
+          <div className="space-y-3">
+            <div className="border-b pb-3">
+              <p className="font-semibold">TechCorp UAE</p>
+              <p className="text-sm text-gray-600">Dubai • IT Services</p>
+            </div>
+            <div className="border-b pb-3">
+              <p className="font-semibold">BuildCo Consulting</p>
+              <p className="text-sm text-gray-600">Abu Dhabi • Construction</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  const [user, setUser] = useState(null)
+  const [page, setPage] = useState('home')
+
+  const handleLogin = (data) => {
+    setUser(data)
+    setPage('home')
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    setPage('home')
+  }
+
+  const handleNavigate = (newPage) => {
+    setPage(newPage)
+  }
+
+  const handleBack = () => {
+    setPage('home')
+  }
+
+  if (!user) {
+    return <LoginPage onLogin={handleLogin} />
+  }
+
+  if (page === 'home') {
+    return <HomePage user={user} onLogout={handleLogout} onNavigate={handleNavigate} />
+  }
+
+  if (page === 'marketing') {
+    return <MarketingPage user={user} onBack={handleBack} />
+  }
+
+  if (page === 'crm') {
+    return <CRMPage user={user} onBack={handleBack} />
+  }
 }
