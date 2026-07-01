@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from supabase import create_client
 import os
 from dotenv import load_dotenv
 import requests
@@ -23,16 +22,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Supabase client (lazy initialization)
 SUPABASE_URL = os.getenv("SUPABASE_URL") or "https://ybxwoasgiozifzwuijtg.supabase.co"
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or "sb_secret_kxNZTmuLT1kxLhuNqf-yHQ_4cxjrK9x"
-_supabase_client = None
 
-def get_supabase():
-    global _supabase_client
-    if _supabase_client is None:
-        _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    return _supabase_client
+def query_supabase(table, select="*", filters=None, limit=None, order_by=None):
+    url = f"{SUPABASE_URL}/rest/v1/{table}"
+    headers = {
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json"
+    }
+    params = {"select": select}
+    if limit:
+        params["limit"] = limit
+    if order_by:
+        params["order"] = order_by
+    if filters:
+        for key, val in filters.items():
+            params[f"{key}=eq.{val}"] = True
+
+    resp = requests.get(url, headers=headers, params=params)
+    if resp.status_code == 200:
+        return resp.json()
+    return []
 
 @app.get("/health")
 async def health():
@@ -44,36 +56,20 @@ async def root():
 
 @app.get("/diagnostic")
 async def diagnostic():
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-
-    # Test REST API directly
-    rest_test = {"status": "testing..."}
     try:
-        if url and key:
-            rest_url = f"{url}/rest/v1/companies?select=id,name&limit=1"
-            resp = requests.get(
-                rest_url,
-                headers={
-                    "Authorization": f"Bearer {key}",
-                    "apikey": key,
-                    "Content-Type": "application/json"
-                }
-            )
-            rest_test = {
-                "status": "success" if resp.status_code == 200 else "failed",
-                "status_code": resp.status_code,
-                "rows": len(resp.json()) if resp.status_code == 200 else 0
-            }
+        companies = query_supabase("companies", select="id", limit=1)
+        return {
+            "status": "ok",
+            "supabase_url": SUPABASE_URL,
+            "api_key_set": bool(SUPABASE_KEY),
+            "companies_count": len(companies),
+            "sample_row": companies[0] if companies else None
+        }
     except Exception as e:
-        rest_test = {"status": "error", "error": str(e)}
-
-    return {
-        "env_url": url,
-        "env_key_set": bool(key),
-        "env_key_first_20": key[:20] if key else "MISSING",
-        "rest_api_test": rest_test,
-    }
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 
 class LoginRequest(BaseModel):
     username: str
@@ -98,23 +94,26 @@ async def login(request: LoginRequest):
 @app.get("/api/crm/companies")
 async def get_companies():
     try:
-        client = get_supabase()
-        response = client.table("companies").select("*").execute()
-        print(f"Companies query returned: {len(response.data or [])} rows")
-        return response.data if response.data else []
+        data = query_supabase("companies", select="*")
+        print(f"Companies query returned: {len(data)} rows")
+        return data
     except Exception as e:
-        print(f"ERROR fetching companies: {type(e).__name__}: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"ERROR fetching companies: {e}")
         return []
 
 @app.get("/api/crm/companies/{company_id}")
 async def get_company(company_id: int):
     try:
-        response = get_supabase().table("companies").select("*").eq("id", company_id).execute()
-        if not response.data:
-            raise HTTPException(status_code=404, detail="Company not found")
-        return response.data[0]
+        url = f"{SUPABASE_URL}/rest/v1/companies?id=eq.{company_id}"
+        headers = {
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json"
+        }
+        resp = requests.get(url, headers=headers)
+        if resp.status_code == 200 and resp.json():
+            return resp.json()[0]
+        raise HTTPException(status_code=404, detail="Company not found")
     except HTTPException:
         raise
     except Exception as e:
@@ -124,8 +123,8 @@ async def get_company(company_id: int):
 @app.get("/api/crm/contacts")
 async def get_contacts():
     try:
-        response = get_supabase().table("contacts").select("*").execute()
-        return response.data if response.data else []
+        data = query_supabase("contacts", select="*")
+        return data
     except Exception as e:
         print(f"Error fetching contacts: {e}")
         return []
@@ -133,10 +132,16 @@ async def get_contacts():
 @app.get("/api/crm/contacts/{contact_id}")
 async def get_contact(contact_id: int):
     try:
-        response = get_supabase().table("contacts").select("*").eq("id", contact_id).execute()
-        if not response.data:
-            raise HTTPException(status_code=404, detail="Contact not found")
-        return response.data[0]
+        url = f"{SUPABASE_URL}/rest/v1/contacts?id=eq.{contact_id}"
+        headers = {
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json"
+        }
+        resp = requests.get(url, headers=headers)
+        if resp.status_code == 200 and resp.json():
+            return resp.json()[0]
+        raise HTTPException(status_code=404, detail="Contact not found")
     except HTTPException:
         raise
     except Exception as e:
@@ -146,8 +151,8 @@ async def get_contact(contact_id: int):
 @app.get("/api/crm/deals")
 async def get_deals():
     try:
-        response = get_supabase().table("deals").select("*").execute()
-        return response.data if response.data else []
+        data = query_supabase("deals", select="*")
+        return data
     except Exception as e:
         print(f"Error fetching deals: {e}")
         return []
@@ -156,17 +161,23 @@ async def get_deals():
 @app.get("/api/analytics/linkedin/current")
 async def get_linkedin():
     try:
-        response = get_supabase().table("linkedin_metrics").select("*").order("snapshot_date", desc=True).limit(1).execute()
-        if not response.data:
-            return {"total_followers": 0, "new_followers": 0}
-        data = response.data[0]
-        return {
-            "total_followers": data.get("total_followers", 0),
-            "new_followers": data.get("new_followers", 0),
-            "seniority_breakdown": data.get("seniority_breakdown", {}),
-            "industry_breakdown": data.get("industry_breakdown", {}),
-            "location_breakdown": data.get("location_breakdown", {}),
+        url = f"{SUPABASE_URL}/rest/v1/linkedin_metrics?select=*&order=snapshot_date.desc&limit=1"
+        headers = {
+            "Authorization": f"Bearer {SUPABASE_KEY}",
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json"
         }
+        resp = requests.get(url, headers=headers)
+        if resp.status_code == 200 and resp.json():
+            data = resp.json()[0]
+            return {
+                "total_followers": data.get("total_followers", 0),
+                "new_followers": data.get("new_followers", 0),
+                "seniority_breakdown": data.get("seniority_breakdown", {}),
+                "industry_breakdown": data.get("industry_breakdown", {}),
+                "location_breakdown": data.get("location_breakdown", {}),
+            }
+        return {"total_followers": 0, "new_followers": 0}
     except Exception as e:
         print(f"Error fetching LinkedIn: {e}")
         return {"total_followers": 0, "new_followers": 0}
@@ -175,15 +186,15 @@ async def get_linkedin():
 async def get_dashboard():
     try:
         linkedin = await get_linkedin()
-        companies_response = get_supabase().table("companies").select("id").execute()
-        deals_response = get_supabase().table("deals").select("value, stage").execute()
+        companies = query_supabase("companies", select="id")
+        deals = query_supabase("deals", select="value,stage")
 
-        total_deal_value = sum([d.get("value", 0) for d in (deals_response.data or []) if d.get("stage") != "lost"])
+        total_deal_value = sum([d.get("value", 0) for d in deals if d.get("stage") != "lost"])
 
         return {
             "total_followers": linkedin.get("total_followers", 0),
             "new_followers_this_month": linkedin.get("new_followers", 0),
-            "total_companies": len(companies_response.data or []),
+            "total_companies": len(companies),
             "total_deal_value": total_deal_value,
         }
     except Exception as e:
@@ -194,8 +205,8 @@ async def get_dashboard():
 @app.get("/api/content/calendar")
 async def get_calendar():
     try:
-        response = get_supabase().table("content_calendar").select("*").execute()
-        return response.data if response.data else []
+        data = query_supabase("content_calendar", select="*")
+        return data
     except Exception as e:
         print(f"Error fetching calendar: {e}")
         return []
@@ -203,8 +214,8 @@ async def get_calendar():
 @app.get("/api/content/templates")
 async def get_templates():
     try:
-        response = get_supabase().table("content_templates").select("*").execute()
-        return response.data if response.data else []
+        data = query_supabase("content_templates", select="*")
+        return data
     except Exception as e:
         print(f"Error fetching templates: {e}")
         return []
