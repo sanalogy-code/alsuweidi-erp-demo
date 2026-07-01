@@ -1,6 +1,32 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 
+const SUPABASE_URL = "https://ybxwoasgiozifzwuijtg.supabase.co"
+const SUPABASE_KEY = "sb_publishable_nLGvd1VM1kLhgWPWr7Q7kA_HM_yzurW"
+
+async function fetchData(endpoint, tableName) {
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  try {
+    // Try backend first
+    const res = await fetch(`${backendUrl}${endpoint}`, { signal: AbortSignal.timeout(3000) })
+    if (res.ok) return await res.json()
+  } catch (err) {
+    // Fallback to Supabase REST API
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${tableName}?select=*`, {
+        headers: {
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "apikey": SUPABASE_KEY,
+        }
+      })
+      return res.ok ? await res.json() : []
+    } catch (e) {
+      return []
+    }
+  }
+  return []
+}
+
 const SUPABASE_URL = 'https://ybxwoasgiozifzwuijtg.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_nLGvd1VM1kLhgWPWr7Q7kA_HM_yzurW'
 
@@ -278,16 +304,8 @@ function ContentPage({ user }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      try {
-        const calendarRes = await fetch(`${backendUrl}/api/content/calendar`)
-        if (!calendarRes.ok) throw new Error(`HTTP ${calendarRes.status}`)
-        const calendarData = await calendarRes.json()
-        setCalendar(Array.isArray(calendarData) ? calendarData : [])
-      } catch (err) {
-        console.error('Error fetching content:', err)
-        setCalendar([])
-      }
+      const calendarData = await querySupabase('content_calendar', '*')
+      setCalendar(Array.isArray(calendarData) ? calendarData : [])
     }
     fetchData()
   }, [])
