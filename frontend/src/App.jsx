@@ -272,6 +272,64 @@ function MarketingPage({ user }) {
   )
 }
 
+function ContentPage({ user }) {
+  const navigate = useNavigate()
+  const [calendar, setCalendar] = useState([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      try {
+        const calendarRes = await fetch(`${backendUrl}/api/content/calendar`)
+        if (!calendarRes.ok) throw new Error(`HTTP ${calendarRes.status}`)
+        const calendarData = await calendarRes.json()
+        setCalendar(Array.isArray(calendarData) ? calendarData : [])
+      } catch (err) {
+        console.error('Error fetching content:', err)
+        setCalendar([])
+      }
+    }
+    fetchData()
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-red-700 text-white p-4 shadow">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <button onClick={() => navigate(-1)} className="text-white hover:text-red-100 text-lg">← Back</button>
+          <h1 className="text-2xl font-bold">Content Calendar</h1>
+          <span className="text-sm">{user.role}</span>
+        </div>
+      </nav>
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="bg-white p-6 rounded shadow">
+          <h2 className="text-xl font-bold mb-4">Scheduled Posts ({calendar.length})</h2>
+          <div className="space-y-3">
+            {calendar.length > 0 ? (
+              calendar.map((entry, idx) => (
+                <div key={idx} className="border-b pb-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold">{entry.title}</p>
+                      <p className="text-sm text-gray-600">{entry.channel.toUpperCase()} • {entry.date}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded ${entry.status === 'published' ? 'bg-green-100 text-green-800' : entry.status === 'scheduled' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {entry.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700 mt-2">{entry.content}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No content scheduled yet</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function CRMPage({ user }) {
   const navigate = useNavigate()
   const [companies, setCompanies] = useState([])
@@ -363,6 +421,7 @@ export default function App() {
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<MarketingPage user={user} />} />
       <Route path="/crm" element={<CRMPage user={user} />} />
+      <Route path="/content" element={<ContentPage user={user} />} />
       <Route path="*" element={<HomePage user={user} onLogout={handleLogout} />} />
     </Routes>
   )
