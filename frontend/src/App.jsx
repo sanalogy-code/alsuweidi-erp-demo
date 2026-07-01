@@ -350,6 +350,10 @@ function ContentPage({ user }) {
 }
 
 function CRMPage({ user }) {
+  return <CRM />
+}
+
+function CRMPageOld({ user }) {
   const navigate = useNavigate()
   const [companies, setCompanies] = useState([])
   const [deals, setDeals] = useState([])
