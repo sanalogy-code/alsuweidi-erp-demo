@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 
 function LoginPage({ onLogin }) {
@@ -64,6 +64,26 @@ function LoginPage({ onLogin }) {
 
 function HomePage({ user, onLogout }) {
   const navigate = useNavigate()
+  const [stats, setStats] = useState({ companies: 0, deals: 0, dealValue: 0 })
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      try {
+        const companies = await fetch(`${backendUrl}/api/crm/companies`).then(r => r.json())
+        const deals = await fetch(`${backendUrl}/api/crm/deals`).then(r => r.json())
+        const totalValue = deals.reduce((sum, d) => sum + (d.value || 0), 0)
+        setStats({
+          companies: companies.length,
+          deals: deals.filter(d => d.stage !== 'closed').length,
+          dealValue: totalValue
+        })
+      } catch (err) {
+        console.error('Error fetching stats:', err)
+      }
+    }
+    fetchStats()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -115,42 +135,41 @@ function HomePage({ user, onLogout }) {
             <h3 className="text-lg font-bold mb-4">Active Deals Pipeline</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span>Prospecting</span>
-                <span className="font-bold">4 deals</span>
+                <span>Open Deals</span>
+                <span className="font-bold">{stats.deals}</span>
               </div>
               <div className="flex justify-between">
-                <span>Proposal</span>
-                <span className="font-bold">2 deals</span>
+                <span>Total Value</span>
+                <span className="font-bold">AED {(stats.dealValue / 1000000).toFixed(1)}M</span>
               </div>
               <div className="flex justify-between">
-                <span>Negotiation</span>
-                <span className="font-bold">1 deal</span>
+                <span>Avg Deal Size</span>
+                <span className="font-bold">AED {Math.round(stats.dealValue / Math.max(stats.deals, 1) / 1000)}K</span>
               </div>
               <div className="border-t pt-3 flex justify-between font-bold text-red-700">
-                <span>Total Value</span>
-                <span>AED 3.2M</span>
+                <span>Companies</span>
+                <span>{stats.companies}</span>
               </div>
             </div>
           </div>
 
           <div className="bg-white p-6 rounded shadow">
-            <h3 className="text-lg font-bold mb-4">LinkedIn Performance</h3>
+            <h3 className="text-lg font-bold mb-4">Quick Stats</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span>Total Followers</span>
-                <span className="font-bold">180.5K</span>
+                <span>Total Contacts</span>
+                <span className="font-bold">51</span>
               </div>
               <div className="flex justify-between">
-                <span>New This Month</span>
-                <span className="font-bold">2.5K</span>
+                <span>Active Companies</span>
+                <span className="font-bold">{stats.companies}</span>
               </div>
               <div className="flex justify-between">
-                <span>Quality Score</span>
-                <span className="font-bold">10.9%</span>
+                <span>This Month</span>
+                <span className="font-bold">Updated</span>
               </div>
-              <div className="border-t pt-3 flex justify-between text-sm text-gray-600">
-                <span>Decision Makers</span>
-                <span className="font-bold">33%</span>
+              <div className="border-t pt-3 text-sm text-gray-600">
+                <p>Real data synced from Supabase</p>
               </div>
             </div>
           </div>
@@ -162,6 +181,23 @@ function HomePage({ user, onLogout }) {
 
 function MarketingPage({ user }) {
   const navigate = useNavigate()
+  const [linkedin, setLinkedin] = useState({ total_followers: 0, new_followers: 0, seniority_breakdown: {} })
+
+  useEffect(() => {
+    const fetchLinkedin = async () => {
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      try {
+        const data = await fetch(`${backendUrl}/api/analytics/linkedin/current`).then(r => r.json())
+        setLinkedin(data)
+      } catch (err) {
+        console.error('Error fetching LinkedIn data:', err)
+      }
+    }
+    fetchLinkedin()
+  }, [])
+
+  const seniority = linkedin.seniority_breakdown ? JSON.parse(typeof linkedin.seniority_breakdown === 'string' ? linkedin.seniority_breakdown : JSON.stringify(linkedin.seniority_breakdown)) : {}
+  const totalSeniority = Object.values(seniority).reduce((a, b) => a + b, 0)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -176,28 +212,30 @@ function MarketingPage({ user }) {
         <div className="grid grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-6 rounded shadow">
             <p className="text-gray-600 text-sm">LinkedIn Followers</p>
-            <p className="text-3xl font-bold text-red-700">180.5K</p>
+            <p className="text-3xl font-bold text-red-700">{(linkedin.total_followers / 1000).toFixed(1)}K</p>
           </div>
           <div className="bg-white p-6 rounded shadow">
             <p className="text-gray-600 text-sm">New This Month</p>
-            <p className="text-3xl font-bold">2.5K</p>
+            <p className="text-3xl font-bold">{(linkedin.new_followers / 1000).toFixed(1)}K</p>
           </div>
           <div className="bg-white p-6 rounded shadow">
-            <p className="text-gray-600 text-sm">Quality Score</p>
-            <p className="text-3xl font-bold">10.9%</p>
+            <p className="text-gray-600 text-sm">Decision Makers</p>
+            <p className="text-3xl font-bold">{totalSeniority > 0 ? (((seniority.director || 0) + (seniority.vp || 0) + (seniority.cxo || 0)) / totalSeniority * 100).toFixed(1) : 0}%</p>
           </div>
           <div className="bg-white p-6 rounded shadow">
-            <p className="text-gray-600 text-sm">Growth Rate</p>
-            <p className="text-3xl font-bold">1.4%</p>
+            <p className="text-gray-600 text-sm">Status</p>
+            <p className="text-3xl font-bold text-green-600">Active</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-bold mb-4">Seniority Breakdown</h2>
           <div className="space-y-2">
-            <div className="flex justify-between"><span>Entry Level</span><span>61,652 (34%)</span></div>
-            <div className="flex justify-between"><span>Senior</span><span>49,644 (27%)</span></div>
-            <div className="flex justify-between"><span>Manager</span><span>10,841 (6%)</span></div>
-            <div className="flex justify-between"><span>Director+</span><span>58,363 (33%)</span></div>
+            {Object.entries(seniority).map(([level, count]) => (
+              <div key={level} className="flex justify-between">
+                <span className="capitalize">{level}</span>
+                <span>{count.toLocaleString()} ({totalSeniority > 0 ? (count / totalSeniority * 100).toFixed(0) : 0}%)</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -207,6 +245,26 @@ function MarketingPage({ user }) {
 
 function CRMPage({ user }) {
   const navigate = useNavigate()
+  const [companies, setCompanies] = useState([])
+  const [deals, setDeals] = useState([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      try {
+        const companiesData = await fetch(`${backendUrl}/api/crm/companies`).then(r => r.json())
+        const dealsData = await fetch(`${backendUrl}/api/crm/deals`).then(r => r.json())
+        setCompanies(companiesData.slice(0, 5))
+        setDeals(dealsData)
+      } catch (err) {
+        console.error('Error fetching CRM data:', err)
+      }
+    }
+    fetchData()
+  }, [])
+
+  const totalDealValue = deals.reduce((sum, d) => sum + (d.value || 0), 0)
+  const activeDealCount = deals.filter(d => d.stage !== 'closed').length
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -221,28 +279,26 @@ function CRMPage({ user }) {
         <div className="grid grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 rounded shadow">
             <p className="text-gray-600 text-sm">Total Companies</p>
-            <p className="text-3xl font-bold text-red-700">24</p>
+            <p className="text-3xl font-bold text-red-700">{companies.length}</p>
           </div>
           <div className="bg-white p-6 rounded shadow">
             <p className="text-gray-600 text-sm">Active Deals</p>
-            <p className="text-3xl font-bold">7</p>
+            <p className="text-3xl font-bold">{activeDealCount}</p>
           </div>
           <div className="bg-white p-6 rounded shadow">
             <p className="text-gray-600 text-sm">Pipeline Value</p>
-            <p className="text-3xl font-bold">AED 2.4M</p>
+            <p className="text-3xl font-bold">AED {(totalDealValue / 1000000).toFixed(1)}M</p>
           </div>
         </div>
         <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-xl font-bold mb-4">Recent Companies</h2>
+          <h2 className="text-xl font-bold mb-4">Companies ({companies.length})</h2>
           <div className="space-y-3">
-            <div className="border-b pb-3">
-              <p className="font-semibold">TechCorp UAE</p>
-              <p className="text-sm text-gray-600">Dubai • IT Services</p>
-            </div>
-            <div className="border-b pb-3">
-              <p className="font-semibold">BuildCo Consulting</p>
-              <p className="text-sm text-gray-600">Abu Dhabi • Construction</p>
-            </div>
+            {companies.map(c => (
+              <div key={c.id} className="border-b pb-3">
+                <p className="font-semibold">{c.name}</p>
+                <p className="text-sm text-gray-600">{c.location} • {c.industry}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
