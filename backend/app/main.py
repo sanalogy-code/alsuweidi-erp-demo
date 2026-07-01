@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from supabase import create_client
 import os
 from dotenv import load_dotenv
+import requests
+import json
 
 load_dotenv()
 
@@ -39,6 +41,39 @@ async def health():
 @app.get("/")
 async def root():
     return {"message": "AL SUWEIDI ERP API v3"}
+
+@app.get("/diagnostic")
+async def diagnostic():
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+    # Test REST API directly
+    rest_test = {"status": "testing..."}
+    try:
+        if url and key:
+            rest_url = f"{url}/rest/v1/companies?select=id,name&limit=1"
+            resp = requests.get(
+                rest_url,
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "apikey": key,
+                    "Content-Type": "application/json"
+                }
+            )
+            rest_test = {
+                "status": "success" if resp.status_code == 200 else "failed",
+                "status_code": resp.status_code,
+                "rows": len(resp.json()) if resp.status_code == 200 else 0
+            }
+    except Exception as e:
+        rest_test = {"status": "error", "error": str(e)}
+
+    return {
+        "env_url": url,
+        "env_key_set": bool(key),
+        "env_key_first_20": key[:20] if key else "MISSING",
+        "rest_api_test": rest_test,
+    }
 
 class LoginRequest(BaseModel):
     username: str
