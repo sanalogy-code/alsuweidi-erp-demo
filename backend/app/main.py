@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -40,7 +40,7 @@ async def login(request: LoginRequest):
     }
     user = USERS.get(request.username)
     if not user or user["password"] != request.password:
-        return {"error": "Invalid credentials"}, 401
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     return {"access_token": "dummy-token", "token_type": "bearer", "role": user["role"]}
 
 # CRM endpoints
