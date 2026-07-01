@@ -5,7 +5,11 @@ app = FastAPI(title="AL SUWEIDI ERP", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://alsuweidi-erp-demo.pages.dev",
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
