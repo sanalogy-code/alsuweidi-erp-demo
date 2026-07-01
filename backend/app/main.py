@@ -2,6 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from supabase import create_client
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(title="AL SUWEIDI ERP", version="3.0.0")
 
@@ -18,9 +22,8 @@ app.add_middleware(
 )
 
 # Supabase client (lazy initialization)
-import os
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ybxwoasgiozifzwuijtg.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_secret_kxNZTmuLT1kxLhuNqf-yHQ_4cxjrK9x")
+SUPABASE_URL = os.getenv("SUPABASE_URL") or "https://ybxwoasgiozifzwuijtg.supabase.co"
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or "sb_secret_kxNZTmuLT1kxLhuNqf-yHQ_4cxjrK9x"
 _supabase_client = None
 
 def get_supabase():

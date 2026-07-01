@@ -9,6 +9,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy app code
 COPY backend/app ./app
 
+# Copy .env file
+COPY backend/.env .env
+
 # Set env vars (Railway will override these)
 ENV PORT=8000
 
