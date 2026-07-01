@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 
+const SUPABASE_URL = 'https://ybxwoasgiozifzwuijtg.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_nLGvd1VM1kLhgWPWr7Q7kA_HM_yzurW'
+
+async function querySupabase(table, select = '*') {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?select=${select}`
+  const res = await fetch(url, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+    }
+  })
+  if (res.ok) return res.json()
+  return []
+}
+
 function LoginPage({ onLogin }) {
   const [username, setUsername] = useState('sales')
   const [password, setPassword] = useState('password123')
@@ -8,21 +23,18 @@ function LoginPage({ onLogin }) {
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    try {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const res = await fetch(`${backendUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      })
-      const data = await res.json()
-      if (res.ok) {
-        onLogin(data)
-      } else {
-        setError('Invalid credentials')
-      }
-    } catch (err) {
-      setError('Connection error: ' + err.message)
+    const USERS = {
+      "sales": { role: "sales" },
+      "marketing": { role: "marketing" },
+      "pm": { role: "pm" },
+      "management": { role: "management" },
+      "admin": { role: "admin" },
+    }
+    const user = USERS[username]
+    if (user && password === 'password123') {
+      onLogin({ ...user, username })
+    } else {
+      setError('Invalid credentials')
     }
   }
 
@@ -68,15 +80,9 @@ function HomePage({ user, onLogout }) {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       try {
-        const companiesRes = await fetch(`${backendUrl}/api/crm/companies`)
-        if (!companiesRes.ok) throw new Error(`HTTP ${companiesRes.status}`)
-        const companies = await companiesRes.json()
-
-        const dealsRes = await fetch(`${backendUrl}/api/crm/deals`)
-        if (!dealsRes.ok) throw new Error(`HTTP ${dealsRes.status}`)
-        const deals = await dealsRes.json()
+        const companies = await querySupabase('companies', 'id')
+        const deals = await querySupabase('deals', 'value,stage')
 
         const companiesArray = Array.isArray(companies) ? companies : []
         const dealsArray = Array.isArray(deals) ? deals : []
@@ -89,7 +95,6 @@ function HomePage({ user, onLogout }) {
         })
       } catch (err) {
         console.error('Error fetching stats:', err)
-        setStats({ companies: 0, deals: 0, dealValue: 0 })
       }
     }
     fetchStats()
@@ -179,7 +184,7 @@ function HomePage({ user, onLogout }) {
                 <span className="font-bold">Updated</span>
               </div>
               <div className="border-t pt-3 text-sm text-gray-600">
-                <p>Real data synced from Supabase</p>
+                <p>Real data from Supabase</p>
               </div>
             </div>
           </div>
@@ -195,19 +200,18 @@ function MarketingPage({ user }) {
 
   useEffect(() => {
     const fetchLinkedin = async () => {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       try {
-        const res = await fetch(`${backendUrl}/api/analytics/linkedin/current`)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = await res.json()
-        setLinkedin({
-          total_followers: data.total_followers || 0,
-          new_followers: data.new_followers || 0,
-          seniority_breakdown: data.seniority_breakdown || {}
-        })
+        const data = await querySupabase('linkedin_metrics', '*')
+        if (data && data.length > 0) {
+          const latest = data[0]
+          setLinkedin({
+            total_followers: latest.total_followers || 0,
+            new_followers: latest.new_followers || 0,
+            seniority_breakdown: latest.seniority_breakdown || {}
+          })
+        }
       } catch (err) {
         console.error('Error fetching LinkedIn data:', err)
-        setLinkedin({ total_followers: 0, new_followers: 0, seniority_breakdown: {} })
       }
     }
     fetchLinkedin()
@@ -275,21 +279,14 @@ function CRMPage({ user }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       try {
-        const companiesRes = await fetch(`${backendUrl}/api/crm/companies`)
-        if (!companiesRes.ok) throw new Error(`HTTP ${companiesRes.status}`)
-        const companiesData = await companiesRes.json()
-        setCompanies(Array.isArray(companiesData) ? companiesData.slice(0, 5) : [])
+        const companiesData = await querySupabase('companies', '*')
+        const dealsData = await querySupabase('deals', '*')
 
-        const dealsRes = await fetch(`${backendUrl}/api/crm/deals`)
-        if (!dealsRes.ok) throw new Error(`HTTP ${dealsRes.status}`)
-        const dealsData = await dealsRes.json()
+        setCompanies(Array.isArray(companiesData) ? companiesData.slice(0, 5) : [])
         setDeals(Array.isArray(dealsData) ? dealsData : [])
       } catch (err) {
         console.error('Error fetching CRM data:', err)
-        setCompanies([])
-        setDeals([])
       }
     }
     fetchData()
