@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 
 function LoginPage({ onLogin }) {
   const [username, setUsername] = useState('sales')
@@ -61,7 +62,9 @@ function LoginPage({ onLogin }) {
   )
 }
 
-function HomePage({ user, onLogout, onNavigate }) {
+function HomePage({ user, onLogout }) {
+  const navigate = useNavigate()
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-red-700 text-white p-4 shadow">
@@ -80,7 +83,7 @@ function HomePage({ user, onLogout, onNavigate }) {
         <h2 className="text-3xl font-bold text-gray-800 mb-8">Modules</h2>
         <div className="grid grid-cols-3 gap-6 mb-8">
           <button
-            onClick={() => onNavigate('crm')}
+            onClick={() => navigate('/crm')}
             className="bg-white p-8 rounded shadow hover:shadow-lg hover:border-red-700 border-2 border-transparent transition text-left"
           >
             <div className="text-4xl mb-3">📊</div>
@@ -89,7 +92,7 @@ function HomePage({ user, onLogout, onNavigate }) {
           </button>
 
           <button
-            onClick={() => onNavigate('marketing')}
+            onClick={() => navigate('/marketing')}
             className="bg-white p-8 rounded shadow hover:shadow-lg hover:border-red-700 border-2 border-transparent transition text-left"
           >
             <div className="text-4xl mb-3">📈</div>
@@ -98,7 +101,7 @@ function HomePage({ user, onLogout, onNavigate }) {
           </button>
 
           <button
-            onClick={() => onNavigate('content')}
+            onClick={() => navigate('/content')}
             className="bg-white p-8 rounded shadow hover:shadow-lg hover:border-red-700 border-2 border-transparent transition text-left"
           >
             <div className="text-4xl mb-3">📝</div>
@@ -157,12 +160,14 @@ function HomePage({ user, onLogout, onNavigate }) {
   )
 }
 
-function MarketingPage({ user, onBack }) {
+function MarketingPage({ user }) {
+  const navigate = useNavigate()
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-red-700 text-white p-4 shadow">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <button onClick={onBack} className="text-white hover:text-red-100 text-lg">← Back</button>
+          <button onClick={() => navigate(-1)} className="text-white hover:text-red-100 text-lg">← Back</button>
           <h1 className="text-2xl font-bold">Marketing Dashboard</h1>
           <span className="text-sm">{user.role}</span>
         </div>
@@ -200,12 +205,14 @@ function MarketingPage({ user, onBack }) {
   )
 }
 
-function CRMPage({ user, onBack }) {
+function CRMPage({ user }) {
+  const navigate = useNavigate()
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-red-700 text-white p-4 shadow">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <button onClick={onBack} className="text-white hover:text-red-100 text-lg">← Back</button>
+          <button onClick={() => navigate(-1)} className="text-white hover:text-red-100 text-lg">← Back</button>
           <h1 className="text-2xl font-bold">CRM Module</h1>
           <span className="text-sm">{user.role}</span>
         </div>
@@ -245,39 +252,28 @@ function CRMPage({ user, onBack }) {
 
 export default function App() {
   const [user, setUser] = useState(null)
-  const [page, setPage] = useState('home')
+  const navigate = useNavigate()
 
   const handleLogin = (data) => {
     setUser(data)
-    setPage('home')
+    navigate('/home')
   }
 
   const handleLogout = () => {
     setUser(null)
-    setPage('home')
-  }
-
-  const handleNavigate = (newPage) => {
-    setPage(newPage)
-  }
-
-  const handleBack = () => {
-    setPage('home')
+    navigate('/')
   }
 
   if (!user) {
     return <LoginPage onLogin={handleLogin} />
   }
 
-  if (page === 'home') {
-    return <HomePage user={user} onLogout={handleLogout} onNavigate={handleNavigate} />
-  }
-
-  if (page === 'marketing') {
-    return <MarketingPage user={user} onBack={handleBack} />
-  }
-
-  if (page === 'crm') {
-    return <CRMPage user={user} onBack={handleBack} />
-  }
+  return (
+    <Routes>
+      <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} />} />
+      <Route path="/marketing" element={<MarketingPage user={user} />} />
+      <Route path="/crm" element={<CRMPage user={user} />} />
+      <Route path="*" element={<HomePage user={user} onLogout={handleLogout} />} />
+    </Routes>
+  )
 }
