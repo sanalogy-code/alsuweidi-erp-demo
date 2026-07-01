@@ -60,9 +60,10 @@ async def login(request: LoginRequest):
 async def get_companies():
     try:
         response = get_supabase().table("companies").select("*").execute()
-        return response.data
+        return response.data if response.data else []
     except Exception as e:
-        return {"error": str(e), "companies": []}
+        print(f"Error fetching companies: {e}")
+        return []
 
 @app.get("/api/crm/companies/{company_id}")
 async def get_company(company_id: int):
@@ -78,9 +79,10 @@ async def get_company(company_id: int):
 async def get_contacts():
     try:
         response = get_supabase().table("contacts").select("*").execute()
-        return response.data
+        return response.data if response.data else []
     except Exception as e:
-        return {"error": str(e), "contacts": []}
+        print(f"Error fetching contacts: {e}")
+        return []
 
 @app.get("/api/crm/contacts/{contact_id}")
 async def get_contact(contact_id: int):
@@ -96,9 +98,10 @@ async def get_contact(contact_id: int):
 async def get_deals():
     try:
         response = get_supabase().table("deals").select("*").execute()
-        return response.data
+        return response.data if response.data else []
     except Exception as e:
-        return {"error": str(e), "deals": []}
+        print(f"Error fetching deals: {e}")
+        return []
 
 # Analytics endpoints
 @app.get("/api/analytics/linkedin/current")
@@ -116,7 +119,8 @@ async def get_linkedin():
             "location_breakdown": data.get("location_breakdown", {}),
         }
     except Exception as e:
-        return {"total_followers": 0, "new_followers": 0, "error": str(e)}
+        print(f"Error fetching LinkedIn: {e}")
+        return {"total_followers": 0, "new_followers": 0}
 
 @app.get("/api/analytics/dashboard")
 async def get_dashboard():
@@ -125,30 +129,33 @@ async def get_dashboard():
         companies_response = get_supabase().table("companies").select("id").execute()
         deals_response = get_supabase().table("deals").select("value, stage").execute()
 
-        total_deal_value = sum([d.get("value", 0) for d in deals_response.data if d.get("stage") != "lost"])
+        total_deal_value = sum([d.get("value", 0) for d in (deals_response.data or []) if d.get("stage") != "lost"])
 
         return {
             "total_followers": linkedin.get("total_followers", 0),
             "new_followers_this_month": linkedin.get("new_followers", 0),
-            "total_companies": len(companies_response.data),
+            "total_companies": len(companies_response.data or []),
             "total_deal_value": total_deal_value,
         }
     except Exception as e:
-        return {"error": str(e)}
+        print(f"Error fetching dashboard: {e}")
+        return {"total_followers": 0, "new_followers_this_month": 0, "total_companies": 0, "total_deal_value": 0}
 
 # Content endpoints
 @app.get("/api/content/calendar")
 async def get_calendar():
     try:
         response = get_supabase().table("content_calendar").select("*").execute()
-        return response.data
+        return response.data if response.data else []
     except Exception as e:
-        return {"error": str(e), "calendar": []}
+        print(f"Error fetching calendar: {e}")
+        return []
 
 @app.get("/api/content/templates")
 async def get_templates():
     try:
         response = get_supabase().table("content_templates").select("*").execute()
-        return response.data
+        return response.data if response.data else []
     except Exception as e:
-        return {"error": str(e), "templates": []}
+        print(f"Error fetching templates: {e}")
+        return []
