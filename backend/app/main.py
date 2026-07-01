@@ -18,8 +18,9 @@ app.add_middleware(
 )
 
 # Supabase client (lazy initialization)
-SUPABASE_URL = "https://ybxwoasgiozifzwuijtg.supabase.co"
-SUPABASE_KEY = "sb_secret_kxNZTmuLT1kxLhuNqf-yHQ_4cxjrK9x"
+import os
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://ybxwoasgiozifzwuijtg.supabase.co")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "sb_secret_kxNZTmuLT1kxLhuNqf-yHQ_4cxjrK9x")
 _supabase_client = None
 
 def get_supabase():
@@ -72,8 +73,11 @@ async def get_company(company_id: int):
         if not response.data:
             raise HTTPException(status_code=404, detail="Company not found")
         return response.data[0]
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error fetching company {company_id}: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
 
 @app.get("/api/crm/contacts")
 async def get_contacts():
@@ -91,8 +95,11 @@ async def get_contact(contact_id: int):
         if not response.data:
             raise HTTPException(status_code=404, detail="Contact not found")
         return response.data[0]
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error fetching contact {contact_id}: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
 
 @app.get("/api/crm/deals")
 async def get_deals():

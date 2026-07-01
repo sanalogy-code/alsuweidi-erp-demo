@@ -70,16 +70,26 @@ function HomePage({ user, onLogout }) {
     const fetchStats = async () => {
       const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       try {
-        const companies = await fetch(`${backendUrl}/api/crm/companies`).then(r => r.json())
-        const deals = await fetch(`${backendUrl}/api/crm/deals`).then(r => r.json())
-        const totalValue = deals.reduce((sum, d) => sum + (d.value || 0), 0)
+        const companiesRes = await fetch(`${backendUrl}/api/crm/companies`)
+        if (!companiesRes.ok) throw new Error(`HTTP ${companiesRes.status}`)
+        const companies = await companiesRes.json()
+
+        const dealsRes = await fetch(`${backendUrl}/api/crm/deals`)
+        if (!dealsRes.ok) throw new Error(`HTTP ${dealsRes.status}`)
+        const deals = await dealsRes.json()
+
+        const companiesArray = Array.isArray(companies) ? companies : []
+        const dealsArray = Array.isArray(deals) ? deals : []
+        const totalValue = dealsArray.reduce((sum, d) => sum + (d.value || 0), 0)
+
         setStats({
-          companies: companies.length,
-          deals: deals.filter(d => d.stage !== 'closed').length,
+          companies: companiesArray.length,
+          deals: dealsArray.filter(d => d.stage !== 'closed').length,
           dealValue: totalValue
         })
       } catch (err) {
         console.error('Error fetching stats:', err)
+        setStats({ companies: 0, deals: 0, dealValue: 0 })
       }
     }
     fetchStats()
@@ -187,17 +197,32 @@ function MarketingPage({ user }) {
     const fetchLinkedin = async () => {
       const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       try {
-        const data = await fetch(`${backendUrl}/api/analytics/linkedin/current`).then(r => r.json())
-        setLinkedin(data)
+        const res = await fetch(`${backendUrl}/api/analytics/linkedin/current`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        setLinkedin({
+          total_followers: data.total_followers || 0,
+          new_followers: data.new_followers || 0,
+          seniority_breakdown: data.seniority_breakdown || {}
+        })
       } catch (err) {
         console.error('Error fetching LinkedIn data:', err)
+        setLinkedin({ total_followers: 0, new_followers: 0, seniority_breakdown: {} })
       }
     }
     fetchLinkedin()
   }, [])
 
-  const seniority = linkedin.seniority_breakdown ? JSON.parse(typeof linkedin.seniority_breakdown === 'string' ? linkedin.seniority_breakdown : JSON.stringify(linkedin.seniority_breakdown)) : {}
-  const totalSeniority = Object.values(seniority).reduce((a, b) => a + b, 0)
+  let seniority = {}
+  try {
+    if (linkedin.seniority_breakdown) {
+      const data = typeof linkedin.seniority_breakdown === 'string' ? JSON.parse(linkedin.seniority_breakdown) : linkedin.seniority_breakdown
+      seniority = typeof data === 'object' && data !== null ? data : {}
+    }
+  } catch (err) {
+    console.error('Error parsing seniority:', err)
+  }
+  const totalSeniority = Object.values(seniority).reduce((a, b) => a + (Number.isInteger(b) ? b : 0), 0)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -252,12 +277,19 @@ function CRMPage({ user }) {
     const fetchData = async () => {
       const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
       try {
-        const companiesData = await fetch(`${backendUrl}/api/crm/companies`).then(r => r.json())
-        const dealsData = await fetch(`${backendUrl}/api/crm/deals`).then(r => r.json())
-        setCompanies(companiesData.slice(0, 5))
-        setDeals(dealsData)
+        const companiesRes = await fetch(`${backendUrl}/api/crm/companies`)
+        if (!companiesRes.ok) throw new Error(`HTTP ${companiesRes.status}`)
+        const companiesData = await companiesRes.json()
+        setCompanies(Array.isArray(companiesData) ? companiesData.slice(0, 5) : [])
+
+        const dealsRes = await fetch(`${backendUrl}/api/crm/deals`)
+        if (!dealsRes.ok) throw new Error(`HTTP ${dealsRes.status}`)
+        const dealsData = await dealsRes.json()
+        setDeals(Array.isArray(dealsData) ? dealsData : [])
       } catch (err) {
         console.error('Error fetching CRM data:', err)
+        setCompanies([])
+        setDeals([])
       }
     }
     fetchData()
@@ -307,16 +339,21 @@ function CRMPage({ user }) {
 }
 
 export default function App() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('user')
+    return saved ? JSON.parse(saved) : null
+  })
   const navigate = useNavigate()
 
   const handleLogin = (data) => {
     setUser(data)
+    localStorage.setItem('user', JSON.stringify(data))
     navigate('/home')
   }
 
   const handleLogout = () => {
     setUser(null)
+    localStorage.removeItem('user')
     navigate('/')
   }
 
