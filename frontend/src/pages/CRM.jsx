@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Home, TrendingUp, Building2, Users, CheckSquare, BarChart3 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Modal from '../components/crm/Modal'
 import OverviewView from '../components/crm/OverviewView'
@@ -13,15 +13,6 @@ import CompanyEditModal from '../components/crm/CompanyEditModal'
 import DealEditModal from '../components/crm/DealEditModal'
 import ExportContactsModal from '../components/crm/ExportContactsModal'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
-
-const TABS = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'pipeline', label: 'Pipeline' },
-  { key: 'companies', label: 'Companies' },
-  { key: 'contacts', label: 'Contacts' },
-  { key: 'tasks', label: 'Tasks' },
-  { key: 'reports', label: 'Reports' },
-]
 
 export default function CRM({ user, onLogout }) {
   const [companies, setCompanies] = useState(INITIAL_COMPANIES)
@@ -174,11 +165,75 @@ export default function CRM({ user, onLogout }) {
 
   const dealFormContacts = contacts.filter((c) => c.companyId === Number(dealForm.companyId))
 
+  const dueTaskCount = tasks.filter((t) => !t.done && t.dueDate <= todayISO()).length
+
+  const NAV_MAIN = [
+    { key: 'overview', label: 'Overview', icon: Home },
+  ]
+
+  const NAV_GROUPS = [
+    {
+      label: 'Sales',
+      items: [
+        { key: 'pipeline', label: 'Pipeline', icon: TrendingUp },
+        { key: 'companies', label: 'Companies', icon: Building2 },
+        { key: 'contacts', label: 'Contacts', icon: Users },
+      ],
+    },
+    {
+      label: 'My Work',
+      items: [
+        { key: 'tasks', label: 'Tasks', icon: CheckSquare, badge: dueTaskCount },
+      ],
+    },
+    {
+      label: 'Insights',
+      items: [
+        { key: 'reports', label: 'Reports', icon: BarChart3 },
+      ],
+    },
+  ]
+
+  const navButton = (item) => {
+    const Icon = item.icon
+    const active = tab === item.key
+    return (
+      <button
+        key={item.key}
+        onClick={() => setTab(item.key)}
+        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
+      >
+        <Icon size={15} className="shrink-0" />
+        <span className="flex-1 truncate">{item.label}</span>
+        {item.badge > 0 && (
+          <span className="bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center shrink-0">
+            {item.badge}
+          </span>
+        )}
+      </button>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar user={user} onLogout={onLogout} title="CRM" showBack />
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
+        <aside className="w-full sm:w-44 shrink-0 sm:sticky sm:top-6">
+          <div className="flex sm:flex-col flex-wrap gap-1">
+            {NAV_MAIN.map(navButton)}
+          </div>
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label}>
+              <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 pt-4 pb-1 hidden sm:block">{group.label}</div>
+              <div className="flex sm:flex-col flex-wrap gap-1 mt-1 sm:mt-0">
+                {group.items.map(navButton)}
+              </div>
+            </div>
+          ))}
+        </aside>
+
+        <main className="flex-1 min-w-0 w-full">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">CRM</h1>
@@ -190,18 +245,6 @@ export default function CRM({ user, onLogout }) {
           >
             <Plus size={18} /> New Client
           </button>
-        </div>
-
-        <div className="flex gap-1 border-b border-gray-200 mb-6">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${tab === t.key ? 'text-brand border-brand' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
-            >
-              {t.label}
-            </button>
-          ))}
         </div>
 
         {tab === 'overview' && (
@@ -250,6 +293,7 @@ export default function CRM({ user, onLogout }) {
         {tab === 'reports' && (
           <ReportsView deals={deals} companies={companies} />
         )}
+        </main>
       </div>
 
       {showAddCompany && (
