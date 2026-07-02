@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Modal from '../components/crm/Modal'
+import OverviewView from '../components/crm/OverviewView'
 import CompaniesView from '../components/crm/CompaniesView'
 import ContactsView from '../components/crm/ContactsView'
 import PipelineView from '../components/crm/PipelineView'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, STAGES, todayISO } from '../data/crmData'
 
 const TABS = [
+  { key: 'overview', label: 'Overview' },
   { key: 'companies', label: 'Companies' },
   { key: 'contacts', label: 'Contacts' },
   { key: 'pipeline', label: 'Pipeline' },
@@ -18,7 +20,7 @@ export default function CRM({ user, onLogout }) {
   const [contacts, setContacts] = useState(INITIAL_CONTACTS)
   const [deals, setDeals] = useState(INITIAL_DEALS)
 
-  const [tab, setTab] = useState('companies')
+  const [tab, setTab] = useState('overview')
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [search, setSearch] = useState('')
 
@@ -118,6 +120,13 @@ export default function CRM({ user, onLogout }) {
             </button>
           ))}
         </div>
+
+        {tab === 'overview' && (
+          <OverviewView
+            companies={companies} contacts={contacts} deals={deals}
+            onLogInteraction={logInteraction} onJumpToCompany={jumpToCompany} setTab={setTab}
+          />
+        )}
 
         {tab === 'companies' && (
           <CompaniesView

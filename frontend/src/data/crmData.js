@@ -44,6 +44,16 @@ export const STAGE_COLOR = {
   Lost: 'bg-red-100 text-red-700 border-red-300',
 }
 
+// Full literal class names so Tailwind's content scanner can see them
+// (string-concatenating a color name at runtime would not be detected).
+export const STAGE_BAR_COLOR = {
+  Prospecting: 'bg-gray-400',
+  Proposal: 'bg-blue-400',
+  Negotiation: 'bg-yellow-400',
+  Won: 'bg-green-400',
+  Lost: 'bg-red-400',
+}
+
 export function getStatusColor(status) {
   switch (status) {
     case 'Won': return 'bg-green-200 text-green-800'
