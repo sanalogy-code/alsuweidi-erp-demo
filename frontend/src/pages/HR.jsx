@@ -4,17 +4,22 @@ import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
 import EmployeeList from '../components/hr/EmployeeList'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
-import { HR_STATS, QUICK_LINKS, EMPLOYEES } from '../data/hrData'
+import LeaveRequestModal from '../components/hr/LeaveRequestModal'
+import LeaveRequestsList from '../components/hr/LeaveRequestsList'
+import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS } from '../data/hrData'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'directory', label: 'Directory' },
+  { key: 'leave', label: 'Leave' },
   { key: 'onboarding', label: 'Onboarding' },
 ]
 
 export default function HR({ user, onLogout }) {
   const [tab, setTab] = useState('overview')
   const [selectedEmployee, setSelectedEmployee] = useState(null)
+  const [showLeaveModal, setShowLeaveModal] = useState(false)
+  const [leaveRequests, setLeaveRequests] = useState(LEAVE_REQUESTS)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,10 +91,33 @@ export default function HR({ user, onLogout }) {
 
         {tab === 'directory' && <EmployeeList employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
 
+        {tab === 'leave' && (
+          <LeaveRequestsList
+            requests={leaveRequests}
+            onRequestNewLeave={() => setShowLeaveModal(true)}
+            onApprove={(id) => {
+              setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status: 'approved' } : r)))
+            }}
+            onDeny={(id) => {
+              setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status: 'denied' } : r)))
+            }}
+          />
+        )}
+
         {tab === 'onboarding' && <OnboardingChecklist userName={user?.username} />}
       </div>
 
       {selectedEmployee && <EmployeeDetailModal employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} />}
+
+      {showLeaveModal && (
+        <LeaveRequestModal
+          employee={EMPLOYEES[0]}
+          onClose={() => setShowLeaveModal(false)}
+          onSubmit={(newRequest) => {
+            setLeaveRequests([...leaveRequests, { ...newRequest, id: Math.max(...leaveRequests.map((r) => r.id), 0) + 1 }])
+          }}
+        />
+      )}
     </div>
   )
 }

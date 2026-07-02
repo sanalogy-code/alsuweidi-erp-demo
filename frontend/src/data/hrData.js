@@ -104,6 +104,14 @@ export const QUICK_LINKS = [
   { label: 'Org Chart' },
 ]
 
+export const LEAVE_TYPES = ['Vacation', 'Sick', 'Unpaid', 'Bereavement', 'Parental']
+
+export const LEAVE_REQUESTS = [
+  { id: 1, employeeId: 1, employeeName: 'Osama Hussain', type: 'Vacation', startDate: '2026-07-15', endDate: '2026-07-22', days: 8, reason: 'Summer holiday', status: 'approved', approvedBy: 'Layla Al Mazrouei', approvedDate: '2026-06-28' },
+  { id: 2, employeeId: 5, employeeName: 'Layla Al Mazrouei', type: 'Sick', startDate: '2026-07-08', endDate: '2026-07-08', days: 1, reason: 'Medical appointment', status: 'pending', approvedBy: null, approvedDate: null },
+  { id: 3, employeeId: 2, employeeName: 'Naseeb Shaheen', type: 'Vacation', startDate: '2026-08-01', endDate: '2026-08-15', days: 15, reason: 'Eid holiday', status: 'pending', approvedBy: null, approvedDate: null },
+]
+
 export const EMPLOYEES = [
   { id: 1, name: 'Osama Hussain', title: 'Senior Project Manager', dept: 'Projects', location: 'Abu Dhabi HQ', employmentType: 'Full-time', email: 'osama@alsuweidi.com', phone: '+971-2-123-4567', startDate: '2015-03-15', status: 'active' },
   { id: 2, name: 'Naseeb Shaheen', title: 'Lead Structural Engineer', dept: 'Engineering', location: 'Abu Dhabi HQ', employmentType: 'Full-time', email: 'naseeb@alsuweidi.com', phone: '+971-2-123-4568', startDate: '2018-06-01', status: 'active' },
