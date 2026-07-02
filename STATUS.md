@@ -52,6 +52,16 @@ Tabs: **Overview → Onboarding**
 
 ---
 
+## Next: Backend & Production Migration
+
+See [BACKEND_PLAN.md](BACKEND_PLAN.md) for the roadmap from proof-of-concept to production:
+- **Phase 2** (Q4 2026): Real backend on an on-prem VM (Postgres + Node/Python API + Docker), with RBAC, audit logging, and encrypted backups. IT gets asked for: 4c/16GB/100GB VM, firewall rules, backup storage.
+- **Phase 3** (2027+): Projects, expanded HR, Financials.
+- **Testing strategy:** All features validated in staging (dummy data, same schema) before touching production.
+- **Data security:** AI helps write code; humans apply changes and own the audit trail. Production data never seen by the AI.
+
+---
+
 ## Standing security item (not yet resolved)
 
 A Supabase **service_role secret key** was committed to `backend/populate_db.py` before the pivot, pushed to the public GitHub repo. Deleted from the working tree but still recoverable from git history (commit `6985c30`). **Needs rotating in the Supabase dashboard** regardless of whether Supabase gets used again — the key still grants live access to the real Supabase project, which holds real ALSUWEIDI client data. Not confirmed done as of this update.
