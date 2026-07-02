@@ -2,11 +2,11 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-02
+**Last updated:** 2026-07-02 (end of session)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy).
 
-**Phase 1 Sprint**: 2-week sprint to finish CRM + HR before showing to management. See [SPRINT_PLAN.md](SPRINT_PLAN.md) for day-by-day breakdown (Days 1–14, starting 2026-07-02).
+**Phase 1 Status:** Feature-complete (CRM + HR). Ready to show management. Real backend work starts after Phase 1 validation.
 
 ---
 
@@ -26,31 +26,40 @@ The one thing that can't live in the repo: **WN (the ALSUWEIDI Knowledge Base Ob
 
 ## Current status
 
-### ✅ CRM module
-Tabs: **Overview → Pipeline → Companies → Contacts → Tasks**
+### ✅ CRM module — COMPLETE
+Tabs: **Overview → Pipeline → Companies → Contacts → Tasks → Reports**
 
 - **Overview** — dashboard: stat cards + widgets (Needs Follow-Up, Reminders, Closing Soon, Top Clients, Pipeline by Stage)
-- **Pipeline** — Kanban board by deal stage, drag-and-drop or dropdown to change stage
-- **Companies** — list + detail drill-down (Contacts/Deals/Activity tabs), Activity tab shows real logged interactions
-- **Contacts** — searchable directory; click a name for a full profile (`ContactDetailModal`): info, inline edit, linked deals, complete interaction history, quick actions. "Export" button opens a filtered export panel.
+- **Pipeline** — Kanban board by deal stage, drag-and-drop or dropdown to change stage. **NEW:** Time filters (This Month / This Quarter / This Year / All Time) update pipeline value + expected value dynamically. Edit/Delete buttons on each deal card (modal with inline editing).
+- **Companies** — list + detail drill-down (Contacts/Deals/Activity tabs). **NEW:** Edit button (inline modal) to change name/industry/location/status; Delete button with confirmation.
+- **Contacts** — searchable directory; full profile modal (info, inline edit, linked deals, complete interaction history, quick actions). "Export" button opens filtered export panel.
 - **Tasks** — reconnect reminders tied to a contact, grouped Overdue/Due This Week/Later/Done
-- **Contact Export** — dropdown filters (Company, Relationship, Sub-Type [cascades off Relationship], Seniority, Employment Type, Last Contacted) → live match count/preview → download as Excel or CSV, entirely client-side
-- **Interaction logging** — "Log Interaction" opens a real form (type/note/date), feeds both the company Activity tab and each contact's full history
+- **Contact Export** — dropdown filters (Company, Relationship, Sub-Type [cascades], Seniority, Employment Type, Last Contacted) → live match count/preview → Excel or CSV export, entirely client-side
+- **Interaction logging** — "Log Interaction" form (type/note/date), feeds company Activity tab + contact history
+- **Reports** — **NEW:** Monthly pipeline breakdown table (Pipeline Value, Expected/Weighted, Won Value, Deal Count). Summary cards: Total Pipeline, Total Expected, Total Won. For forecasting: "How much closes this month?" or "What's our Q3 pipeline?"
 
-Two-tier contact taxonomy: `relationship` (Client, Prospect, Vendor/Supplier, Partner, Government/Regulator, Employee) + `subType` scoped per relationship, plus flat `seniority` (Entry→C-Suite) and `employmentType` enums. Full table in SPEC.md §2.
+Two-tier contact taxonomy: `relationship` + `subType` scoped per relationship, `seniority` (Entry→C-Suite), `employmentType` enums.
 
-### ✅ HR module
-Tabs: **Overview → Onboarding**
+### ✅ HR module — COMPLETE
+Tabs: **Overview → Directory → Accomplishments → Leave → Onboarding**
 
-- **Overview** — basic stat cards, quick links (not yet functional), a call-out into onboarding
-- **Onboarding** — 7 sections (reading/policy/how-to/video types), each with a completion checkbox, progress bar, and a final acknowledgement gate
+- **Overview** — stat cards (total employees, departments, new hires), call-out to onboarding
+- **Directory** — searchable employee list (name, title, dept, email, phone). **NEW:** Click name → full profile modal with tabs:
+  - **Info tab:** employment details (title, dept, location, employment type, start date, tenure)
+  - **Visa & Dependents tab:** visa status + expiry + sponsor + passport #; dependents list (name, relationship, DOB)
+  - **Accomplishments tab:** searchable certifications (PE, BIM, Safety, etc.) with issuer, date issued, expiry
+  - **Documents tab:** placeholder for Phase 2 (CV, certificates, passport uploads)
+- **Accomplishments** — **NEW:** Global search across all employees. Filter by type (PE License, BIM Cert, Safety Induction, etc.). Shows "Who has a PE license?" or "Who's BIM certified?"
+- **Leave** — Leave Requests form + list view (pending/approved/denied status). **NOTE:** Approval workflow deferred to Phase 2 (needs manager/HR dashboard).
+- **Onboarding** — 7 sections (reading/policy/how-to/video), per-section checkbox + progress bar + final acknowledgement gate
 
 ### 📋 Not yet built (known gaps, roughly in priority order)
-- **No RBAC/permissions enforcement** (role picker is cosmetic) — the one real architectural risk of the UI-first approach, see SPEC.md §5
+- **No RBAC/permissions enforcement** (role picker is cosmetic) — the one real architectural risk of the UI-first approach, see SPEC.md §5. Recommend filtering at API level in Phase 2 (Option 2: everyone sees limited info, HR/Admin see full details).
+- **Leave approval workflow** (form is there, but no approval engine, manager dashboard, or conflict checking — too complex for Phase 1 without backend)
+- **Attendance tracking** (fingerprint/card readers + timesheet — needs backend integration, skipped for Phase 1 demo)
 - Won deals → actual Projects (explicitly deprioritized — "a little big" for now)
-- Edit/delete on companies and deals (Contacts have edit; those don't yet)
-- Email sending (needs a small backend + provider — structurally can't be done client-side)
-- Global search, charts beyond Overview's simple bars, role-based filtered views
+- Email sending (structurally can't be done client-side; needs serverless function + provider)
+- Global search, role-based filtered views
 
 ---
 

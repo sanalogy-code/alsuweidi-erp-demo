@@ -116,18 +116,25 @@ erDiagram
 ### CRM (`pages/CRM.jsx`, all state owned here and passed down)
 
 1. **Overview** (`OverviewView`) — dashboard: stat cards (companies, open pipeline value, weighted expected value, needs-follow-up count, tasks-overdue count), plus widgets: Needs Follow-Up (contacts untouched 14+ days), Reminders (tasks due within 7 days), Closing Soon (deals by close date), Top Clients by value, Pipeline by Stage breakdown.
-2. **Pipeline** (`PipelineView`) — Kanban board by deal stage. Drag-and-drop or a per-card dropdown to change stage. Summary bar: open pipeline, weighted expected, won total, win rate.
-3. **Companies** (`CompaniesView`) — searchable list + detail drill-down per company (Contacts / Deals / Activity tabs). Activity tab shows real logged interactions for that company's contacts, not placeholder text.
-4. **Contacts** (`ContactsView`) — flat searchable directory across every company. Clicking a name opens `ContactDetailModal` (full profile: info, inline edit, linked deals, full interaction history, quick actions). "Export" button opens `ExportContactsModal`.
-5. **Tasks** (`TasksView`) — reconnect reminders tied to a contact, grouped Overdue / Due This Week / Later / Done.
-6. **Export** (`ExportContactsModal`) — filters (multi-select dropdowns: Company, Relationship, Sub-Type [cascading off Relationship], Seniority, Employment Type; single-select: Last Contacted) → live match count + preview → export to `.xlsx` or `.csv` via SheetJS, entirely client-side.
+2. **Pipeline** (`PipelineView`) — Kanban board by deal stage. Drag-and-drop or per-card dropdown to change stage. **NEW:** Time filters (This Month / This Quarter / This Year / All Time) update all metrics dynamically. Edit button (pencil icon) on each card opens `DealEditModal` (edit title/value/stage/probability/close date, or delete with confirmation). Summary bar: open pipeline, weighted expected, won total, win rate.
+3. **Companies** (`CompaniesView`) — searchable list + detail drill-down (Contacts / Deals / Activity tabs). **NEW:** Edit button in company header opens `CompanyEditModal` (edit name/industry/location/status, or delete with confirmation). Activity tab shows real logged interactions.
+4. **Contacts** (`ContactsView`) — searchable directory. Click name → `ContactDetailModal` (info, inline edit, linked deals, full interaction history, quick actions). "Export" button → `ExportContactsModal` (filters + live preview + Excel/CSV export, client-side).
+5. **Tasks** (`TasksView`) — reminders tied to contacts, grouped Overdue / Due This Week / Later / Done.
+6. **Reports** — **NEW:** Monthly pipeline breakdown (table: Pipeline Value, Expected/Weighted, Won Value, Deal Count). Summary cards: Total Pipeline, Total Expected, Total Won. For forecasting: "How much closes this month?" or "What's our Q3 pipeline?"
 
-Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `layered` bumps z-index so a modal opened from inside another modal, e.g. Log Interaction from within Contact Detail, renders on top instead of behind).
+Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `layered` bumps z-index for modals-within-modals, e.g. Log Interaction from Contact Detail renders on top).
 
 ### HR (`pages/HR.jsx`)
 
-1. **Overview** — basic stat cards (dummy: total employees, departments, new hires this month), a call-out into Onboarding, quick links (not yet functional).
-2. **Onboarding** (`OnboardingChecklist`) — 7 sections mixing reading/policy/how-to/video types (`hrData.js`), each expandable with a per-section "I've read/watched this" checkbox, a progress bar, and a final acknowledgement gate that unlocks only once every section is checked.
+1. **Overview** — stat cards (employees, departments, new hires), call-out to Onboarding, quick links (not yet functional).
+2. **Directory** (`EmployeeList`, `EmployeeDetailModal`) — searchable employee list (name, title, dept, email, phone). Click name → full profile modal with tabs:
+   - **Info tab:** employment details (title, dept, location, employment type, start date, tenure)
+   - **Visa & Dependents tab:** visa status + expiry + sponsor + passport #; dependents (name, relationship, DOB)
+   - **Accomplishments tab:** certifications (PE, BIM, Safety, etc.) with issuer, date issued, expiry
+   - **Documents tab:** placeholder for Phase 2 (CV, certs, passport uploads)
+3. **Accomplishments** (`AccomplishmentsSearch`) — **NEW:** Global search + filter across all employees by accomplishment type. Answering "Who has a PE license?" or "Who's BIM certified?" Shows issuer, date, expiry.
+4. **Leave** (`LeaveRequestModal`, `LeaveRequestsList`) — form to request leave (type, dates, reason, auto-calculates days). List view shows all requests (pending/approved/denied). **Note:** approval workflow deferred to Phase 2 (needs manager/HR dashboard + conflict checking).
+5. **Onboarding** (`OnboardingChecklist`) — 7 sections (reading/policy/how-to/video), per-section checkbox + progress bar + final acknowledgement gate.
 
 ---
 
@@ -144,13 +151,14 @@ Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `la
 
 This is the honest risk list, not just a TODO.
 
-- **No RBAC / permissions enforcement.** The role picker at login is cosmetic. The original ERP planning docs (see `ERP_PROJECT_SUMMARY.md`) specced real role-based + user-level-override permissions (marketing read-only, PMs see only their projects, etc.). This is the one area where "UI first, backend later" carries real risk — access control changes *what renders*, not just what an API returns, so retrofitting it onto screens built assuming "show everything" may require rework, not just a new API layer underneath. Plan for this explicitly rather than bolting it on last.
-- **No persistence.** Every add/edit/delete is `setState` on an in-memory array. Refreshing the page resets to seed data. This is fine for a demo, obviously not fine for real use.
-- **No edit/delete on Companies or Deals** (Contacts have edit via `ContactDetailModal`; nothing else does yet).
-- **Won deals don't become Projects.** Explicitly deprioritized by the user as "a little big" for now — a deal that reaches `Won` just sits there with that stage; there's no linked delivery/project entity with its own status, timeline, or team.
-- **No email sending.** Genuinely impossible to do client-side without exposing credentials — needs a small serverless function + an email provider (Resend recommended) whenever this is prioritized. Everything else in this app deliberately avoids needing a backend; this is the one feature that structurally can't.
-- **Leaked credential in git history.** A Supabase `service_role` secret key was committed to this repo before the pivot away from Supabase (`backend/populate_db.py`, now deleted from the working tree but still in history at commit `6985c30`). It needs rotating in the Supabase dashboard regardless of whether Supabase is ever used again — the key is still live until rotated. Not confirmed done as of this writing.
-- **No global search**, no charts/visualizations beyond the simple bar breakdowns on Overview, no role-based filtered views.
+- **No RBAC / permissions enforcement.** The role picker at login is cosmetic. The original ERP planning docs specced real role-based permissions (marketing read-only, PMs see only their projects, etc.). This is the one area where "UI first, backend later" carries real risk — access control changes *what renders*, not just what an API returns, so retrofitting it onto screens built assuming "show everything" may require rework. Recommend Option 2 for Phase 2 backend: everyone sees limited info (name, title, email, phone, location), HR/Admin see full details (visa, dependents, accomplishments, salary-related fields).
+- **No persistence.** Every add/edit/delete is `setState` on in-memory arrays. Refreshing resets to seed data. Fine for Phase 1 demo; Phase 2 backend will fix this.
+- **No Leave approval workflow.** Form exists to request leave, but no approval engine, manager/HR dashboard, or conflict checking (preventing 5 people from the same team being out simultaneously). Too complex for Phase 1 without backend; defer to Phase 2.
+- **No Attendance tracking.** Fingerprint/card readers + timesheet integration require backend (biometric API, hours validation against projects). Skipped Phase 1.
+- **Won deals don't become Projects.** Explicitly deprioritized. A deal that reaches `Won` just sits there; no linked delivery/project entity with timeline/team/budget.
+- **No email sending.** Structurally can't be done client-side — needs serverless function + provider (Resend recommended).
+- **Leaked credential in git history.** Supabase `service_role` key in `backend/populate_db.py` (commit `6985c30`). Needs rotating in Supabase dashboard — the key is still live until rotated. Not confirmed done as of this writing.
+- **No global search**, no charts beyond Overview's bar breakdowns.
 
 ---
 
