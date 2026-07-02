@@ -1,7 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, Home, TrendingUp, Building2, Users, CheckSquare, BarChart3 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Modal from '../components/crm/Modal'
+import CreateProjectFromDealModal from '../components/projects/CreateProjectFromDealModal'
+import { EMPLOYEES } from '../data/hrData'
 import OverviewView from '../components/crm/OverviewView'
 import CompaniesView from '../components/crm/CompaniesView'
 import ContactsView from '../components/crm/ContactsView'
@@ -14,7 +17,9 @@ import DealEditModal from '../components/crm/DealEditModal'
 import ExportContactsModal from '../components/crm/ExportContactsModal'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
 
-export default function CRM({ user, onLogout }) {
+export default function CRM({ user, onLogout, projects = [], onAddProject }) {
+  const navigate = useNavigate()
+  const [projectDeal, setProjectDeal] = useState(null)
   const [companies, setCompanies] = useState(INITIAL_COMPANIES)
   const [contacts, setContacts] = useState(INITIAL_CONTACTS)
   const [deals, setDeals] = useState(INITIAL_DEALS)
@@ -257,9 +262,11 @@ export default function CRM({ user, onLogout }) {
 
         {tab === 'pipeline' && (
           <PipelineView
-            deals={deals} companies={companies} contacts={contacts}
+            deals={deals} companies={companies} contacts={contacts} projects={projects}
             onMoveStage={moveStage} onAddDeal={() => setShowAddDeal(true)}
             onJumpToCompany={jumpToCompany} onEditDeal={setEditingDealId}
+            onCreateProject={setProjectDeal}
+            onOpenProject={(project) => navigate('/projects', { state: { openProjectId: project.id } })}
           />
         )}
 
@@ -532,6 +539,18 @@ export default function CRM({ user, onLogout }) {
         <ExportContactsModal
           contacts={contacts} companies={companies}
           onClose={() => setShowExportContacts(false)}
+        />
+      )}
+
+      {projectDeal && (
+        <CreateProjectFromDealModal
+          deal={projectDeal}
+          company={companies.find((c) => c.id === projectDeal.companyId)}
+          employees={EMPLOYEES}
+          existingProjects={projects}
+          onClose={() => setProjectDeal(null)}
+          onCreate={onAddProject}
+          onGoToProject={(project) => navigate('/projects', { state: { openProjectId: project.id } })}
         />
       )}
     </div>

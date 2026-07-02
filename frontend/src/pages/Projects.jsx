@@ -1,11 +1,11 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { LayoutDashboard, FolderKanban } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import ProjectsDashboard from '../components/projects/ProjectsDashboard'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
-import { PROJECTS } from '../data/projectsData'
 import { EMPLOYEES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 
@@ -14,10 +14,13 @@ const NAV = [
   { key: 'portfolio', label: 'Portfolio', icon: FolderKanban },
 ]
 
-export default function Projects({ user, onLogout }) {
+export default function Projects({ user, onLogout, projects = [] }) {
+  const location = useLocation()
   const [view, setView] = useState('dashboard')
-  const [projects] = useState(PROJECTS)
-  const [selectedProject, setSelectedProject] = useState(null)
+  // CRM's "view project" / "open in Projects" hands over a project id via router state
+  const [selectedProject, setSelectedProject] = useState(
+    () => projects.find((p) => p.id === location.state?.openProjectId) || null
+  )
   const [selectedEmployee, setSelectedEmployee] = useState(null)
 
   const canViewSensitive = SENSITIVE_VIEW_ROLES.includes(user?.role)

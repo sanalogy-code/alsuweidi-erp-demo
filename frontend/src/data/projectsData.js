@@ -128,7 +128,7 @@ export const PROJECTS = [
     supervision: null,
   },
   {
-    id: 8, projectNo: 'P-2650', name: 'Pump Station Upgrade — Ruwais', employer: 'ADNOC', companyId: 1, owner: 'ADNOC',
+    id: 8, projectNo: 'P-2650', name: 'Pump Station Upgrade — Ruwais', employer: 'ADNOC', companyId: 1, owner: 'ADNOC', dealId: 101,
     type: 'Buildings', mainFunction: 'Industrial', location: 'Western Region', sector: 'Ruwais', plot: 'RW-19', builtupArea: 3600,
     description: 'Construction supervision of pump station upgrade — the delivery side of the CRM-won deal.',
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,

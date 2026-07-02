@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Plus, Pencil } from 'lucide-react'
+import { Plus, Pencil, FolderKanban } from 'lucide-react'
 import { STAGES, STAGE_COLOR, formatCurrencyShort } from '../../data/crmData'
 
-export default function PipelineView({ deals, companies, contacts, onMoveStage, onAddDeal, onJumpToCompany, onEditDeal }) {
+export default function PipelineView({ deals, companies, contacts, projects = [], onMoveStage, onAddDeal, onJumpToCompany, onEditDeal, onCreateProject, onOpenProject }) {
   const [dragId, setDragId] = useState(null)
   const [timeRange, setTimeRange] = useState('all')
   const [customStart, setCustomStart] = useState('')
@@ -235,6 +235,24 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
                       >
                         {STAGES.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
+                      {deal.stage === 'Won' && (() => {
+                        const project = projects.find((p) => p.dealId === deal.id)
+                        return project ? (
+                          <button
+                            onClick={() => onOpenProject?.(project)}
+                            className="mt-2 w-full text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded px-1.5 py-1.5 hover:bg-green-100 flex items-center justify-center gap-1 transition"
+                          >
+                            <FolderKanban size={12} /> {project.projectNo} — view project
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => onCreateProject?.(deal)}
+                            className="mt-2 w-full text-xs font-medium text-white bg-brand rounded px-1.5 py-1.5 hover:bg-brand-dark flex items-center justify-center gap-1 transition"
+                          >
+                            <FolderKanban size={12} /> Create project
+                          </button>
+                        )
+                      })()}
                     </div>
                   )
                 })}
