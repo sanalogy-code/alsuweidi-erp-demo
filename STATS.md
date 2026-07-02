@@ -9,17 +9,18 @@ The "how long did this actually take" log — numbers pulled from git history, f
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Feature-complete demo** | 2 July 2026, 22:07 |
-| **Elapsed time** | ~38 hours, across **2 working days** |
-| **Commits** | 88 (30 on day one, 58 on day two) |
-| **Deploys to the live site** | every push auto-deploys — ~88 |
-| **App code** | ~6,500 lines across 32 components + 5 pages |
+| **Three modules live (CRM + HR + Projects)** | 2 July 2026, 22:48 |
+| **Elapsed time** | ~39 hours, across **2 working days** |
+| **Commits** | 90 (30 on day one, 60 on day two) |
+| **Deploys to the live site** | every push auto-deploys — ~90 |
+| **App code** | ~7,100 lines across 35 components + 6 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 2 days
 
 - **CRM module** — pipeline kanban with drag & drop, companies, contacts with two-tier taxonomy, tasks, interaction logging, filtered Excel/CSV export, date-filtered reports with download
 - **HR module** — employee directory with full profiles (visa/passport/Emirates ID, dependents, compensation), org chart, leave with overlap calendar and balances, certificate requests with auto-generated English/Arabic letters, complaints (incl. anonymous), referrals & internal jobs, payroll with WPS workflow and payslips, attendance dashboard, public holidays feeding the home dashboard, renewals radar (visa/passport/contract/insurance expiries), onboarding checklist, employee self-service
+- **Projects module** — the design & supervision portfolio, restructured from the old ERP's 40-column export into a filterable list + full project record with stage pipeline, discipline scope, approved-vs-actual progress, and role-gated financials
 - **Role-based views** — employees, HR, and management each see different navigation and data
 - **Home dashboard** — module launcher, announcements, holidays tile, build-number card
 

@@ -11,8 +11,8 @@ If you're a developer, an AI agent, or anyone picking this project up cold: read
 ## 1. Architecture
 
 - **Frontend**: React 18 + Vite + Tailwind CSS + React Router. No backend, no API calls, no database.
-- **State**: all data lives in `useState` at the page level (`pages/CRM.jsx`, `pages/HR.jsx`) and is passed down as props. Refreshing the page resets everything to the seed data in `data/*.js`. This is intentional for now — see §5.
-- **Auth**: cosmetic only. Login is a name + role dropdown, no password, nothing sent anywhere. The `role` field is stored on the user object but **does not currently filter or restrict anything** — see §5.
+- **State**: all data lives in `useState` at the page level (`pages/CRM.jsx`, `pages/HR.jsx`, `pages/Projects.jsx`; public holidays are lifted to `App.jsx`) and is passed down as props. Refreshing the page resets everything to the seed data in `data/*.js`. This is intentional for now — see §5.
+- **Auth**: cosmetic only. Login is a name + role dropdown, no password, nothing sent anywhere. The `role` field **does** drive what renders (sensitive tabs, HR workspace, project financials — see role groups in §2), but purely client-side; anyone can pick any role — see §5.
 - **Hosting**: [github.com/sanalogy-code/alsuweidi-erp-demo](https://github.com/sanalogy-code/alsuweidi-erp-demo) → Cloudflare Pages, auto-deploys on push to `master`.
 - **Dependencies of note**: `lucide-react` (icons), `xlsx` (Excel/CSV export, lazy-loaded via dynamic `import()` so it doesn't bloat the main bundle — installed from SheetJS's own CDN build, not the npm registry package, which has two unpatched CVEs that don't apply to write-only usage but aren't worth shipping anyway).
 
@@ -139,9 +139,22 @@ Since the passport/visa/EID split, employees and each dependent carry their own 
 | `PAYROLL_MONTHS` / `PAYROLL_ADJUSTMENTS` | per-month overtime/deduction adjustments layered on `compensation`; WPS run status draft → submitted → paid |
 | `ATTENDANCE_TODAY` | illustrative snapshot (present/site/on_leave/absent, check-ins, weekly hours) — real feed is a Phase 2 backend item |
 
+### Projects model (`frontend/src/data/projectsData.js`)
+
+Modeled on the column structure of the company's existing ERP export (140 projects × 40 flat columns) but normalized: the old export flattens three records into one row, so half its columns are N/A for any project. Here a `PROJECT` is one core record plus **optional `design` and `supervision` sub-records** — scope-less sections simply don't exist. All seed projects are invented; no real client data was copied.
+
+| Piece | Fields / notes |
+|---|---|
+| Core | `projectNo, name, employer, companyId (FK → CRM company, nullable), owner, type (Buildings/Infrastructure/Transportation/Secondment), mainFunction, location, sector (free text), plot, builtupArea, description, generalStatus (In Progress/On Hold/Completed), fund, contractType, contractSigned, loaObtained, contractorName` |
+| Money (sensitive) | `contractValue` (fees) and `constructionCost`, AED — the real export strips these; here they're role-gated |
+| People | `dpmId` / `cpmId` — FKs to HR `EMPLOYEES` |
+| Stages | `stagesInvolved` (subset of the 9-stage pipeline: Data Collection → Concept → Schematic → Detailed → Tender Docs → IFC → Tendering → Construction → D&L) + `currentStage` — the old ERP stores this as a comma-joined string |
+| `design` (nullable) | `{ sow: [disciplines from DESIGN_DISCIPLINES], status, outputFormat (CAD/BIM/CAD+BIM), startYear, completionYear, financialStatus (5-value incl. dispute states), payStatus }` |
+| `supervision` (nullable) | `{ coverage (Full/Partial), status, payStatus, contractualCompletion, estimatedCompletion, approvedPct, actualPct, startYear, completionYear }` — approved vs actual is the behind-schedule signal |
+
 ### Role groups (`dashboardData.js`)
 
-`HR_STAFF_ROLES = ['hr', 'admin']` (process requests: inbox, certificates, complaints, holidays). `SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']` (view sensitive data: visa/dependents/compensation tabs, renewals, payroll, attendance, leave planner). Client-side gating only — see §5.
+`HR_STAFF_ROLES = ['hr', 'admin']` (process requests: inbox, certificates, complaints, holidays). `SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']` (view sensitive data: visa/dependents/compensation tabs, renewals, payroll, attendance, leave planner, project financials). Client-side gating only — see §5.
 
 ---
 
@@ -186,6 +199,17 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
 
 **Certificate letters** (`CertificateLetterModal` + `data/certificateTemplates.js`): six UAE letter types (salary, employment, salary transfer, NOC, embassy, experience) with suggested wording auto-filled from the employee record in English/Arabic/bilingual; HR edits freely, prints to PDF on letterhead (hidden-iframe print), Zoho Sign step is a mocked workflow preview pending the Phase 2 backend.
 
+### Projects (`pages/Projects.jsx`)
+
+1. **Portfolio** (`ProjectList`) — deliberately the anti-CSV: seven columns (no, name + client, type, scope, current stage, DPM/CPM, status) with type/scope/status/location filters, search, and a "My projects" toggle (matches the logged-in name against DPM/CPM). Everything else lives in the drill-in.
+2. **Project record** (`ProjectDetailModal`) — header with status chip and the 9-stage pipeline as a visual strip (`StagePipeline`; out-of-scope stages muted). Tabs render conditionally:
+   - **Overview** — always; description, function, contract type, fund, sector/plot/area, contract & LOA state, contractor
+   - **Design** — only if the project has design scope; discipline chips, output format, years, scope status
+   - **Supervision** — only if supervised; coverage, contractual vs estimated completion (late dates in red), approved-vs-actual progress bars with a "N pts behind plan" flag
+   - **Financials** — `SENSITIVE_VIEW_ROLES` only; contract value, construction cost, design fee financial status (disputes highlighted), payment statuses
+   - **Team** — DPM/CPM open the full HR `EmployeeDetailModal` (cross-module); employers matching CRM companies get a "CRM client" tag
+3. Not yet built: portfolio dashboard, won-deal → project creation (see §5).
+
 ---
 
 ## 4. UI Conventions
@@ -208,7 +232,7 @@ This is the honest risk list, not just a TODO.
 - **Zoho Sign is mocked.** The certificate-letter flow ends at print-to-PDF; the e-signature step is a workflow preview because API credentials can't live in a frontend-only app. Needs a small serverless function in Phase 2.
 - **No document storage.** CVs, passport scans, signed letters — the Documents tab and candidate CV upload are placeholders pending Phase 2 file storage.
 - **Appraisals not started** — waiting on a specification (cycle, reviewers, rating model).
-- **Won deals don't become Projects.** Explicitly deprioritized. A deal that reaches `Won` just sits there; no linked delivery/project entity with timeline/team/budget.
+- **Won deals don't become Projects yet.** The Projects module now exists (portfolio + full record), but a deal that reaches `Won` in CRM still just sits there — the "create project from won deal" handoff is the next planned link, no longer deprioritized.
 - **No email sending / notifications.** Structurally can't be done client-side — needs serverless function + provider (Resend recommended). Increasingly relevant now that there are approval flows people would expect to be notified about.
 - **Leaked credential in git history.** Supabase `service_role` key in `backend/populate_db.py` (commit `6985c30`). Needs rotating in Supabase dashboard — the key is still live until rotated. Not confirmed done as of this writing.
 - **No global search**, no charts beyond Overview's bar breakdowns.

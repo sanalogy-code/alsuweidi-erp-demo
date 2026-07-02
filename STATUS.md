@@ -2,11 +2,11 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-02 (end of day — HR expansion wave + sidebar navigation redesign, now applied to CRM too)
+**Last updated:** 2026-07-02 (late evening — Projects module live: portfolio + full project record)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed.
 
-**Phase 1 Status:** Feature-complete (CRM + full HR suite). Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md) — headline: **2 working days, 86 commits, AED 0 infrastructure**.
+**Phase 1 Status:** Three modules live — CRM, full HR suite, and Projects (portfolio + record; dashboard next). Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md) — headline: **2 working days, 90 commits, AED 0 infrastructure**.
 
 ---
 
@@ -62,12 +62,21 @@ Redesigned from 11 flat tabs into a **grouped sidebar with two lenses** — empl
 
 **Certificate letters:** six UAE letter types (salary, employment, salary transfer, NOC, embassy, experience) auto-drafted from the employee record in English/Arabic/bilingual — HR edits, prints to PDF on letterhead, letter saved on the request. Zoho Sign step is mocked pending Phase 2.
 
+### ✅ Projects module — LIVE (portfolio + record; dashboard next)
+
+Modeled on the structure of the company's existing ERP export (140 projects × 40 unreadable flat columns) but normalized — a project is one core record plus optional design and supervision sub-records, so the N/A noise is structurally gone. All 12 seed projects are invented.
+
+- **Portfolio** — seven-column list (no, name + client, type, scope, stage, DPM/CPM, status) with type/scope/status/location filters and a "My projects" toggle
+- **Project record** — 9-stage delivery pipeline as a visual strip; Design tab (discipline chips, CAD/BIM) and Supervision tab (approved vs actual % with behind-plan flag, late completion highlighted) only render where the project has that scope
+- **Financials** — contract value, construction cost, design-fee disputes, payment statuses — **HR/Admin/Management only**, mirroring how the real export strips those columns
+- **Cross-module links** — DPM/CPM open the HR profile; employers matching CRM companies are tagged "CRM client"
+
 ### 📋 Not yet built (known gaps, roughly in priority order)
 - **RBAC is prototyped, not enforced** — the UI genuinely gates by role now (sensitive tabs, HR workspace), which doubles as the Phase 2 access-control spec, but it's client-side against a password-less login. Real enforcement (auth + API filtering) is the first backend job — see SPEC.md §5.
 - **Leave approval is single-step** — approve/deny + overlap warnings exist; manager-first chains, notifications, and hard conflict blocking are Phase 2.
 - **Attendance device feed + project timesheets** — dashboard is mocked; fingerprint/biometric integration and the weekly project-linked timesheet module (modeled on the current external system) need the backend.
 - **Zoho Sign integration** (mocked), **document/CV storage** (placeholders), **appraisals** (awaiting spec — cycle, reviewers, rating model).
-- Won deals → actual Projects (explicitly deprioritized — "a little big" for now)
+- Won deals → actual Projects (module now exists; the CRM handoff link is next on the list, after the projects dashboard)
 - Email sending / notifications (structurally can't be done client-side; needs serverless function + provider)
 - Global search
 
