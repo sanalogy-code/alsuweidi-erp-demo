@@ -111,13 +111,13 @@ export const LEAVE_TYPES = ['Vacation', 'Sick', 'Unpaid', 'Bereavement', 'Parent
 export const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Secondment', 'Intern']
 
 export const LEAVE_REQUESTS = [
-  { id: 1, employeeId: 1, employeeName: 'Osama Hussain', type: 'Vacation', startDate: '2026-07-15', endDate: '2026-07-22', days: 8, reason: 'Summer holiday', status: 'approved', approvedBy: 'Layla Al Mazrouei', approvedDate: '2026-06-28' },
-  { id: 2, employeeId: 5, employeeName: 'Layla Al Mazrouei', type: 'Sick', startDate: '2026-07-08', endDate: '2026-07-08', days: 1, reason: 'Medical appointment', status: 'pending', approvedBy: null, approvedDate: null },
-  { id: 3, employeeId: 2, employeeName: 'Naseeb Shaheen', type: 'Vacation', startDate: '2026-08-01', endDate: '2026-08-15', days: 15, reason: 'Eid holiday', status: 'pending', approvedBy: null, approvedDate: null },
-  { id: 4, employeeId: 8, employeeName: 'Hassan Al Shamsi', type: 'Vacation', startDate: '2026-07-20', endDate: '2026-07-24', days: 5, reason: 'Family trip', status: 'pending', approvedBy: null, approvedDate: null },
-  { id: 5, employeeId: 10, employeeName: 'Samir Al Mazrouei', type: 'Sick', startDate: '2026-07-06', endDate: '2026-07-07', days: 2, reason: 'Flu', status: 'approved', approvedBy: 'Layla Al Mazrouei', approvedDate: '2026-07-01' },
-  { id: 6, employeeId: 7, employeeName: 'Fatima Al Mansouri', type: 'Vacation', startDate: '2026-07-27', endDate: '2026-07-31', days: 5, reason: 'Short break', status: 'approved', approvedBy: 'Layla Al Mazrouei', approvedDate: '2026-06-30' },
-  { id: 7, employeeId: 3, employeeName: 'Mohammad Kubba', type: 'Vacation', startDate: '2026-07-29', endDate: '2026-08-04', days: 7, reason: 'Family visit abroad', status: 'pending', approvedBy: null, approvedDate: null },
+  { id: 1, employeeId: 1, employeeName: 'Osama Hussain', type: 'Vacation', startDate: '2026-07-15', endDate: '2026-07-22', days: 8, reason: 'Summer holiday', status: 'approved', approvedBy: 'Layla Al Mazrouei', approvedDate: '2026-06-28', requestedDate: '2026-06-20' },
+  { id: 2, employeeId: 5, employeeName: 'Layla Al Mazrouei', type: 'Sick', startDate: '2026-07-08', endDate: '2026-07-08', days: 1, reason: 'Medical appointment', status: 'pending', approvedBy: null, approvedDate: null, requestedDate: '2026-07-01' },
+  { id: 3, employeeId: 2, employeeName: 'Naseeb Shaheen', type: 'Vacation', startDate: '2026-08-01', endDate: '2026-08-15', days: 15, reason: 'Eid holiday', status: 'pending', approvedBy: null, approvedDate: null, requestedDate: '2026-06-28' },
+  { id: 4, employeeId: 8, employeeName: 'Hassan Al Shamsi', type: 'Vacation', startDate: '2026-07-20', endDate: '2026-07-24', days: 5, reason: 'Family trip', status: 'pending', approvedBy: null, approvedDate: null, requestedDate: '2026-06-30' },
+  { id: 5, employeeId: 10, employeeName: 'Samir Al Mazrouei', type: 'Sick', startDate: '2026-07-06', endDate: '2026-07-07', days: 2, reason: 'Flu', status: 'approved', approvedBy: 'Layla Al Mazrouei', approvedDate: '2026-07-01', requestedDate: '2026-06-30' },
+  { id: 6, employeeId: 7, employeeName: 'Fatima Al Mansouri', type: 'Vacation', startDate: '2026-07-27', endDate: '2026-07-31', days: 5, reason: 'Short break', status: 'approved', approvedBy: 'Layla Al Mazrouei', approvedDate: '2026-06-30', requestedDate: '2026-06-25' },
+  { id: 7, employeeId: 3, employeeName: 'Mohammad Kubba', type: 'Vacation', startDate: '2026-07-29', endDate: '2026-08-04', days: 7, reason: 'Family visit abroad', status: 'pending', approvedBy: null, approvedDate: null, requestedDate: '2026-07-01' },
 ]
 
 // UAE public holidays. Islamic dates are announced on moon sighting, so entries start as

@@ -33,6 +33,7 @@ export default function LeaveRequestModal({ employee, onClose, onSubmit }) {
       days,
       reason,
       status: 'pending',
+      requestedDate: new Date().toISOString().slice(0, 10),
     })
     onClose()
   }

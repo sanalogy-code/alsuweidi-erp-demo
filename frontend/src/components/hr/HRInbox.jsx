@@ -1,0 +1,136 @@
+import { Inbox, FileText } from 'lucide-react'
+import { CERTIFICATE_TYPES, OPEN_POSITIONS } from '../../data/hrData'
+
+const KIND_CHIP = {
+  leave: 'bg-amber-100 text-amber-700',
+  certificate: 'bg-blue-100 text-blue-700',
+  concern: 'bg-red-100 text-red-700',
+  candidate: 'bg-green-100 text-green-700',
+}
+
+const KIND_LABEL = { leave: 'Leave', certificate: 'Certificate', concern: 'Concern', candidate: 'Candidate' }
+
+const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+const certLabel = (v) => CERTIFICATE_TYPES.find((t) => t.value === v)?.label || v
+
+const daysAgo = (d) => {
+  const n = Math.floor((new Date() - new Date(d)) / (1000 * 60 * 60 * 24))
+  return n <= 0 ? 'today' : `${n}d ago`
+}
+
+// One queue of everything waiting on HR, oldest first — replaces per-type badge chasing.
+export function buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }) {
+  return [
+    ...leaveRequests.filter((r) => r.status === 'pending').map((r) => ({
+      key: `l${r.id}`, kind: 'leave', date: r.requestedDate || r.startDate, ref: r,
+      text: `${r.employeeName} — ${r.type} ${fmt(r.startDate)}–${fmt(r.endDate)} (${r.days}d)`,
+      sub: r.reason || '',
+    })),
+    ...certificateRequests.filter((r) => r.status === 'pending').map((r) => ({
+      key: `c${r.id}`, kind: 'certificate', date: r.requestedDate, ref: r,
+      text: `${r.employeeName} — ${certLabel(r.type)} for ${r.addressedTo}`,
+      sub: r.nocObject || r.purpose || '',
+    })),
+    ...complaints.filter((c) => c.status === 'submitted' || c.status === 'under_review').map((c) => ({
+      key: `x${c.id}`, kind: 'concern', date: c.submittedDate, ref: c,
+      text: `${c.anonymous ? 'Anonymous' : c.submittedBy} — ${c.category}`,
+      sub: c.description,
+    })),
+    ...candidates.filter((c) => c.status === 'new').map((c) => ({
+      key: `p${c.id}`, kind: 'candidate', date: c.submittedDate, ref: c,
+      text: `${c.candidateName} — ${OPEN_POSITIONS.find((p) => p.id === c.positionId)?.title || 'position'} (${c.kind === 'referral' ? `referred by ${c.referredBy}` : 'internal applicant'})`,
+      sub: c.note || '',
+    })),
+  ].sort((a, b) => a.date.localeCompare(b.date))
+}
+
+export default function HRInbox({ leaveRequests, certificateRequests, complaints, candidates, onLeaveAction, onPrepareCert, onRejectCert, onAdvanceComplaint, onAdvanceCandidate }) {
+  const items = buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates })
+  const issuedLetters = certificateRequests
+    .filter((r) => r.status === 'issued' && r.letterText)
+    .sort((a, b) => (b.resolvedDate || '').localeCompare(a.resolvedDate || ''))
+    .slice(0, 5)
+
+  const actionsFor = (item) => {
+    if (item.kind === 'leave') return (
+      <>
+        <button onClick={() => onLeaveAction(item.ref.id, 'approved')} className="text-xs font-medium text-green-700 hover:underline">Approve</button>
+        <button onClick={() => onLeaveAction(item.ref.id, 'denied')} className="text-xs font-medium text-red-600 hover:underline">Deny</button>
+      </>
+    )
+    if (item.kind === 'certificate') return (
+      <>
+        <button onClick={() => onPrepareCert(item.ref)} className="text-xs font-medium text-brand hover:underline">Prepare Letter</button>
+        <button onClick={() => onRejectCert(item.ref.id)} className="text-xs font-medium text-red-600 hover:underline">Reject</button>
+      </>
+    )
+    if (item.kind === 'concern') return item.ref.status === 'submitted' ? (
+      <button onClick={() => onAdvanceComplaint(item.ref.id, 'under_review')} className="text-xs font-medium text-brand hover:underline">Start Review</button>
+    ) : (
+      <button onClick={() => onAdvanceComplaint(item.ref.id, 'resolved')} className="text-xs font-medium text-green-700 hover:underline">Mark Resolved</button>
+    )
+    if (item.kind === 'candidate') return (
+      <>
+        <button onClick={() => onAdvanceCandidate(item.ref.id, 'interviewing')} className="text-xs font-medium text-brand hover:underline">Interview</button>
+        <button onClick={() => onAdvanceCandidate(item.ref.id, 'rejected')} className="text-xs font-medium text-red-600 hover:underline">Reject</button>
+      </>
+    )
+    return null
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+            <Inbox size={15} className="text-brand" /> Inbox ({items.length})
+          </h2>
+          <p className="text-xs text-gray-500">Everything waiting on HR — leave, certificates, concerns, and candidates — oldest first.</p>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="p-8 text-center text-sm text-gray-400">Inbox zero — nothing waiting on HR.</div>
+        ) : (
+          <div className="divide-y divide-gray-100">
+            {items.map((item) => (
+              <div key={item.key} className="px-4 py-3 flex items-center justify-between gap-4">
+                <div className="flex items-start gap-3 min-w-0">
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 mt-0.5 ${KIND_CHIP[item.kind]}`}>{KIND_LABEL[item.kind]}</span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">{item.text}</div>
+                    {item.sub && <div className="text-xs text-gray-500 truncate">{item.sub}</div>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-xs text-gray-400 whitespace-nowrap">{daysAgo(item.date)}</span>
+                  <div className="flex gap-2">{actionsFor(item)}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {issuedLetters.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-800">Recently issued letters</h3>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {issuedLetters.map((r) => (
+              <div key={r.id} className="px-4 py-2.5 flex items-center justify-between gap-4 text-sm">
+                <span className="text-gray-700 truncate">{r.employeeName} — {certLabel(r.type)} ({r.language})</span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-xs text-gray-400">{r.resolvedDate ? fmt(r.resolvedDate) : ''}</span>
+                  <button onClick={() => onPrepareCert(r)} className="text-xs font-medium text-brand hover:underline flex items-center gap-1">
+                    <FileText size={12} /> View Letter
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
