@@ -8,6 +8,7 @@ import ContactsView from '../components/crm/ContactsView'
 import PipelineView from '../components/crm/PipelineView'
 import TasksView from '../components/crm/TasksView'
 import ContactDetailModal from '../components/crm/ContactDetailModal'
+import ExportContactsModal from '../components/crm/ExportContactsModal'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
 
 const TABS = [
@@ -29,6 +30,7 @@ export default function CRM({ user, onLogout }) {
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [search, setSearch] = useState('')
   const [viewContactId, setViewContactId] = useState(null)
+  const [showExportContacts, setShowExportContacts] = useState(false)
 
   const [showAddCompany, setShowAddCompany] = useState(false)
   const [showAddContact, setShowAddContact] = useState(false)
@@ -206,6 +208,7 @@ export default function CRM({ user, onLogout }) {
             contacts={contacts} companies={companies} deals={deals} interactions={interactions}
             onAddContact={openAddContact} onLogInteraction={openLogInteraction} onAddTask={openAddTask}
             onJumpToCompany={jumpToCompany} onViewContact={setViewContactId}
+            onExport={() => setShowExportContacts(true)}
           />
         )}
 
@@ -427,6 +430,13 @@ export default function CRM({ user, onLogout }) {
           onJumpToCompany={jumpToCompanyFromDetail}
           onLogInteraction={openLogInteraction}
           onAddTask={openAddTask}
+        />
+      )}
+
+      {showExportContacts && (
+        <ExportContactsModal
+          contacts={contacts} companies={companies}
+          onClose={() => setShowExportContacts(false)}
         />
       )}
     </div>

@@ -9,18 +9,37 @@ export const INITIAL_COMPANIES = [
   { id: 3, name: 'DEWA', industry: 'Utilities', location: 'Dubai', status: 'Active' },
   { id: 4, name: 'Emaar Properties', industry: 'Real Estate', location: 'Dubai', status: 'Negotiation' },
   { id: 5, name: 'DP World', industry: 'Logistics', location: 'Dubai', status: 'Prospect' },
+  { id: 6, name: 'Gulf Steel Fabrication', industry: 'Industrial Supply', location: 'Sharjah', status: 'Active' },
 ]
 
+// Two-tier contact taxonomy. relationship = tier 1, subType = tier 2 (scoped to a relationship).
+export const RELATIONSHIP_TYPES = ['Client', 'Prospect', 'Vendor/Supplier', 'Partner', 'Government/Regulator', 'Employee']
+
+export const SUBTYPES_BY_RELATIONSHIP = {
+  'Client': ['Decision Maker', 'Technical Contact', 'Procurement', 'End User'],
+  'Prospect': ['Cold Lead', 'Warm Lead', 'Referral'],
+  'Vendor/Supplier': ['Subcontractor', 'Material Supplier', 'Software Vendor'],
+  'Partner': ['JV Partner', 'Strategic Alliance'],
+  'Government/Regulator': ['Regulator', 'Client Agency', 'Licensing Authority'],
+  'Employee': ['Secondment', 'Site-Based', 'HQ'],
+}
+
+export const SENIORITY_LEVELS = ['Entry', 'Senior', 'Manager', 'Director', 'VP', 'C-Suite']
+
+export const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contractor', 'Consultant', 'Freelance']
+
 export const INITIAL_CONTACTS = [
-  { id: 1, companyId: 1, name: 'Ahmed Al Mazrouei', title: 'Engineering Manager', email: 'ahmed@adnoc.ae', phone: '+971-2-401-2201', lastContact: '2026-06-28', notes: 'Discussed pump specifications' },
-  { id: 2, companyId: 1, name: 'Fatima Al Mansoori', title: 'Project Lead', email: 'fatima@adnoc.ae', phone: '+971-2-401-2245', lastContact: '2026-06-20', notes: 'Requested proposal for Q3 project' },
-  { id: 3, companyId: 2, name: 'Mohammed Al Ketbi', title: 'Technical Director', email: 'mkb@etihad.ae', phone: '+971-2-599-1102', lastContact: '2026-06-25', notes: 'Maintenance contract renewal' },
-  { id: 4, companyId: 2, name: 'Noura Al Zaabi', title: 'Procurement Manager', email: 'noura@etihad.ae', phone: '+971-2-599-1187', lastContact: '2026-06-10', notes: 'Reviewing GSE upgrade scope' },
-  { id: 5, companyId: 3, name: 'Sara Al Mansoori', title: 'Operations Manager', email: 'sara@dewa.gov.ae', phone: '+971-4-324-6610', lastContact: '2026-06-22', notes: 'Follow up on grid upgrade project' },
-  { id: 6, companyId: 3, name: 'Khalid Al Shehhi', title: 'Procurement', email: 'khalid@dewa.gov.ae', phone: '+971-4-324-6688', lastContact: '2026-05-15', notes: 'Waiting for RFQ approval' },
-  { id: 7, companyId: 4, name: 'Layla Al Mansouri', title: 'VP Engineering', email: 'layla@emaar.ae', phone: '+971-4-367-3300', lastContact: '2026-06-15', notes: 'Proposal under review' },
-  { id: 8, companyId: 4, name: 'Rashid Al Nuaimi', title: 'Finance Director', email: 'rashid@emaar.ae', phone: '+971-4-367-3355', lastContact: null, notes: 'Introduced via Layla, not yet contacted directly' },
-  { id: 9, companyId: 5, name: 'Omar Al Mazrouei', title: 'CEO', email: 'omar@dpworld.ae', phone: '+971-4-881-5200', lastContact: null, notes: 'Cold prospect - needs warm introduction' },
+  { id: 1, companyId: 1, name: 'Ahmed Al Mazrouei', title: 'Engineering Manager', email: 'ahmed@adnoc.ae', phone: '+971-2-401-2201', lastContact: '2026-06-28', notes: 'Discussed pump specifications', relationship: 'Client', subType: 'Technical Contact', seniority: 'Manager', employmentType: 'Full-time' },
+  { id: 2, companyId: 1, name: 'Fatima Al Mansoori', title: 'Project Lead', email: 'fatima@adnoc.ae', phone: '+971-2-401-2245', lastContact: '2026-06-20', notes: 'Requested proposal for Q3 project', relationship: 'Client', subType: 'Technical Contact', seniority: 'Senior', employmentType: 'Full-time' },
+  { id: 3, companyId: 2, name: 'Mohammed Al Ketbi', title: 'Technical Director', email: 'mkb@etihad.ae', phone: '+971-2-599-1102', lastContact: '2026-06-25', notes: 'Maintenance contract renewal', relationship: 'Client', subType: 'Decision Maker', seniority: 'Director', employmentType: 'Full-time' },
+  { id: 4, companyId: 2, name: 'Noura Al Zaabi', title: 'Procurement Manager', email: 'noura@etihad.ae', phone: '+971-2-599-1187', lastContact: '2026-06-10', notes: 'Reviewing GSE upgrade scope', relationship: 'Client', subType: 'Procurement', seniority: 'Manager', employmentType: 'Full-time' },
+  { id: 5, companyId: 3, name: 'Sara Al Mansoori', title: 'Operations Manager', email: 'sara@dewa.gov.ae', phone: '+971-4-324-6610', lastContact: '2026-06-22', notes: 'Follow up on grid upgrade project', relationship: 'Government/Regulator', subType: 'Client Agency', seniority: 'Manager', employmentType: 'Full-time' },
+  { id: 6, companyId: 3, name: 'Khalid Al Shehhi', title: 'Procurement', email: 'khalid@dewa.gov.ae', phone: '+971-4-324-6688', lastContact: '2026-05-15', notes: 'Waiting for RFQ approval', relationship: 'Government/Regulator', subType: 'Regulator', seniority: 'Entry', employmentType: 'Full-time' },
+  { id: 7, companyId: 4, name: 'Layla Al Mansouri', title: 'VP Engineering', email: 'layla@emaar.ae', phone: '+971-4-367-3300', lastContact: '2026-06-15', notes: 'Proposal under review', relationship: 'Client', subType: 'Decision Maker', seniority: 'VP', employmentType: 'Full-time' },
+  { id: 8, companyId: 4, name: 'Rashid Al Nuaimi', title: 'Finance Director', email: 'rashid@emaar.ae', phone: '+971-4-367-3355', lastContact: null, notes: 'Introduced via Layla, not yet contacted directly', relationship: 'Client', subType: 'Decision Maker', seniority: 'Director', employmentType: 'Full-time' },
+  { id: 9, companyId: 5, name: 'Omar Al Mazrouei', title: 'CEO', email: 'omar@dpworld.ae', phone: '+971-4-881-5200', lastContact: null, notes: 'Cold prospect - needs warm introduction', relationship: 'Prospect', subType: 'Cold Lead', seniority: 'C-Suite', employmentType: 'Full-time' },
+  { id: 10, companyId: 1, name: 'Yousef Al Kaabi', title: 'Site Engineer (ALSUWEIDI)', email: 'yousef.alkaabi@alsuweidi.ae', phone: '+971-2-401-2299', lastContact: '2026-06-18', notes: 'Seconded to ADNOC site full-time, reports on ground progress weekly', relationship: 'Employee', subType: 'Secondment', seniority: 'Senior', employmentType: 'Full-time' },
+  { id: 11, companyId: 6, name: 'Hassan Al Rashidi', title: 'Procurement Lead', email: 'hassan@gulfsteelfab.ae', phone: '+971-6-574-8820', lastContact: '2026-06-05', notes: 'Steel supplier for Pump Station Upgrade project', relationship: 'Vendor/Supplier', subType: 'Subcontractor', seniority: 'Manager', employmentType: 'Contractor' },
 ]
 
 export const INITIAL_DEALS = [

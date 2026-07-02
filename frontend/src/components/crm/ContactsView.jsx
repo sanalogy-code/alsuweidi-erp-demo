@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Mail, Phone, Search, Plus, Bell, History } from 'lucide-react'
+import { Mail, Phone, Search, Plus, Bell, History, Download } from 'lucide-react'
 import { daysSince } from '../../data/crmData'
 
-export default function ContactsView({ contacts, companies, deals, interactions, onAddContact, onLogInteraction, onAddTask, onJumpToCompany, onViewContact }) {
+export default function ContactsView({ contacts, companies, deals, interactions, onAddContact, onLogInteraction, onAddTask, onJumpToCompany, onViewContact, onExport }) {
   const [search, setSearch] = useState('')
 
   const rows = contacts
@@ -36,6 +36,12 @@ export default function ContactsView({ contacts, companies, deals, interactions,
               className="pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand w-64"
             />
           </div>
+          <button
+            onClick={onExport}
+            className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-md text-xs font-medium hover:bg-gray-200 flex items-center gap-1 whitespace-nowrap"
+          >
+            <Download size={14} /> Export
+          </button>
           <button
             onClick={() => onAddContact(companies[0]?.id)}
             className="bg-brand text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-brand-dark flex items-center gap-1 whitespace-nowrap"
