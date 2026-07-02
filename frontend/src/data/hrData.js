@@ -103,3 +103,16 @@ export const QUICK_LINKS = [
   { label: 'IT Helpdesk' },
   { label: 'Org Chart' },
 ]
+
+export const EMPLOYEES = [
+  { id: 1, name: 'Osama Hussain', title: 'Senior Project Manager', dept: 'Projects', email: 'osama@alsuweidi.com', phone: '+971-2-123-4567', startDate: '2015-03-15', status: 'active' },
+  { id: 2, name: 'Naseeb Shaheen', title: 'Lead Structural Engineer', dept: 'Engineering', email: 'naseeb@alsuweidi.com', phone: '+971-2-123-4568', startDate: '2018-06-01', status: 'active' },
+  { id: 3, name: 'Mohammad Kubba', title: 'MEP Design Manager', dept: 'Engineering', email: 'mkubba@alsuweidi.com', phone: '+971-2-123-4569', startDate: '2016-08-10', status: 'active' },
+  { id: 4, name: 'Ahmed El Haddad', title: 'BIM Coordinator', dept: 'IT/BIM', email: 'ahaddad@alsuweidi.com', phone: '+971-2-123-4570', startDate: '2019-01-20', status: 'active' },
+  { id: 5, name: 'Layla Al Mazrouei', title: 'HR Manager', dept: 'HR', email: 'layla@alsuweidi.com', phone: '+971-2-123-4571', startDate: '2017-11-05', status: 'active' },
+  { id: 6, name: 'Khalid Al Ketbi', title: 'Finance Director', dept: 'Finance', email: 'khalid@alsuweidi.com', phone: '+971-2-123-4572', startDate: '2014-02-15', status: 'active' },
+  { id: 7, name: 'Fatima Al Mansouri', title: 'Senior Architect', dept: 'Engineering', email: 'fatima@alsuweidi.com', phone: '+971-2-123-4573', startDate: '2016-09-01', status: 'active' },
+  { id: 8, name: 'Hassan Al Shamsi', title: 'Project Coordinator', dept: 'Projects', email: 'hassan@alsuweidi.com', phone: '+971-2-123-4574', startDate: '2020-05-10', status: 'active' },
+  { id: 9, name: 'Maryam Al Kaabi', title: 'Compliance Officer', dept: 'Admin', email: 'maryam@alsuweidi.com', phone: '+971-2-123-4575', startDate: '2019-03-15', status: 'active' },
+  { id: 10, name: 'Samir Al Mazrouei', title: 'Site Supervisor', dept: 'Projects', email: 'samir@alsuweidi.com', phone: '+971-2-123-4576', startDate: '2018-07-20', status: 'active' },
+]

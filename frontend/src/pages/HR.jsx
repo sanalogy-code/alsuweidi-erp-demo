@@ -2,15 +2,18 @@ import { useState } from 'react'
 import { ArrowRight, Users, Building2, UserPlus } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
-import { HR_STATS, QUICK_LINKS } from '../data/hrData'
+import EmployeeList from '../components/hr/EmployeeList'
+import { HR_STATS, QUICK_LINKS, EMPLOYEES } from '../data/hrData'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'directory', label: 'Directory' },
   { key: 'onboarding', label: 'Onboarding' },
 ]
 
 export default function HR({ user, onLogout }) {
   const [tab, setTab] = useState('overview')
+  const [selectedEmployee, setSelectedEmployee] = useState(null)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -77,11 +80,10 @@ export default function HR({ user, onLogout }) {
               </div>
             </div>
 
-            <p className="text-xs text-gray-400 text-center">
-              Employee directory, leave requests, and timesheet approvals are planned for a future build. Onboarding is the first piece — full HR comes later.
-            </p>
           </div>
         )}
+
+        {tab === 'directory' && <EmployeeList employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
 
         {tab === 'onboarding' && <OnboardingChecklist userName={user?.username} />}
       </div>
