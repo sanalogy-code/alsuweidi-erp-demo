@@ -191,7 +191,7 @@ export default function CRM({ user, onLogout }) {
 
         {tab === 'contacts' && (
           <ContactsView
-            contacts={contacts} companies={companies} deals={deals}
+            contacts={contacts} companies={companies} deals={deals} interactions={interactions}
             onAddContact={openAddContact} onLogInteraction={openLogInteraction} onAddTask={openAddTask}
             onJumpToCompany={jumpToCompany}
           />

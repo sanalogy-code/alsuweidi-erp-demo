@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { Mail, Phone, FileText, Search, Bell, Plus } from 'lucide-react'
+import { Mail, Phone, FileText, Search, Bell, Plus, History, ChevronDown, ChevronUp } from 'lucide-react'
 import { getStatusColor, formatCurrency, daysSince } from '../../data/crmData'
 import InteractionIcon from './InteractionIcon'
+import InteractionHistory from './InteractionHistory'
 
 export default function CompaniesView({
   companies, contacts, deals, interactions, selectedCompany, setSelectedCompany,
   search, setSearch, onAddContact, onLogInteraction, onAddTask,
 }) {
   const [activeTab, setActiveTab] = useState('contacts')
+  const [expandedContactId, setExpandedContactId] = useState(null)
 
   const filteredCompanies = companies.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) || c.industry.toLowerCase().includes(search.toLowerCase())
@@ -139,14 +141,26 @@ export default function CompaniesView({
                           <div className="flex items-center gap-1.5"><Phone size={13} className="text-gray-400" />{contact.phone || '—'}</div>
                         </div>
                         {contact.notes && <p className="text-xs text-gray-500 italic mb-2">"{contact.notes}"</p>}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 mb-1">
                           <button onClick={() => onLogInteraction(contact.id)} className="text-brand text-xs font-medium hover:underline">
                             Log Interaction →
                           </button>
                           <button onClick={() => onAddTask(contact.id)} title="Remind me to reconnect" className="text-gray-400 hover:text-brand transition flex items-center gap-1 text-xs">
                             <Bell size={13} /> Remind me
                           </button>
+                          <button
+                            onClick={() => setExpandedContactId(expandedContactId === contact.id ? null : contact.id)}
+                            className="text-gray-400 hover:text-brand transition flex items-center gap-1 text-xs ml-auto"
+                          >
+                            <History size={13} /> History
+                            {expandedContactId === contact.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          </button>
                         </div>
+                        {expandedContactId === contact.id && (
+                          <div className="border-t border-gray-100 pt-3 mt-2">
+                            <InteractionHistory interactions={interactions} contactId={contact.id} />
+                          </div>
+                        )}
                       </div>
                     ))}
                     {companyContacts.length === 0 && (
