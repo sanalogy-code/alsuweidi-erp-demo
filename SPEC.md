@@ -149,6 +149,8 @@ Since the passport/visa/EID split, employees and each dependent carry their own 
 
 ### CRM (`pages/CRM.jsx`, all state owned here and passed down)
 
+Grouped **sidebar navigation** (same pattern and visual language as HR — replaced the old six-tab bar): **Overview** top-level, then **Sales** (Pipeline, Companies, Contacts), **My Work** (Tasks, badge = open tasks due today or overdue), **Insights** (Reports). Sidebar collapses to a wrapping horizontal row on mobile (`sm:flex-col`), group labels hidden.
+
 1. **Overview** (`OverviewView`) — dashboard: stat cards (companies, open pipeline value, weighted expected value, needs-follow-up count, tasks-overdue count), plus widgets: Needs Follow-Up (contacts untouched 14+ days), Reminders (tasks due within 7 days), Closing Soon (deals by close date), Top Clients by value, Pipeline by Stage breakdown.
 2. **Pipeline** (`PipelineView`) — Kanban board by deal stage. Drag-and-drop or per-card dropdown to change stage. **Unified date range selector:** preset dropdown (All Time / This Year / This Quarter / This Month) or custom date picker (From/To dates). Filters respond in real-time. Handles ISO dates, quarter format (2026-Q3), and year format (2026). Edit button (pencil icon) on each card opens `DealEditModal` (edit title/value/stage/probability/close date, or delete with confirmation). Summary bar: open pipeline, weighted expected, won total, win rate.
 3. **Companies** (`CompaniesView`) — searchable list + detail drill-down (Contacts / Deals / Activity tabs). Edit button in company header opens `CompanyEditModal` (edit name/industry/location/status, or delete with confirmation). Activity tab shows real logged interactions.

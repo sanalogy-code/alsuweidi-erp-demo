@@ -11,8 +11,8 @@ The "how long did this actually take" log — numbers pulled from git history, f
 | **First commit** | 1 July 2026, 07:41 |
 | **Feature-complete demo** | 2 July 2026, 22:07 |
 | **Elapsed time** | ~38 hours, across **2 working days** |
-| **Commits** | 86 (30 on day one, 56 on day two) |
-| **Deploys to the live site** | every push auto-deploys — ~86 |
+| **Commits** | 88 (30 on day one, 58 on day two) |
+| **Deploys to the live site** | every push auto-deploys — ~88 |
 | **App code** | ~6,500 lines across 32 components + 5 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 

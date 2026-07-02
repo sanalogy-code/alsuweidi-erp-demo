@@ -2,7 +2,7 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-02 (end of day — HR expansion wave + sidebar navigation redesign)
+**Last updated:** 2026-07-02 (end of day — HR expansion wave + sidebar navigation redesign, now applied to CRM too)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed.
 
@@ -26,8 +26,9 @@ The one thing that can't live in the repo: **WN (the ALSUWEIDI Knowledge Base Ob
 
 ## Current status
 
-### ✅ CRM module — COMPLETE
-Tabs: **Overview → Pipeline → Companies → Contacts → Tasks → Reports**
+### ✅ CRM module — COMPLETE (sidebar navigation)
+
+Grouped sidebar matching HR's (replaced the six horizontal tabs): **Overview** top-level, **Sales** (Pipeline, Companies, Contacts), **My Work** (Tasks, with a badge counting open tasks due today or overdue), **Insights** (Reports).
 
 - **Overview** — dashboard: stat cards + widgets (Needs Follow-Up, Reminders, Closing Soon, Top Clients, Pipeline by Stage)
 - **Pipeline** — Kanban board by deal stage, drag-and-drop or dropdown to change stage. **Unified date range selector** (preset: All Time/This Year/This Quarter/This Month, or custom From/To date picker). Filters respond in real-time. Handles ISO dates, quarter format (2026-Q3), year format (2026). Edit/Delete buttons on each deal card.
