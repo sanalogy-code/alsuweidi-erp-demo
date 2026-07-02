@@ -6,35 +6,51 @@
 
 ---
 
-## Week 1: HR Build-Out
+## Week 1: HR Build-Out (Daily Quick Wins)
 
-Build the five core HR modules (Employee Directory, Leave Management, Attendance, ESS, Benefits).
+Ship small pieces daily. Each task = 30 mins to 1 hour, visible progress every day.
 
-| Day | Feature | Scope | Hours | Lead | Notes |
-|-----|---------|-------|-------|------|-------|
-| **Day 1–2** | **Employee Directory** | List view + search + detail modal (name, title, dept, email, start date, docs) | 4–6h | Fable | Use same modal pattern as Contacts. Dummy data in `hrData.js`. Search across name/dept/title. |
-| **Day 3–4** | **Leave Management** | Request form → approval flow → balance tracker → leave calendar | 6–8h | Fable (forms) + Sonnet (workflow) | State: pending/approved/denied. Show remaining balance. Calendar shows who's out. |
-| **Day 5–6** | **Attendance** | Clock in/out buttons, weekly hours view, overtime calc | 4–6h | Fable (time logic) | Simple: manual clock in/out timestamps. Show hours this week + overtime. |
-| **Day 7–8** | **Employee Self-Service (ESS)** | View own profile, edit contact/emergency/banking info | 4–5h | Fable (forms) | Restrict to logged-in user's own data. Inline edit like ContactDetailModal. |
-| **Day 9** | **Benefits View** | Display current benefits (health, pension, life, etc.) — display only | 2–3h | Fable | Enrollment data only, no edits yet. Show plan type, effective date, cost-share. |
+| Day | Task | What | Est | Commit |
+|-----|------|------|-----|--------|
+| **Day 1a** | Employee List | HR tab → list view of all employees (name, title, dept) | 30m | `Add HR Employee list view` |
+| **Day 1b** | Employee Search | Add search box to filter by name/dept/title | 30m | `Add HR employee search` |
+| **Day 1c** | Employee Detail Modal | Click name → modal (name, title, email, start date, documents) | 45m | `Add HR employee detail modal` |
+| **Day 2a** | Leave Request Form | Modal to request leave (type, dates, reason) | 45m | `Add leave request form` |
+| **Day 2b** | Leave Requests List | Show all leave requests (pending/approved/denied) | 30m | `Add leave requests view` |
+| **Day 2c** | Approve/Deny Leave | Buttons to change request status | 30m | `Add leave approval actions` |
+| **Day 3a** | Leave Balance | Show remaining vacation/sick/unpaid days | 30m | `Add leave balance display` |
+| **Day 3b** | Leave Calendar | Visually show who's out (heatmap or simple list) | 45m | `Add leave calendar view` |
+| **Day 4a** | Attendance Clock In/Out | Buttons to record clock in/out | 45m | `Add attendance clock in/out` |
+| **Day 4b** | Attendance Hours View | Show hours logged this week + total | 30m | `Add attendance hours summary` |
+| **Day 5a** | ESS: View Own Profile | Employee sees their own data only | 30m | `Add ESS profile view` |
+| **Day 5b** | ESS: Edit Contact Info | Inline edit name, email, phone (own data only) | 45m | `Add ESS edit contact info` |
+| **Day 6a** | Benefits Display | Show current health, pension, life insurance | 30m | `Add benefits view` |
+| **Day 6b** | Benefits Details | Click benefit → see plan type, effective date, cost-share | 30m | `Add benefits detail modal` |
 
-**Week 1 total:** ~26–32 hours. All in React, same components as CRM.
+**Week 1 total:** ~9 hours, 14 small commits, daily visible progress.
 
 ---
 
-## Week 2: CRM Polish + System Testing
+## Week 2: CRM Polish + System Testing (Daily Wins)
 
-Finish CRM gaps + polish + testing + demo prep.
+| Day | Task | What | Est | Commit |
+|-----|------|------|-----|--------|
+| **Day 7a** | Edit Company | Company detail → edit modal (name, industry, location, status) | 45m | `Add company edit modal` |
+| **Day 7b** | Delete Company | Confirm dialog, remove from list | 30m | `Add company delete` |
+| **Day 8a** | Edit Deal | Deal detail → edit modal (title, value, stage, close date) | 45m | `Add deal edit modal` |
+| **Day 8b** | Delete Deal | Confirm dialog, remove from pipeline | 30m | `Add deal delete` |
+| **Day 9a** | Form Validation | Required fields, error messages (all forms) | 45m | `Add form validation` |
+| **Day 9b** | Empty States | "No companies yet", "No contacts yet", etc. | 30m | `Add empty state messages` |
+| **Day 10a** | Polish CRM | Sort options (by name, by value, by date) | 30m | `Add CRM sorting` |
+| **Day 10b** | Polish HR | Consistent styling, button placement, spacing | 45m | `Polish HR UI` |
+| **Day 11a** | Test CRM end-to-end | Add/edit/delete contacts, companies, deals. Log interactions. Export. | 1h | Test + document issues |
+| **Day 11b** | Test HR end-to-end | Request leave, approve, view balance, clock in/out, view benefits. | 1h | Test + document issues |
+| **Day 12a** | Fix bugs | Any crashes, validation issues, UX weirdness | 1h | Fixes |
+| **Day 12b** | Demo walkthrough | Full workflow: add contact → log interaction → request leave → approve → view benefits | 30m | `Ready for demo` |
 
-| Day | Feature | Scope | Hours | Lead | Notes |
-|-----|---------|-------|-------|------|-------|
-| **Day 10–11** | **CRM Edit/Delete** | Edit + delete modals for Companies and Deals | 3–4h | Fable | Same pattern as ContactDetailModal. Confirm on delete. |
-| **Day 12** | **CRM Polish** | Validation, error messages, empty states, sorting, pagination if needed | 3–4h | Fable | "No companies yet" states, form validation (required fields), better error feedback. |
-| **Day 13–14** | **Testing + Refinement** | QA across all modules (CRM + HR), fix bugs, demo readiness, polish UX | 4–5h | Manual + Sonnet review | Load dummy data, test workflows end-to-end. Fix any crashes or weird UX. |
+**Week 2 total:** ~9 hours, 12 commits, tested & demo-ready.
 
-**Week 2 total:** ~13–17 hours.
-
-**Phase 1 total:** ~40–50 hours of dev work.
+**Phase 1 total:** ~18 hours of dev work, 26 small commits, daily shipped features.
 
 ---
 
