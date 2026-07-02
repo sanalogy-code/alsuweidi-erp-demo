@@ -72,7 +72,7 @@ function IdentityBlock({ title, passport, visa, emiratesId, nationality }) {
   )
 }
 
-export default function EmployeeDetailModal({ employee, employees = [], onClose, onViewEmployee, onAddDependent }) {
+export default function EmployeeDetailModal({ employee, employees = [], onClose, onViewEmployee, onAddDependent, canViewSensitive = false }) {
   const [detailTab, setDetailTab] = useState('info')
   const [addingDependent, setAddingDependent] = useState(false)
   const [depForm, setDepForm] = useState(EMPTY_DEPENDENT_FORM)
@@ -127,12 +127,14 @@ export default function EmployeeDetailModal({ employee, employees = [], onClose,
         >
           Info
         </button>
-        <button
-          onClick={() => setDetailTab('visa')}
-          className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'visa' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
-        >
-          Visa & Dependents
-        </button>
+        {canViewSensitive && (
+          <button
+            onClick={() => setDetailTab('visa')}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'visa' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
+          >
+            Visa & Dependents
+          </button>
+        )}
         <button
           onClick={() => setDetailTab('accomplishments')}
           className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'accomplishments' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
@@ -140,20 +142,24 @@ export default function EmployeeDetailModal({ employee, employees = [], onClose,
           <Award size={14} className="inline mr-1" />
           Accomplishments
         </button>
-        <button
-          onClick={() => setDetailTab('compensation')}
-          className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'compensation' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
-        >
-          <DollarSign size={14} className="inline mr-1" />
-          Compensation
-        </button>
-        <button
-          onClick={() => setDetailTab('documents')}
-          className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'documents' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
-        >
-          <FileText size={14} className="inline mr-1" />
-          Documents
-        </button>
+        {canViewSensitive && (
+          <button
+            onClick={() => setDetailTab('compensation')}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'compensation' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
+          >
+            <DollarSign size={14} className="inline mr-1" />
+            Compensation
+          </button>
+        )}
+        {canViewSensitive && (
+          <button
+            onClick={() => setDetailTab('documents')}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'documents' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
+          >
+            <FileText size={14} className="inline mr-1" />
+            Documents
+          </button>
+        )}
       </div>
 
       {detailTab === 'info' && (
@@ -241,7 +247,7 @@ export default function EmployeeDetailModal({ employee, employees = [], onClose,
         </div>
       )}
 
-      {detailTab === 'visa' && (
+      {detailTab === 'visa' && canViewSensitive && (
         <div className="space-y-8">
           <div>
             <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">{employee.name} — Identity Documents</h3>
@@ -395,7 +401,7 @@ export default function EmployeeDetailModal({ employee, employees = [], onClose,
         </div>
       )}
 
-      {detailTab === 'compensation' && employee.compensation && (
+      {detailTab === 'compensation' && canViewSensitive && employee.compensation && (
         <div className="space-y-6">
           <div>
             <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">Monthly Package (AED)</h3>
@@ -431,7 +437,7 @@ export default function EmployeeDetailModal({ employee, employees = [], onClose,
         </div>
       )}
 
-      {detailTab === 'documents' && (
+      {detailTab === 'documents' && canViewSensitive && (
         <div className="space-y-3 text-sm text-gray-600">
           <div className="bg-gray-50 rounded p-4 text-center">
             <FileText size={32} className="mx-auto mb-2 text-gray-400" />

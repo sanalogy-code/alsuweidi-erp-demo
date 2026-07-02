@@ -2,8 +2,7 @@ import { useState } from 'react'
 import Modal from '../crm/Modal'
 import { CERTIFICATE_TYPES, CERTIFICATE_LANGUAGES, ADDRESSEE_SUGGESTIONS } from '../../data/hrData'
 
-export default function CertificateRequestModal({ employees, defaultEmployeeId, onClose, onSubmit }) {
-  const [employeeId, setEmployeeId] = useState(defaultEmployeeId || employees[0]?.id)
+export default function CertificateRequestModal({ user, employees = [], onClose, onSubmit }) {
   const [type, setType] = useState(CERTIFICATE_TYPES[0].value)
   const [addressedTo, setAddressedTo] = useState('')
   const [language, setLanguage] = useState('English')
@@ -11,13 +10,11 @@ export default function CertificateRequestModal({ employees, defaultEmployeeId, 
   const [nocObject, setNocObject] = useState('')
 
   const selectedType = CERTIFICATE_TYPES.find((t) => t.value === type)
+  // Requests are always for the logged-in person. Link to their employee record when the
+  // demo login name matches one; the name alone is enough for the request either way.
+  const matchedEmployee = employees.find((e) => e.name.toLowerCase() === (user?.username || '').toLowerCase())
 
   const handleSubmit = () => {
-    const employee = employees.find((e) => e.id === Number(employeeId))
-    if (!employee) {
-      alert('Select an employee')
-      return
-    }
     if (!addressedTo.trim()) {
       alert('Please specify who this certificate is addressed to')
       return
@@ -27,8 +24,8 @@ export default function CertificateRequestModal({ employees, defaultEmployeeId, 
       return
     }
     onSubmit({
-      employeeId: employee.id,
-      employeeName: employee.name,
+      employeeId: matchedEmployee?.id ?? null,
+      employeeName: matchedEmployee?.name || user?.username || 'Unknown',
       type,
       addressedTo: addressedTo.trim(),
       language,
@@ -45,16 +42,10 @@ export default function CertificateRequestModal({ employees, defaultEmployeeId, 
     <Modal title="Request Certificate" onClose={onClose}>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
-          <select
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand"
-          >
-            {employees.map((e) => (
-              <option key={e.id} value={e.id}>{e.name} — {e.title}</option>
-            ))}
-          </select>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Requested By</label>
+          <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-800">
+            {matchedEmployee ? `${matchedEmployee.name} — ${matchedEmployee.title}` : user?.username}
+          </div>
         </div>
 
         <div>

@@ -7,7 +7,7 @@ function daysUntil(dateStr) {
   return Math.round((new Date(dateStr) - new Date()) / MS_PER_DAY)
 }
 
-function buildItems(employees) {
+export function buildRenewalItems(employees) {
   const items = []
 
   const pushIfDue = (employee, subjectName, relationship, docType, dateStr) => {
@@ -45,7 +45,7 @@ const DOC_COLOR = {
 }
 
 export default function RenewalsReport({ employees, onViewEmployee }) {
-  const items = buildItems(employees)
+  const items = buildRenewalItems(employees)
   const overdue = items.filter((i) => i.days < 0)
   const dueSoon = items.filter((i) => i.days >= 0)
 

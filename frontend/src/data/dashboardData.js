@@ -71,5 +71,9 @@ export const ROLES = [
   { value: 'admin', label: 'Admin' },
 ]
 
-// Roles that can see HR-sensitive views (visa/passport/contract renewals, compensation, etc.)
+// HR staff who process requests (issue certificates, run payroll actions)
 export const HR_STAFF_ROLES = ['hr', 'admin']
+
+// Roles allowed to view sensitive employee data: visa/passport, dependents, compensation,
+// renewals, payroll. HR staff plus top management — nobody else.
+export const SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']

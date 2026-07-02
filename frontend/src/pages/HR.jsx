@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight, Users, Building2, UserPlus, Award, List, Network, FileText } from 'lucide-react'
+import { ArrowRight, Users, Building2, UserPlus, Award, List, Network, FileText, AlertTriangle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
 import EmployeeList from '../components/hr/EmployeeList'
@@ -8,11 +8,12 @@ import LeaveRequestModal from '../components/hr/LeaveRequestModal'
 import LeaveRequestsList from '../components/hr/LeaveRequestsList'
 import AccomplishmentsSearch from '../components/hr/AccomplishmentsSearch'
 import OrgChart from '../components/hr/OrgChart'
-import RenewalsReport from '../components/hr/RenewalsReport'
+import RenewalsReport, { buildRenewalItems } from '../components/hr/RenewalsReport'
 import CertificateRequestModal from '../components/hr/CertificateRequestModal'
 import CertificateRequestsList from '../components/hr/CertificateRequestsList'
+import PayrollTab from '../components/hr/PayrollTab'
 import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS } from '../data/hrData'
-import { HR_STAFF_ROLES } from '../data/dashboardData'
+import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 
 const BASE_TABS = [
   { key: 'overview', label: 'Overview' },
@@ -33,12 +34,15 @@ export default function HR({ user, onLogout }) {
   const [showCertModal, setShowCertModal] = useState(false)
 
   const isHrStaff = HR_STAFF_ROLES.includes(user?.role)
+  const canViewSensitive = SENSITIVE_VIEW_ROLES.includes(user?.role)
   const isNewHire = !!user?.isNewHire
   const pendingCertCount = certificateRequests.filter((r) => r.status === 'pending').length
+  const renewalItems = canViewSensitive ? buildRenewalItems(employees) : []
+  const overdueCount = renewalItems.filter((i) => i.days < 0).length
 
   const TABS = [
     ...BASE_TABS,
-    ...(isHrStaff ? [{ key: 'renewals', label: 'Renewals' }] : []),
+    ...(canViewSensitive ? [{ key: 'renewals', label: 'Renewals' }, { key: 'payroll', label: 'Payroll' }] : []),
     ...(isNewHire ? [{ key: 'onboarding', label: 'Onboarding' }] : []),
   ]
 
@@ -97,6 +101,24 @@ export default function HR({ user, onLogout }) {
                 <div className="text-2xl font-bold text-gray-800">{HR_STATS.newHiresThisMonth}</div>
               </div>
             </div>
+
+            {canViewSensitive && renewalItems.length > 0 && (
+              <button
+                onClick={() => setTab('renewals')}
+                className={`w-full bg-white border rounded-lg shadow-sm p-4 text-left transition flex items-center justify-between ${overdueCount > 0 ? 'border-red-200 hover:border-red-300' : 'border-amber-200 hover:border-amber-300'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <AlertTriangle size={20} className={overdueCount > 0 ? 'text-red-600' : 'text-amber-600'} />
+                  <div>
+                    <div className="text-sm font-semibold text-gray-800">
+                      {overdueCount > 0 && `${overdueCount} overdue, `}{renewalItems.length - overdueCount} renewal{renewalItems.length - overdueCount === 1 ? '' : 's'} due within 90 days
+                    </div>
+                    <div className="text-xs text-gray-500">Visas, passports, and contracts — employees and their dependents.</div>
+                  </div>
+                </div>
+                <ArrowRight size={18} className="text-gray-400 shrink-0" />
+              </button>
+            )}
 
             {isHrStaff && pendingCertCount > 0 && (
               <button
@@ -174,7 +196,9 @@ export default function HR({ user, onLogout }) {
 
         {tab === 'accomplishments' && <AccomplishmentsSearch employees={employees} />}
 
-        {tab === 'renewals' && isHrStaff && <RenewalsReport employees={employees} onViewEmployee={setSelectedEmployee} />}
+        {tab === 'renewals' && canViewSensitive && <RenewalsReport employees={employees} onViewEmployee={setSelectedEmployee} />}
+
+        {tab === 'payroll' && canViewSensitive && <PayrollTab employees={employees} />}
 
         {tab === 'leave' && (
           <LeaveRequestsList
@@ -213,6 +237,7 @@ export default function HR({ user, onLogout }) {
           onClose={() => setSelectedEmployee(null)}
           onViewEmployee={setSelectedEmployee}
           onAddDependent={handleAddDependent}
+          canViewSensitive={canViewSensitive}
         />
       )}
 
@@ -228,6 +253,7 @@ export default function HR({ user, onLogout }) {
 
       {showCertModal && (
         <CertificateRequestModal
+          user={user}
           employees={employees}
           onClose={() => setShowCertModal(false)}
           onSubmit={(newRequest) => {
