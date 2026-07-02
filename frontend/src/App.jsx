@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import CRM from './pages/CRM'
 import HR from './pages/HR'
+import Projects from './pages/Projects'
 import ComingSoon from './pages/ComingSoon'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
 
@@ -37,7 +38,7 @@ export default function App() {
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} />} />
-      <Route path="/projects" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="projects" />} />
+      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} />} />
       <Route path="/marketing" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="marketing" />} />
       <Route path="/content" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="content" />} />
