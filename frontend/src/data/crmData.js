@@ -36,6 +36,19 @@ export const INITIAL_DEALS = [
   { id: 402, companyId: 4, contactId: 8, title: 'Marina Tower MEP Consultancy', value: 680000, stage: 'Lost', probability: 0, closeDate: '2026-Q2' },
 ]
 
+export const INTERACTION_TYPES = ['Call', 'Email', 'Meeting', 'Note']
+
+export const INITIAL_INTERACTIONS = [
+  { id: 1, contactId: 1, type: 'Meeting', note: 'Discussed pump station specifications on site.', date: '2026-06-10' },
+  { id: 2, contactId: 1, type: 'Call', note: 'Pricing check-in for Control System Retrofit.', date: '2026-06-28' },
+  { id: 3, contactId: 2, type: 'Email', note: 'Sent Q3 project proposal draft for review.', date: '2026-06-20' },
+  { id: 4, contactId: 3, type: 'Call', note: 'Discussed maintenance contract renewal terms.', date: '2026-06-25' },
+  { id: 5, contactId: 4, type: 'Note', note: 'Reviewing GSE upgrade scope internally before responding.', date: '2026-06-10' },
+  { id: 6, contactId: 5, type: 'Meeting', note: 'Site visit for grid upgrade project follow-up.', date: '2026-06-22' },
+  { id: 7, contactId: 6, type: 'Email', note: 'Sent RFQ, waiting on procurement approval.', date: '2026-05-15' },
+  { id: 8, contactId: 7, type: 'Call', note: 'Walked through the infrastructure proposal, positive signal.', date: '2026-06-15' },
+]
+
 export const INITIAL_TASKS = [
   { id: 1, contactId: 8, title: 'Warm intro call with Rashid', dueDate: '2026-06-29', done: false },
   { id: 2, contactId: 4, title: 'Send GSE upgrade scope doc', dueDate: '2026-07-03', done: false },

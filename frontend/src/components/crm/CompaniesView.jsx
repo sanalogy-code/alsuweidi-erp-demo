@@ -1,15 +1,10 @@
 import { useState } from 'react'
-import { Mail, Phone, FileText, Search, Bell } from 'lucide-react'
+import { Mail, Phone, FileText, Search, Bell, Plus } from 'lucide-react'
 import { getStatusColor, formatCurrency, daysSince } from '../../data/crmData'
-
-const ACTIVITY_LOG = [
-  { text: 'Proposal submitted for Pipeline Inspection', when: '2 days ago', color: 'bg-brand' },
-  { text: 'Contact: Fatima Al Mansoori requested proposal', when: '5 days ago', color: 'bg-green-600' },
-  { text: 'Project Won: Pump Station Upgrade (AED 850K)', when: '1 week ago', color: 'bg-green-600' },
-]
+import InteractionIcon from './InteractionIcon'
 
 export default function CompaniesView({
-  companies, contacts, deals, selectedCompany, setSelectedCompany,
+  companies, contacts, deals, interactions, selectedCompany, setSelectedCompany,
   search, setSearch, onAddContact, onLogInteraction, onAddTask,
 }) {
   const [activeTab, setActiveTab] = useState('contacts')
@@ -22,6 +17,10 @@ export default function CompaniesView({
   const companyContacts = selectedCompany ? contacts.filter((c) => c.companyId === selectedCompany) : []
   const companyDeals = selectedCompany ? deals.filter((d) => d.companyId === selectedCompany) : []
   const openValue = companyDeals.filter((d) => d.stage !== 'Lost').reduce((s, d) => s + d.value, 0)
+  const companyContactIds = companyContacts.map((c) => c.id)
+  const companyInteractions = [...interactions]
+    .filter((i) => companyContactIds.includes(i.contactId))
+    .sort((a, b) => b.date.localeCompare(a.date))
 
   return (
     <div className="grid grid-cols-12 gap-6">
@@ -197,17 +196,38 @@ export default function CompaniesView({
                 )}
 
                 {activeTab === 'activity' && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Recent Activity</h3>
-                    {ACTIVITY_LOG.map((a, i) => (
-                      <div key={i} className="flex gap-3">
-                        <div className={`w-1 rounded-full ${a.color}`} />
-                        <div>
-                          <p className="text-sm text-gray-800">{a.text}</p>
-                          <p className="text-xs text-gray-400">{a.when}</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-semibold text-gray-800">Interaction Log</h3>
+                      <button
+                        onClick={() => onLogInteraction(companyContacts[0]?.id)}
+                        className="bg-brand text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-brand-dark flex items-center gap-1"
+                      >
+                        <Plus size={14} /> Log Interaction
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      {companyInteractions.map((i) => {
+                        const contact = contacts.find((c) => c.id === i.contactId)
+                        return (
+                          <div key={i.id} className="flex gap-3">
+                            <InteractionIcon type={i.type} />
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start gap-2">
+                                <p className="text-sm text-gray-800">
+                                  <span className="font-semibold">{i.type}</span> with {contact?.name}
+                                </p>
+                                <span className="text-xs text-gray-400 whitespace-nowrap">{daysSince(i.date)}</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-0.5">{i.note}</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                      {companyInteractions.length === 0 && (
+                        <p className="text-gray-400 text-sm text-center py-8">No interactions logged yet.</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

@@ -7,7 +7,7 @@ import CompaniesView from '../components/crm/CompaniesView'
 import ContactsView from '../components/crm/ContactsView'
 import PipelineView from '../components/crm/PipelineView'
 import TasksView from '../components/crm/TasksView'
-import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, STAGES, todayISO } from '../data/crmData'
+import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
@@ -22,6 +22,7 @@ export default function CRM({ user, onLogout }) {
   const [contacts, setContacts] = useState(INITIAL_CONTACTS)
   const [deals, setDeals] = useState(INITIAL_DEALS)
   const [tasks, setTasks] = useState(INITIAL_TASKS)
+  const [interactions, setInteractions] = useState(INITIAL_INTERACTIONS)
 
   const [tab, setTab] = useState('overview')
   const [selectedCompany, setSelectedCompany] = useState(null)
@@ -31,12 +32,14 @@ export default function CRM({ user, onLogout }) {
   const [showAddContact, setShowAddContact] = useState(false)
   const [showAddDeal, setShowAddDeal] = useState(false)
   const [showAddTask, setShowAddTask] = useState(false)
+  const [showLogInteraction, setShowLogInteraction] = useState(false)
   const [addContactCompanyId, setAddContactCompanyId] = useState(null)
 
   const [companyForm, setCompanyForm] = useState({ name: '', industry: '', location: '', status: 'Prospect' })
   const [contactForm, setContactForm] = useState({ name: '', title: '', email: '', phone: '' })
   const [dealForm, setDealForm] = useState({ companyId: '', contactId: '', title: '', value: '', stage: 'Prospecting', probability: 25, closeDate: '' })
   const [taskForm, setTaskForm] = useState({ contactId: '', title: '', dueDate: '' })
+  const [interactionForm, setInteractionForm] = useState({ contactId: '', type: 'Call', note: '', date: '' })
 
   function jumpToCompany(companyId) {
     setSelectedCompany(companyId)
@@ -51,6 +54,11 @@ export default function CRM({ user, onLogout }) {
   function openAddTask(contactId) {
     setTaskForm({ contactId: contactId || '', title: '', dueDate: '' })
     setShowAddTask(true)
+  }
+
+  function openLogInteraction(contactId) {
+    setInteractionForm({ contactId: contactId || '', type: 'Call', note: '', date: todayISO() })
+    setShowLogInteraction(true)
   }
 
   function addCompany(e) {
@@ -108,8 +116,16 @@ export default function CRM({ user, onLogout }) {
     setTasks(tasks.filter((t) => t.id !== taskId))
   }
 
-  function logInteraction(contactId) {
-    setContacts(contacts.map((c) => c.id === contactId ? { ...c, lastContact: todayISO() } : c))
+  function addInteraction(e) {
+    e.preventDefault()
+    if (!interactionForm.contactId || !interactionForm.note.trim()) return
+    const id = Math.max(0, ...interactions.map((i) => i.id)) + 1
+    const contactId = Number(interactionForm.contactId)
+    const date = interactionForm.date || todayISO()
+    setInteractions([...interactions, { id, contactId, type: interactionForm.type, note: interactionForm.note, date }])
+    setContacts(contacts.map((c) => c.id === contactId ? { ...c, lastContact: date } : c))
+    setInteractionForm({ contactId: '', type: 'Call', note: '', date: '' })
+    setShowLogInteraction(false)
   }
 
   function moveStage(dealId, stage) {
@@ -151,7 +167,7 @@ export default function CRM({ user, onLogout }) {
         {tab === 'overview' && (
           <OverviewView
             companies={companies} contacts={contacts} deals={deals} tasks={tasks}
-            onLogInteraction={logInteraction} onToggleTask={toggleTask}
+            onLogInteraction={openLogInteraction} onToggleTask={toggleTask}
             onJumpToCompany={jumpToCompany} setTab={setTab}
           />
         )}
@@ -166,17 +182,17 @@ export default function CRM({ user, onLogout }) {
 
         {tab === 'companies' && (
           <CompaniesView
-            companies={companies} contacts={contacts} deals={deals}
+            companies={companies} contacts={contacts} deals={deals} interactions={interactions}
             selectedCompany={selectedCompany} setSelectedCompany={setSelectedCompany}
             search={search} setSearch={setSearch}
-            onAddContact={openAddContact} onLogInteraction={logInteraction} onAddTask={openAddTask}
+            onAddContact={openAddContact} onLogInteraction={openLogInteraction} onAddTask={openAddTask}
           />
         )}
 
         {tab === 'contacts' && (
           <ContactsView
             contacts={contacts} companies={companies} deals={deals}
-            onAddContact={openAddContact} onLogInteraction={logInteraction} onAddTask={openAddTask}
+            onAddContact={openAddContact} onLogInteraction={openLogInteraction} onAddTask={openAddTask}
             onJumpToCompany={jumpToCompany}
           />
         )}
@@ -344,6 +360,46 @@ export default function CRM({ user, onLogout }) {
             </div>
             <button type="submit" className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark mt-2">
               Add Task
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {showLogInteraction && (
+        <Modal title="Log Interaction" onClose={() => setShowLogInteraction(false)}>
+          <form onSubmit={addInteraction} className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Contact</label>
+              <select required value={interactionForm.contactId} onChange={(e) => setInteractionForm({ ...interactionForm, contactId: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand">
+                <option value="">Select a contact...</option>
+                {contacts.map((c) => {
+                  const company = companies.find((co) => co.id === c.companyId)
+                  return <option key={c.id} value={c.id}>{c.name} — {company?.name}</option>
+                })}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                <select value={interactionForm.type} onChange={(e) => setInteractionForm({ ...interactionForm, type: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand">
+                  {INTERACTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <input required type="date" value={interactionForm.date} onChange={(e) => setInteractionForm({ ...interactionForm, date: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">What happened?</label>
+              <textarea required rows={3} placeholder="e.g. Called to discuss pricing on the retrofit proposal..." value={interactionForm.note} onChange={(e) => setInteractionForm({ ...interactionForm, note: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand resize-none" />
+            </div>
+            <button type="submit" className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark mt-2">
+              Log Interaction
             </button>
           </form>
         </Modal>
