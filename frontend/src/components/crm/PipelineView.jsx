@@ -28,14 +28,18 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
 
   function isInTimeRange(dateStr) {
     const dealDate = new Date(dateStr)
+    const isValidDate = !isNaN(dealDate)
 
     if (timeRange === 'custom') {
+      if (!isValidDate) return true // Include deals with invalid dates when using custom range
       const start = customStart ? new Date(customStart) : null
       const end = customEnd ? new Date(customEnd) : null
       if (start && dealDate < start) return false
       if (end && dealDate > end) return false
       return true
     }
+
+    if (!isValidDate) return true // Include deals with invalid dates for preset ranges
 
     const { start, end } = getPresetRange(timeRange)
     if (start && dealDate < start) return false

@@ -39,7 +39,10 @@ export default function ReportsView({ deals, companies }) {
       if (filterStage && deal.stage !== filterStage) return false
 
       const dealDate = new Date(deal.closeDate)
-      if (isNaN(dealDate)) return false
+      const isValidDate = !isNaN(dealDate)
+
+      // If no valid date, include the deal in results (date filtering won't apply)
+      if (!isValidDate) return true
 
       if (timeRange === 'custom') {
         const start = customStart ? new Date(customStart) : null
@@ -59,10 +62,26 @@ export default function ReportsView({ deals, companies }) {
   function generateMonthlyReport() {
     const filtered = applyFilters(deals)
     const monthlyData = {}
+    const invalidDatesData = { pipelineValue: 0, expectedValue: 0, closed: 0, won: 0, dealsCount: 0, deals: [] }
 
     filtered.forEach((deal) => {
       const dateObj = new Date(deal.closeDate)
-      if (isNaN(dateObj)) return
+
+      if (isNaN(dateObj)) {
+        // Group deals with invalid dates separately
+        invalidDatesData.dealsCount += 1
+        invalidDatesData.deals.push(deal)
+        if (deal.stage === 'Won') {
+          invalidDatesData.won += 1
+          invalidDatesData.closed += deal.value
+        } else if (deal.stage === 'Lost') {
+          invalidDatesData.closed += deal.value
+        } else {
+          invalidDatesData.pipelineValue += deal.value
+          invalidDatesData.expectedValue += deal.value * (deal.probability / 100)
+        }
+        return
+      }
 
       const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`
       if (!monthlyData[monthKey]) {
@@ -80,6 +99,11 @@ export default function ReportsView({ deals, companies }) {
         monthlyData[monthKey].expectedValue += deal.value * (deal.probability / 100)
       }
     })
+
+    // Add "Other" category for invalid dates if there are any
+    if (invalidDatesData.dealsCount > 0) {
+      monthlyData['0000-00'] = invalidDatesData
+    }
 
     return monthlyData
   }
@@ -261,11 +285,16 @@ export default function ReportsView({ deals, companies }) {
               ) : (
                 sortedMonths.map((month) => {
                   const data = monthlyData[month]
-                  const [year, monthNum] = month.split('-')
-                  const monthName = new Date(year, parseInt(monthNum) - 1).toLocaleDateString('en-AE', { month: 'short', year: 'numeric' })
+                  let monthName = ''
+                  if (month === '0000-00') {
+                    monthName = 'Other (no valid date)'
+                  } else {
+                    const [year, monthNum] = month.split('-')
+                    monthName = new Date(year, parseInt(monthNum) - 1).toLocaleDateString('en-AE', { month: 'short', year: 'numeric' })
+                  }
 
                   return (
-                    <tr key={month} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                    <tr key={month} className={`border-b border-gray-100 hover:bg-gray-50 transition ${month === '0000-00' ? 'bg-gray-50' : ''}`}>
                       <td className="px-4 py-3 font-medium text-gray-800">{monthName}</td>
                       <td className="px-4 py-3 text-right text-brand font-semibold">{formatCurrency(data.pipelineValue)}</td>
                       <td className="px-4 py-3 text-right text-gray-700 font-medium">{formatCurrency(data.expectedValue)}</td>
