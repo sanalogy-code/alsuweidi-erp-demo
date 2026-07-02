@@ -6,19 +6,22 @@ import OverviewView from '../components/crm/OverviewView'
 import CompaniesView from '../components/crm/CompaniesView'
 import ContactsView from '../components/crm/ContactsView'
 import PipelineView from '../components/crm/PipelineView'
-import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, STAGES, todayISO } from '../data/crmData'
+import TasksView from '../components/crm/TasksView'
+import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, STAGES, todayISO } from '../data/crmData'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'pipeline', label: 'Pipeline' },
   { key: 'companies', label: 'Companies' },
   { key: 'contacts', label: 'Contacts' },
-  { key: 'pipeline', label: 'Pipeline' },
+  { key: 'tasks', label: 'Tasks' },
 ]
 
 export default function CRM({ user, onLogout }) {
   const [companies, setCompanies] = useState(INITIAL_COMPANIES)
   const [contacts, setContacts] = useState(INITIAL_CONTACTS)
   const [deals, setDeals] = useState(INITIAL_DEALS)
+  const [tasks, setTasks] = useState(INITIAL_TASKS)
 
   const [tab, setTab] = useState('overview')
   const [selectedCompany, setSelectedCompany] = useState(null)
@@ -27,11 +30,13 @@ export default function CRM({ user, onLogout }) {
   const [showAddCompany, setShowAddCompany] = useState(false)
   const [showAddContact, setShowAddContact] = useState(false)
   const [showAddDeal, setShowAddDeal] = useState(false)
+  const [showAddTask, setShowAddTask] = useState(false)
   const [addContactCompanyId, setAddContactCompanyId] = useState(null)
 
   const [companyForm, setCompanyForm] = useState({ name: '', industry: '', location: '', status: 'Prospect' })
   const [contactForm, setContactForm] = useState({ name: '', title: '', email: '', phone: '' })
   const [dealForm, setDealForm] = useState({ companyId: '', contactId: '', title: '', value: '', stage: 'Prospecting', probability: 25, closeDate: '' })
+  const [taskForm, setTaskForm] = useState({ contactId: '', title: '', dueDate: '' })
 
   function jumpToCompany(companyId) {
     setSelectedCompany(companyId)
@@ -41,6 +46,11 @@ export default function CRM({ user, onLogout }) {
   function openAddContact(companyId) {
     setAddContactCompanyId(companyId)
     setShowAddContact(true)
+  }
+
+  function openAddTask(contactId) {
+    setTaskForm({ contactId: contactId || '', title: '', dueDate: '' })
+    setShowAddTask(true)
   }
 
   function addCompany(e) {
@@ -79,6 +89,23 @@ export default function CRM({ user, onLogout }) {
     }])
     setDealForm({ companyId: '', contactId: '', title: '', value: '', stage: 'Prospecting', probability: 25, closeDate: '' })
     setShowAddDeal(false)
+  }
+
+  function addTask(e) {
+    e.preventDefault()
+    if (!taskForm.title.trim() || !taskForm.contactId || !taskForm.dueDate) return
+    const id = Math.max(0, ...tasks.map((t) => t.id)) + 1
+    setTasks([...tasks, { id, contactId: Number(taskForm.contactId), title: taskForm.title, dueDate: taskForm.dueDate, done: false }])
+    setTaskForm({ contactId: '', title: '', dueDate: '' })
+    setShowAddTask(false)
+  }
+
+  function toggleTask(taskId) {
+    setTasks(tasks.map((t) => t.id === taskId ? { ...t, done: !t.done } : t))
+  }
+
+  function deleteTask(taskId) {
+    setTasks(tasks.filter((t) => t.id !== taskId))
   }
 
   function logInteraction(contactId) {
@@ -123,8 +150,17 @@ export default function CRM({ user, onLogout }) {
 
         {tab === 'overview' && (
           <OverviewView
-            companies={companies} contacts={contacts} deals={deals}
-            onLogInteraction={logInteraction} onJumpToCompany={jumpToCompany} setTab={setTab}
+            companies={companies} contacts={contacts} deals={deals} tasks={tasks}
+            onLogInteraction={logInteraction} onToggleTask={toggleTask}
+            onJumpToCompany={jumpToCompany} setTab={setTab}
+          />
+        )}
+
+        {tab === 'pipeline' && (
+          <PipelineView
+            deals={deals} companies={companies} contacts={contacts}
+            onMoveStage={moveStage} onAddDeal={() => setShowAddDeal(true)}
+            onJumpToCompany={jumpToCompany}
           />
         )}
 
@@ -133,22 +169,22 @@ export default function CRM({ user, onLogout }) {
             companies={companies} contacts={contacts} deals={deals}
             selectedCompany={selectedCompany} setSelectedCompany={setSelectedCompany}
             search={search} setSearch={setSearch}
-            onAddContact={openAddContact} onLogInteraction={logInteraction}
+            onAddContact={openAddContact} onLogInteraction={logInteraction} onAddTask={openAddTask}
           />
         )}
 
         {tab === 'contacts' && (
           <ContactsView
             contacts={contacts} companies={companies} deals={deals}
-            onAddContact={openAddContact} onLogInteraction={logInteraction}
+            onAddContact={openAddContact} onLogInteraction={logInteraction} onAddTask={openAddTask}
             onJumpToCompany={jumpToCompany}
           />
         )}
 
-        {tab === 'pipeline' && (
-          <PipelineView
-            deals={deals} companies={companies} contacts={contacts}
-            onMoveStage={moveStage} onAddDeal={() => setShowAddDeal(true)}
+        {tab === 'tasks' && (
+          <TasksView
+            tasks={tasks} contacts={contacts} companies={companies}
+            onAddTask={openAddTask} onToggle={toggleTask} onDelete={deleteTask}
             onJumpToCompany={jumpToCompany}
           />
         )}
@@ -277,6 +313,37 @@ export default function CRM({ user, onLogout }) {
             </div>
             <button type="submit" className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark mt-2">
               Add Deal
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {showAddTask && (
+        <Modal title="New Task" onClose={() => setShowAddTask(false)}>
+          <form onSubmit={addTask} className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Contact</label>
+              <select required value={taskForm.contactId} onChange={(e) => setTaskForm({ ...taskForm, contactId: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand">
+                <option value="">Select a contact...</option>
+                {contacts.map((c) => {
+                  const company = companies.find((co) => co.id === c.companyId)
+                  return <option key={c.id} value={c.id}>{c.name} — {company?.name}</option>
+                })}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Reminder</label>
+              <input required placeholder="e.g. Follow up on proposal" value={taskForm.title} onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Due date</label>
+              <input required type="date" value={taskForm.dueDate} onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
+            </div>
+            <button type="submit" className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark mt-2">
+              Add Task
             </button>
           </form>
         </Modal>

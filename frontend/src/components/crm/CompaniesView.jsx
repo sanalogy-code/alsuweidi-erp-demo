@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Mail, Phone, FileText, Search } from 'lucide-react'
+import { Mail, Phone, FileText, Search, Bell } from 'lucide-react'
 import { getStatusColor, formatCurrency, daysSince } from '../../data/crmData'
 
 const ACTIVITY_LOG = [
@@ -10,7 +10,7 @@ const ACTIVITY_LOG = [
 
 export default function CompaniesView({
   companies, contacts, deals, selectedCompany, setSelectedCompany,
-  search, setSearch, onAddContact, onLogInteraction,
+  search, setSearch, onAddContact, onLogInteraction, onAddTask,
 }) {
   const [activeTab, setActiveTab] = useState('contacts')
 
@@ -140,9 +140,14 @@ export default function CompaniesView({
                           <div className="flex items-center gap-1.5"><Phone size={13} className="text-gray-400" />{contact.phone || '—'}</div>
                         </div>
                         {contact.notes && <p className="text-xs text-gray-500 italic mb-2">"{contact.notes}"</p>}
-                        <button onClick={() => onLogInteraction(contact.id)} className="text-brand text-xs font-medium hover:underline">
-                          Log Interaction →
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => onLogInteraction(contact.id)} className="text-brand text-xs font-medium hover:underline">
+                            Log Interaction →
+                          </button>
+                          <button onClick={() => onAddTask(contact.id)} title="Remind me to reconnect" className="text-gray-400 hover:text-brand transition flex items-center gap-1 text-xs">
+                            <Bell size={13} /> Remind me
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {companyContacts.length === 0 && (

@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Mail, Phone, Search, Plus } from 'lucide-react'
+import { Mail, Phone, Search, Plus, Bell } from 'lucide-react'
 import { daysSince } from '../../data/crmData'
 
-export default function ContactsView({ contacts, companies, deals, onAddContact, onLogInteraction, onJumpToCompany }) {
+export default function ContactsView({ contacts, companies, deals, onAddContact, onLogInteraction, onAddTask, onJumpToCompany }) {
   const [search, setSearch] = useState('')
 
   const rows = contacts
@@ -82,9 +82,14 @@ export default function ContactsView({ contacts, companies, deals, onAddContact,
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <button onClick={() => onLogInteraction(c.id)} className="text-brand text-xs font-medium hover:underline whitespace-nowrap">
-                    Log Interaction →
-                  </button>
+                  <div className="flex items-center gap-3 whitespace-nowrap">
+                    <button onClick={() => onLogInteraction(c.id)} className="text-brand text-xs font-medium hover:underline">
+                      Log Interaction
+                    </button>
+                    <button onClick={() => onAddTask(c.id)} title="Remind me to reconnect" className="text-gray-400 hover:text-brand transition">
+                      <Bell size={14} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

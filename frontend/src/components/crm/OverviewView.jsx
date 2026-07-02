@@ -1,11 +1,12 @@
-import { STAGES, STAGE_COLOR, STAGE_BAR_COLOR, formatCurrencyShort, daysSince } from '../../data/crmData'
+import { Check } from 'lucide-react'
+import { STAGES, STAGE_COLOR, STAGE_BAR_COLOR, formatCurrencyShort, daysSince, daysUntil, formatDueLabel } from '../../data/crmData'
 
 function daysSinceNumber(date) {
   if (!date) return Infinity
   return Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24))
 }
 
-export default function OverviewView({ companies, contacts, deals, onLogInteraction, onJumpToCompany, setTab }) {
+export default function OverviewView({ companies, contacts, deals, tasks, onLogInteraction, onToggleTask, onJumpToCompany, setTab }) {
   const openDeals = deals.filter((d) => d.stage !== 'Won' && d.stage !== 'Lost')
   const openValue = openDeals.reduce((s, d) => s + d.value, 0)
   const weightedValue = openDeals.reduce((s, d) => s + d.value * (d.probability / 100), 0)
@@ -14,6 +15,12 @@ export default function OverviewView({ companies, contacts, deals, onLogInteract
     .sort((a, b) => daysSinceNumber(b.lastContact) - daysSinceNumber(a.lastContact))
     .filter((c) => daysSinceNumber(c.lastContact) >= 14)
     .slice(0, 5)
+
+  const dueTasks = tasks
+    .filter((t) => !t.done && daysUntil(t.dueDate) <= 7)
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+    .slice(0, 5)
+  const overdueCount = tasks.filter((t) => !t.done && daysUntil(t.dueDate) < 0).length
 
   const closingSoon = [...openDeals]
     .sort((a, b) => a.closeDate.localeCompare(b.closeDate))
@@ -34,7 +41,7 @@ export default function OverviewView({ companies, contacts, deals, onLogInteract
   return (
     <div className="space-y-6">
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
           <div className="text-xs text-gray-500">Companies</div>
           <div className="text-xl font-bold text-gray-800">{companies.length}</div>
@@ -50,6 +57,10 @@ export default function OverviewView({ companies, contacts, deals, onLogInteract
         <div className="bg-white rounded-lg border-2 border-red-200 bg-red-50/50 shadow-sm p-4">
           <div className="text-xs text-red-600 font-medium">Needs Follow-Up</div>
           <div className="text-xl font-bold text-red-700">{contacts.filter((c) => daysSinceNumber(c.lastContact) >= 14).length}</div>
+        </div>
+        <div className="bg-white rounded-lg border-2 border-yellow-200 bg-yellow-50/50 shadow-sm p-4">
+          <div className="text-xs text-yellow-700 font-medium">Tasks Overdue</div>
+          <div className="text-xl font-bold text-yellow-700">{overdueCount}</div>
         </div>
       </div>
 
@@ -84,6 +95,42 @@ export default function OverviewView({ companies, contacts, deals, onLogInteract
             })}
             {needsFollowUp.length === 0 && (
               <div className="px-5 py-8 text-center text-sm text-gray-400">Everyone's been contacted recently. Nice work.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Task reminders */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="text-sm font-semibold text-gray-800">Reminders</h3>
+            <button onClick={() => setTab('tasks')} className="text-xs text-brand font-medium hover:underline">View all →</button>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {dueTasks.map((t) => {
+              const contact = contacts.find((c) => c.id === t.contactId)
+              const overdue = daysUntil(t.dueDate) < 0
+              return (
+                <div key={t.id} className="px-5 py-3 flex items-center gap-3">
+                  <button
+                    onClick={() => onToggleTask(t.id)}
+                    className="w-5 h-5 rounded border border-gray-300 hover:border-brand flex items-center justify-center shrink-0 transition"
+                  >
+                    <Check size={12} className="opacity-0 hover:opacity-40" />
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">{t.title}</div>
+                    <button onClick={() => onJumpToCompany(contact?.companyId)} className="text-xs text-gray-500 hover:text-brand hover:underline">
+                      {contact?.name}
+                    </button>
+                  </div>
+                  <span className={`text-[10px] px-2 py-1 rounded-full font-medium whitespace-nowrap ${overdue ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                    {formatDueLabel(t.dueDate)}
+                  </span>
+                </div>
+              )
+            })}
+            {dueTasks.length === 0 && (
+              <div className="px-5 py-8 text-center text-sm text-gray-400">Nothing due this week.</div>
             )}
           </div>
         </div>

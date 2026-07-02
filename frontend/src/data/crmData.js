@@ -36,6 +36,14 @@ export const INITIAL_DEALS = [
   { id: 402, companyId: 4, contactId: 8, title: 'Marina Tower MEP Consultancy', value: 680000, stage: 'Lost', probability: 0, closeDate: '2026-Q2' },
 ]
 
+export const INITIAL_TASKS = [
+  { id: 1, contactId: 8, title: 'Warm intro call with Rashid', dueDate: '2026-06-29', done: false },
+  { id: 2, contactId: 4, title: 'Send GSE upgrade scope doc', dueDate: '2026-07-03', done: false },
+  { id: 3, contactId: 1, title: 'Follow up on Control System Retrofit pricing', dueDate: '2026-07-05', done: false },
+  { id: 4, contactId: 9, title: 'Cold outreach - DP World', dueDate: '2026-07-15', done: false },
+  { id: 5, contactId: 2, title: 'Check in after Q3 proposal review', dueDate: '2026-06-25', done: true },
+]
+
 export const STAGE_COLOR = {
   Prospecting: 'bg-gray-100 text-gray-700 border-gray-300',
   Proposal: 'bg-blue-100 text-blue-700 border-blue-300',
@@ -87,4 +95,19 @@ export function daysSince(date) {
 
 export function todayISO() {
   return new Date().toISOString().slice(0, 10)
+}
+
+// Whole calendar days until a date (negative = overdue, 0 = due today).
+export function daysUntil(date) {
+  const today = new Date(todayISO())
+  const target = new Date(date)
+  return Math.round((target - today) / (1000 * 60 * 60 * 24))
+}
+
+export function formatDueLabel(date) {
+  const d = daysUntil(date)
+  if (d < 0) return `${Math.abs(d)} day${Math.abs(d) === 1 ? '' : 's'} overdue`
+  if (d === 0) return 'Due today'
+  if (d === 1) return 'Due tomorrow'
+  return `Due in ${d} days`
 }
