@@ -63,35 +63,53 @@ This document outlines the roadmap from frontend-only proof-of-concept to a prod
 
 ### Testing & Validation
 
+**Staging environment:** Local machine or a cheap VPS you control (e.g., Hetzner $5/mo) — not IT's infrastructure.
+
 Before any production data:
 
-1. **Schema & migration testing** — API + database schema tested against dummy data that mirrors production schema
-2. **Staging environment** — Parallel VM or docker-compose setup running identical code + schema, populated with non-sensitive test data (fictional companies, contacts, deals)
-3. **Feature validation** — All workflows tested end-to-end in staging (add/edit/delete contacts, run reports, export data, audit logs visible)
-4. **Load testing** — Verify performance with realistic data volumes (~10k contacts, ~5k deals)
-5. **Security validation** — RBAC tested (users with different roles see/can do only what they should), audit logs verified, password reset flow tested
+1. **Local dev** — `docker-compose.yml` on your machine, dummy data, fast iteration
+2. **Staging** — Same docker-compose, same migrations, test data that mirrors production schema (fictional companies, contacts, deals, realistic volumes)
+3. **Feature validation** — All workflows tested end-to-end (add/edit/delete, export, audit logs)
+4. **Load testing** — Verify performance with realistic volumes (~10k contacts, ~5k deals)
+5. **Security validation** — RBAC tested, audit logs verified, password hashing tested
 
-### Data Migration
+### Deployment to Production
 
-Once staging is validated:
+Once staging is validated, **you deploy yourself** via SSH:
 
+```bash
+# Simple one-liner deploy script
+ssh prodvm "cd /app && git pull && docker-compose down && docker-compose up -d"
+```
+
+Or manually:
+```bash
+ssh prodvm
+cd /app
+git pull origin master
+docker-compose down
+docker-compose up -d
+```
+
+**Data migration (first time only):**
 1. Export current ERP data (if porting existing contacts/companies)
-2. Clean and normalize data
-3. Test import into staging first
-4. Only then import to production
-5. Verify completeness and accuracy before switching traffic
+2. Clean and normalize in a SQL script
+3. Test import in your staging environment first
+4. Run the same import script on production (via SSH)
+5. Verify completeness before switching traffic
 
-### IT Asks
+### IT Asks (Minimal, One-Time)
 
 **Immediate (before Phase 2 starts):**
 - Provision a VM: 4c / 16GB / 100GB (1–2 hours IT time, one-off cost)
-- Clarify network: how does new ERP reach Postgres internally? (VPN? Local network?)
-- Firewall: open ports 80/443 to the VM; no other ports public
+- Give SSH key-based access to that VM (Sana will deploy herself)
+- Open firewall ports 80/443 to the VM; no other ports public
+- Set up nightly encrypted backups to on-site storage (NAS or secondary drive)
 
-**Ongoing:**
-- Nightly encrypted backups to on-site storage
-- SSH access for deployment (key-based, restricted to 1–2 people)
-- Monitoring setup (optional but recommended: alerts if the app goes down)
+**That's it.** No "ask IT to deploy" workflow. No "IT manages updates." You own deployments via SSH.
+
+**Optional (recommended but not required):**
+- Monitoring: alerts if the app or database goes down (Sana can check SSH; IT can too if needed)
 
 **Cost:** Minimal — VM is already their infrastructure, backups use existing storage, no new licenses.
 
@@ -111,11 +129,11 @@ Once staging is validated:
 
 #### How changes reach production:
 1. **AI writes code** against dummy data (tested locally or in staging)
-2. **Human reviews** the code and migration script
-3. **Human applies** to production (AI stays out of the loop)
-4. **Audit log** records the human as the actor, not the AI
+2. **Code review** of the logic and schema migrations
+3. **Sana deploys** via SSH (`git pull && docker-compose up -d`)
+4. **Audit log** in the app records all data changes (who changed what, when)
 
-**Benefit:** Speed of development + full human accountability for data integrity.
+**Benefit:** Speed of development + full human control of deployments + no IT bottleneck.
 
 #### Data protection specifics:
 - All API endpoints enforce RBAC server-side (not hidden in the UI)
@@ -201,8 +219,8 @@ Once staging is validated:
 
 ## Questions for IT (to ask soon)
 
-1. Can you provision a 4c/16GB/100GB VM for this project? ~1 hour of your time?
-2. What hypervisor do you use (VMware, Hyper-V, Proxmox)? We'll containerize the app to work with whatever you have.
-3. For backups: do you have a NAS we can use, or should we plan for a second drive in the same rack?
-4. Can the new VM have public-facing ports (80/443)? It won't need any others.
-5. Who owns SSH access and key management? (We'll need it for deployments, but you control the keys.)
+1. Can you provision a 4c/16GB/100GB VM for this project? (~1 hour, one-time)
+2. Can I get SSH key-based access to that VM so I can deploy code myself?
+3. Can you open firewall ports 80/443 to it? (No other ports need to be public.)
+4. Can you set up nightly encrypted backups to on-site storage (NAS or secondary drive)? We'll handle everything else.
+5. Optional: do you have monitoring set up for down servers/databases? (Not required, but nice to know if the app goes down.)
