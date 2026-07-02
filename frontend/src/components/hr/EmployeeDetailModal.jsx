@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, FileText, Award, DollarSign, Plus } from 'lucide-react'
 import Modal from '../crm/Modal'
-import { RELATIONSHIP_TYPES } from '../../data/hrData'
+import { RELATIONSHIP_TYPES, ACCOMPLISHMENT_TYPES } from '../../data/hrData'
 
 const visaStatusColor = {
   Valid: 'bg-green-100 text-green-700',
@@ -72,10 +72,17 @@ function IdentityBlock({ title, passport, visa, emiratesId, nationality }) {
   )
 }
 
-export default function EmployeeDetailModal({ employee, employees = [], onClose, onViewEmployee, onAddDependent, canViewSensitive = false }) {
+export default function EmployeeDetailModal({ employee, employees = [], user, isHrStaff = false, onClose, onViewEmployee, onAddDependent, onAddAccomplishment, onVerifyAccomplishment, canViewSensitive = false }) {
   const [detailTab, setDetailTab] = useState('info')
   const [addingDependent, setAddingDependent] = useState(false)
   const [depForm, setDepForm] = useState(EMPTY_DEPENDENT_FORM)
+  const [addingAcc, setAddingAcc] = useState(false)
+  const [accForm, setAccForm] = useState({ type: ACCOMPLISHMENT_TYPES[0], issuer: '', date: '', expiryDate: '' })
+
+  // Employees maintain their own accomplishments (courses, certificates) — self-added entries
+  // stay flagged until HR verifies them. HR can add or verify for anyone.
+  const isSelf = !!user?.username && employee?.name?.toLowerCase() === user.username.toLowerCase()
+  const canEditAccomplishments = isSelf || isHrStaff
 
   if (!employee) return null
 
@@ -380,11 +387,70 @@ export default function EmployeeDetailModal({ employee, employees = [], onClose,
 
       {detailTab === 'accomplishments' && (
         <div className="space-y-3">
+          {canEditAccomplishments && !addingAcc && (
+            <div className="flex justify-end">
+              <button
+                onClick={() => { setAccForm({ type: ACCOMPLISHMENT_TYPES[0], issuer: '', date: '', expiryDate: '' }); setAddingAcc(true) }}
+                className="text-xs font-medium text-brand hover:underline flex items-center gap-1"
+              >
+                <Plus size={13} /> {isSelf && !isHrStaff ? 'Add my certificate / course' : 'Add accomplishment'}
+              </button>
+            </div>
+          )}
+
+          {addingAcc && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (!accForm.issuer.trim() || !accForm.date) {
+                  alert('Issuer and date are required')
+                  return
+                }
+                onAddAccomplishment?.(employee.id, {
+                  type: accForm.type,
+                  issuer: accForm.issuer.trim(),
+                  date: accForm.date,
+                  expiryDate: accForm.expiryDate || null,
+                  verified: isHrStaff, // HR-added entries are verified; self-added await HR
+                })
+                setAddingAcc(false)
+              }}
+              className="bg-blue-50 border border-blue-200 rounded-lg p-3 grid grid-cols-4 gap-2 items-end"
+            >
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
+                <select value={accForm.type} onChange={(e) => setAccForm({ ...accForm, type: e.target.value })} className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand">
+                  {ACCOMPLISHMENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Issuer</label>
+                <input required value={accForm.issuer} onChange={(e) => setAccForm({ ...accForm, issuer: e.target.value })} className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <input required type="date" value={accForm.date} onChange={(e) => setAccForm({ ...accForm, date: e.target.value })} className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
+              </div>
+              <div className="flex gap-1">
+                <button type="submit" className="flex-1 bg-brand text-white py-1.5 rounded-md text-xs font-medium hover:bg-brand-dark">Add</button>
+                <button type="button" onClick={() => setAddingAcc(false)} className="flex-1 bg-gray-100 text-gray-700 py-1.5 rounded-md text-xs font-medium hover:bg-gray-200">Cancel</button>
+              </div>
+              {!isHrStaff && (
+                <div className="col-span-4 text-xs text-gray-500">Self-added entries show as "Pending HR verification" until HR confirms — no approval workflow needed to submit.</div>
+              )}
+            </form>
+          )}
+
           {employee.accomplishments && employee.accomplishments.length > 0 ? (
             employee.accomplishments.map((acc, idx) => (
               <div key={idx} className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
                 <div className="flex justify-between items-start mb-1">
-                  <div className="font-medium text-blue-900">{acc.type}</div>
+                  <div className="font-medium text-blue-900 flex items-center gap-2">
+                    {acc.type}
+                    {acc.verified === false && (
+                      <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-medium">Pending HR verification</span>
+                    )}
+                  </div>
                   <div className="text-xs text-blue-700">{new Date(acc.date).toLocaleDateString('en-AE')}</div>
                 </div>
                 <div className="text-xs text-blue-800">Issued by: {acc.issuer}</div>
@@ -393,10 +459,18 @@ export default function EmployeeDetailModal({ employee, employees = [], onClose,
                     Expires: {new Date(acc.expiryDate).toLocaleDateString('en-AE')}
                   </div>
                 )}
+                {acc.verified === false && isHrStaff && (
+                  <button
+                    onClick={() => onVerifyAccomplishment?.(employee.id, idx)}
+                    className="mt-2 text-xs font-medium text-green-700 hover:underline"
+                  >
+                    ✓ Verify
+                  </button>
+                )}
               </div>
             ))
           ) : (
-            <div className="text-sm text-gray-500">No accomplishments recorded yet</div>
+            !addingAcc && <div className="text-sm text-gray-500">No accomplishments recorded yet</div>
           )}
         </div>
       )}

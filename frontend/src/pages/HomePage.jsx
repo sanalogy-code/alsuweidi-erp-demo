@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowRight, GitCommit } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight, GitCommit, CalendarDays } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import {
   ANNOUNCEMENTS, COMPANY_UPDATES, RECENT_PROJECTS, TEAM_MEMBERS,
@@ -26,9 +26,21 @@ function greeting() {
   return 'Good evening'
 }
 
-export default function HomePage({ user, onLogout }) {
+export default function HomePage({ user, onLogout, holidays = [] }) {
   const navigate = useNavigate()
   const [slide, setSlide] = useState(0)
+
+  // Only HR-approved holidays reach employees; pending ones (awaiting moon sighting) stay hidden
+  const upcomingHolidays = holidays
+    .filter((h) => h.status === 'approved' && new Date(h.endDate || h.date) >= new Date())
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 4)
+
+  const fmtHoliday = (h) => {
+    const opts = { day: 'numeric', month: 'short' }
+    const start = new Date(h.date).toLocaleDateString('en-GB', opts)
+    return h.endDate ? `${start} – ${new Date(h.endDate).toLocaleDateString('en-GB', opts)}` : start
+  }
 
   useEffect(() => {
     const id = setInterval(() => setSlide((s) => (s + 1) % ANNOUNCEMENTS.length), 6000)
@@ -173,6 +185,23 @@ export default function HomePage({ user, onLogout }) {
                 Fill this week →
               </button>
             </div>
+
+            {upcomingHolidays.length > 0 && (
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <CalendarDays size={15} className="text-brand" /> Public Holidays
+                </h3>
+                <div className="space-y-2.5">
+                  {upcomingHolidays.map((h) => (
+                    <div key={h.id} className="flex justify-between items-baseline gap-2 text-sm">
+                      <span className="text-gray-700 min-w-0 truncate">{h.name}</span>
+                      <span className="text-xs font-semibold text-brand whitespace-nowrap">{fmtHoliday(h)}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-[11px] text-gray-400 mt-3">Approved by HR — Islamic dates confirmed on moon sighting.</div>
+              </div>
+            )}
 
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
               <h3 className="text-sm font-semibold text-gray-800 mb-3">Team Members</h3>

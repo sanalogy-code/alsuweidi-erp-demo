@@ -32,6 +32,7 @@ export function buildRenewalItems(employees) {
     ;(e.dependents || []).forEach((d) => {
       pushIfDue(e, d.name, d.relationship, 'Passport', d.passport?.expiryDate)
       pushIfDue(e, d.name, d.relationship, 'Visa', d.visa?.expiryDate)
+      pushIfDue(e, d.name, d.relationship, 'Insurance', d.insurance?.expiryDate)
     })
   })
 
@@ -42,6 +43,7 @@ const DOC_COLOR = {
   Passport: 'bg-purple-100 text-purple-700',
   Visa: 'bg-blue-100 text-blue-700',
   Contract: 'bg-amber-100 text-amber-700',
+  Insurance: 'bg-teal-100 text-teal-700',
 }
 
 export default function RenewalsReport({ employees, onViewEmployee }) {
@@ -52,7 +54,7 @@ export default function RenewalsReport({ employees, onViewEmployee }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-sm font-semibold text-gray-800 mb-1">Renewals — Visa, Passport & Contract</h2>
+        <h2 className="text-sm font-semibold text-gray-800 mb-1">Renewals — Visa, Passport, Contract & Insurance</h2>
         <p className="text-xs text-gray-500">Everyone (staff or dependents) with a document expiring within {WINDOW_DAYS} days, or already overdue.</p>
       </div>
 

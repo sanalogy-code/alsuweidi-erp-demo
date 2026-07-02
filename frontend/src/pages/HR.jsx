@@ -1,18 +1,24 @@
 import { useState } from 'react'
-import { ArrowRight, Users, Building2, UserPlus, Award, List, Network, FileText, AlertTriangle } from 'lucide-react'
+import { ArrowRight, Users, Building2, UserPlus, List, Network, FileText, AlertTriangle, ShieldAlert } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
 import EmployeeList from '../components/hr/EmployeeList'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import LeaveRequestModal from '../components/hr/LeaveRequestModal'
 import LeaveRequestsList from '../components/hr/LeaveRequestsList'
+import LeaveDashboard from '../components/hr/LeaveDashboard'
 import AccomplishmentsSearch from '../components/hr/AccomplishmentsSearch'
 import OrgChart from '../components/hr/OrgChart'
 import RenewalsReport, { buildRenewalItems } from '../components/hr/RenewalsReport'
 import CertificateRequestModal from '../components/hr/CertificateRequestModal'
 import CertificateRequestsList from '../components/hr/CertificateRequestsList'
+import CertificateLetterModal from '../components/hr/CertificateLetterModal'
 import PayrollTab from '../components/hr/PayrollTab'
-import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS } from '../data/hrData'
+import HolidaysTab from '../components/hr/HolidaysTab'
+import ComplaintsTab from '../components/hr/ComplaintsTab'
+import CareersTab from '../components/hr/CareersTab'
+import AttendanceTab from '../components/hr/AttendanceTab'
+import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS, COMPLAINTS, OPEN_POSITIONS, CANDIDATES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 
 const BASE_TABS = [
@@ -21,28 +27,36 @@ const BASE_TABS = [
   { key: 'accomplishments', label: 'Accomplishments' },
   { key: 'leave', label: 'Leave' },
   { key: 'certificates', label: 'Certificates' },
+  { key: 'complaints', label: 'Complaints' },
+  { key: 'careers', label: 'Careers' },
 ]
 
-export default function HR({ user, onLogout }) {
+export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) {
   const [tab, setTab] = useState('overview')
   const [directoryView, setDirectoryView] = useState('list')
+  const [leaveView, setLeaveView] = useState('requests')
   const [employees, setEmployees] = useState(EMPLOYEES)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaveRequests, setLeaveRequests] = useState(LEAVE_REQUESTS)
   const [certificateRequests, setCertificateRequests] = useState(CERTIFICATE_REQUESTS)
   const [showCertModal, setShowCertModal] = useState(false)
+  const [letterRequest, setLetterRequest] = useState(null)
+  const [complaints, setComplaints] = useState(COMPLAINTS)
+  const [candidates, setCandidates] = useState(CANDIDATES)
 
   const isHrStaff = HR_STAFF_ROLES.includes(user?.role)
   const canViewSensitive = SENSITIVE_VIEW_ROLES.includes(user?.role)
   const isNewHire = !!user?.isNewHire
   const pendingCertCount = certificateRequests.filter((r) => r.status === 'pending').length
+  const newComplaintCount = complaints.filter((c) => c.status === 'submitted').length
   const renewalItems = canViewSensitive ? buildRenewalItems(employees) : []
   const overdueCount = renewalItems.filter((i) => i.days < 0).length
 
   const TABS = [
     ...BASE_TABS,
-    ...(canViewSensitive ? [{ key: 'renewals', label: 'Renewals' }, { key: 'payroll', label: 'Payroll' }] : []),
+    ...(isHrStaff ? [{ key: 'holidays', label: 'Holidays' }] : []),
+    ...(canViewSensitive ? [{ key: 'renewals', label: 'Renewals' }, { key: 'payroll', label: 'Payroll' }, { key: 'attendance', label: 'Attendance' }] : []),
     ...(isNewHire ? [{ key: 'onboarding', label: 'Onboarding' }] : []),
   ]
 
@@ -51,8 +65,32 @@ export default function HR({ user, onLogout }) {
     setSelectedEmployee((prev) => (prev && prev.id === employeeId ? { ...prev, dependents: [...prev.dependents, dependent] } : prev))
   }
 
+  const handleAddAccomplishment = (employeeId, acc) => {
+    setEmployees(employees.map((e) => (e.id === employeeId ? { ...e, accomplishments: [...e.accomplishments, acc] } : e)))
+    setSelectedEmployee((prev) => (prev && prev.id === employeeId ? { ...prev, accomplishments: [...prev.accomplishments, acc] } : prev))
+  }
+
+  const handleVerifyAccomplishment = (employeeId, idx) => {
+    const verify = (accs) => accs.map((a, i) => (i === idx ? { ...a, verified: true } : a))
+    setEmployees(employees.map((e) => (e.id === employeeId ? { ...e, accomplishments: verify(e.accomplishments) } : e)))
+    setSelectedEmployee((prev) => (prev && prev.id === employeeId ? { ...prev, accomplishments: verify(prev.accomplishments) } : prev))
+  }
+
+  const handleSaveLetter = (requestId, letterText) => {
+    setCertificateRequests(certificateRequests.map((r) => (r.id === requestId
+      ? { ...r, letterText, status: 'issued', resolvedDate: r.resolvedDate || new Date().toISOString().slice(0, 10) }
+      : r)))
+  }
+
   const handleQuickLink = (label) => {
     if (label === 'Request Certificate') setShowCertModal(true)
+  }
+
+  const badgeFor = (key) => {
+    if (!isHrStaff) return 0
+    if (key === 'certificates') return pendingCertCount
+    if (key === 'complaints') return newComplaintCount
+    return 0
   }
 
   return (
@@ -65,21 +103,24 @@ export default function HR({ user, onLogout }) {
           <p className="text-sm text-gray-500">Employees, onboarding, leave & timesheets</p>
         </div>
 
-        <div className="flex gap-1 border-b border-gray-200 mb-6">
-          {TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className={`relative px-4 py-2 text-sm font-medium border-b-2 transition ${tab === t.key ? 'text-brand border-brand' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
-            >
-              {t.label}
-              {t.key === 'certificates' && isHrStaff && pendingCertCount > 0 && (
-                <span className="absolute -top-0.5 -right-1.5 bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
-                  {pendingCertCount}
-                </span>
-              )}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-1 border-b border-gray-200 mb-6">
+          {TABS.map((t) => {
+            const badge = badgeFor(t.key)
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={`relative px-3 py-2 text-sm font-medium border-b-2 transition ${tab === t.key ? 'text-brand border-brand' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
+              >
+                {t.label}
+                {badge > 0 && (
+                  <span className="absolute -top-0.5 -right-1 bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
+                    {badge}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
 
         {tab === 'overview' && (
@@ -113,7 +154,7 @@ export default function HR({ user, onLogout }) {
                     <div className="text-sm font-semibold text-gray-800">
                       {overdueCount > 0 && `${overdueCount} overdue, `}{renewalItems.length - overdueCount} renewal{renewalItems.length - overdueCount === 1 ? '' : 's'} due within 90 days
                     </div>
-                    <div className="text-xs text-gray-500">Visas, passports, and contracts — employees and their dependents.</div>
+                    <div className="text-xs text-gray-500">Visas, passports, contracts, and insurance — employees and their dependents.</div>
                   </div>
                 </div>
                 <ArrowRight size={18} className="text-gray-400 shrink-0" />
@@ -128,8 +169,24 @@ export default function HR({ user, onLogout }) {
                 <div className="flex items-center gap-3">
                   <FileText size={20} className="text-amber-600" />
                   <div>
-                    <div className="text-sm font-semibold text-gray-800">{pendingCertCount} new certificate request{pendingCertCount > 1 ? 's' : ''} pending</div>
-                    <div className="text-xs text-gray-500">Salary, employment, NOC, bank, or embassy letters awaiting review.</div>
+                    <div className="text-sm font-semibold text-gray-800">{pendingCertCount} certificate request{pendingCertCount > 1 ? 's' : ''} awaiting a letter</div>
+                    <div className="text-xs text-gray-500">Open a request to generate, edit, and issue the letter.</div>
+                  </div>
+                </div>
+                <ArrowRight size={18} className="text-gray-400 shrink-0" />
+              </button>
+            )}
+
+            {isHrStaff && newComplaintCount > 0 && (
+              <button
+                onClick={() => setTab('complaints')}
+                className="w-full bg-white border border-red-200 rounded-lg shadow-sm p-4 text-left hover:border-red-300 transition flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <ShieldAlert size={20} className="text-red-600" />
+                  <div>
+                    <div className="text-sm font-semibold text-gray-800">{newComplaintCount} new concern{newComplaintCount > 1 ? 's' : ''} raised</div>
+                    <div className="text-xs text-gray-500">Visible to HR staff only.</div>
                   </div>
                 </div>
                 <ArrowRight size={18} className="text-gray-400 shrink-0" />
@@ -200,17 +257,64 @@ export default function HR({ user, onLogout }) {
 
         {tab === 'payroll' && canViewSensitive && <PayrollTab employees={employees} />}
 
-        {tab === 'leave' && (
-          <LeaveRequestsList
-            requests={leaveRequests}
-            onRequestNewLeave={() => setShowLeaveModal(true)}
-            onApprove={(id) => {
-              setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status: 'approved' } : r)))
-            }}
-            onDeny={(id) => {
-              setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status: 'denied' } : r)))
-            }}
+        {tab === 'attendance' && canViewSensitive && <AttendanceTab employees={employees} />}
+
+        {tab === 'holidays' && isHrStaff && <HolidaysTab holidays={holidays} onUpdateHolidays={onUpdateHolidays} />}
+
+        {tab === 'complaints' && (
+          <ComplaintsTab
+            complaints={complaints}
+            user={user}
+            isHrStaff={isHrStaff}
+            onSubmit={(c) => setComplaints([...complaints, { ...c, id: Math.max(...complaints.map((x) => x.id), 0) + 1 }])}
+            onAdvance={(id, next) => setComplaints(complaints.map((c) => (c.id === id ? { ...c, status: next } : c)))}
           />
+        )}
+
+        {tab === 'careers' && (
+          <CareersTab
+            positions={OPEN_POSITIONS}
+            candidates={candidates}
+            user={user}
+            isHrStaff={isHrStaff}
+            onSubmitCandidate={(c) => setCandidates([...candidates, { ...c, id: Math.max(...candidates.map((x) => x.id), 0) + 1 }])}
+            onAdvanceCandidate={(id, next) => setCandidates(candidates.map((c) => (c.id === id ? { ...c, status: next } : c)))}
+          />
+        )}
+
+        {tab === 'leave' && (
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <div className="inline-flex bg-gray-100 rounded-md p-1 gap-1">
+                <button
+                  onClick={() => setLeaveView('requests')}
+                  className={`px-3 py-1.5 rounded text-xs font-medium transition ${leaveView === 'requests' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Requests
+                </button>
+                <button
+                  onClick={() => setLeaveView('calendar')}
+                  className={`px-3 py-1.5 rounded text-xs font-medium transition ${leaveView === 'calendar' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Calendar & Balances
+                </button>
+              </div>
+            </div>
+            {leaveView === 'requests' ? (
+              <LeaveRequestsList
+                requests={leaveRequests}
+                onRequestNewLeave={() => setShowLeaveModal(true)}
+                onApprove={(id) => {
+                  setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status: 'approved' } : r)))
+                }}
+                onDeny={(id) => {
+                  setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status: 'denied' } : r)))
+                }}
+              />
+            ) : (
+              <LeaveDashboard employees={employees} requests={leaveRequests} holidays={holidays} />
+            )}
+          </div>
         )}
 
         {tab === 'certificates' && (
@@ -218,9 +322,7 @@ export default function HR({ user, onLogout }) {
             requests={certificateRequests}
             isHrStaff={isHrStaff}
             onNewRequest={() => setShowCertModal(true)}
-            onIssue={(id) => {
-              setCertificateRequests(certificateRequests.map((r) => (r.id === id ? { ...r, status: 'issued', resolvedDate: new Date().toISOString().slice(0, 10) } : r)))
-            }}
+            onPrepare={(req) => setLetterRequest(req)}
             onReject={(id) => {
               setCertificateRequests(certificateRequests.map((r) => (r.id === id ? { ...r, status: 'rejected', resolvedDate: new Date().toISOString().slice(0, 10) } : r)))
             }}
@@ -234,9 +336,13 @@ export default function HR({ user, onLogout }) {
         <EmployeeDetailModal
           employee={selectedEmployee}
           employees={employees}
+          user={user}
+          isHrStaff={isHrStaff}
           onClose={() => setSelectedEmployee(null)}
           onViewEmployee={setSelectedEmployee}
           onAddDependent={handleAddDependent}
+          onAddAccomplishment={handleAddAccomplishment}
+          onVerifyAccomplishment={handleVerifyAccomplishment}
           canViewSensitive={canViewSensitive}
         />
       )}
@@ -259,6 +365,15 @@ export default function HR({ user, onLogout }) {
           onSubmit={(newRequest) => {
             setCertificateRequests([...certificateRequests, { ...newRequest, id: Math.max(...certificateRequests.map((r) => r.id), 0) + 1 }])
           }}
+        />
+      )}
+
+      {letterRequest && (
+        <CertificateLetterModal
+          request={letterRequest}
+          employee={employees.find((e) => e.id === letterRequest.employeeId)}
+          onClose={() => setLetterRequest(null)}
+          onSave={handleSaveLetter}
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, XCircle, Plus } from 'lucide-react'
+import { CheckCircle, Clock, XCircle, Plus, FileText } from 'lucide-react'
 import { CERTIFICATE_TYPES } from '../../data/hrData'
 
 const STATUS_STYLE = {
@@ -9,7 +9,7 @@ const STATUS_STYLE = {
 
 const typeLabel = (value) => CERTIFICATE_TYPES.find((t) => t.value === value)?.label || value
 
-export default function CertificateRequestsList({ requests, isHrStaff, onNewRequest, onIssue, onReject }) {
+export default function CertificateRequestsList({ requests, isHrStaff, onNewRequest, onPrepare, onReject }) {
   if (!requests || requests.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
@@ -76,9 +76,15 @@ export default function CertificateRequestsList({ requests, isHrStaff, onNewRequ
                     <td className="px-4 py-2">
                       {req.status === 'pending' ? (
                         <div className="flex gap-2">
-                          <button onClick={() => onIssue(req.id)} className="text-xs font-medium text-green-700 hover:underline">Mark Issued</button>
+                          <button onClick={() => onPrepare(req)} className="text-xs font-medium text-brand hover:underline flex items-center gap-1">
+                            <FileText size={12} /> Prepare Letter
+                          </button>
                           <button onClick={() => onReject(req.id)} className="text-xs font-medium text-red-700 hover:underline">Reject</button>
                         </div>
+                      ) : req.status === 'issued' && req.letterText ? (
+                        <button onClick={() => onPrepare(req)} className="text-xs font-medium text-brand hover:underline flex items-center gap-1">
+                          <FileText size={12} /> View Letter
+                        </button>
                       ) : (
                         <span className="text-xs text-gray-400">—</span>
                       )}
