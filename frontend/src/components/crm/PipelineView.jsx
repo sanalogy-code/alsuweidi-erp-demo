@@ -13,6 +13,27 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
   const thisQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
   const thisYear = new Date(now.getFullYear(), 0, 1)
 
+  function parseCloseDate(dateStr) {
+    if (!dateStr) return null
+    // Try ISO date first
+    const isoDate = new Date(dateStr)
+    if (!isNaN(isoDate)) return isoDate
+    // Try quarter format: "2026-Q3"
+    const quarterMatch = dateStr.match(/(\d{4})-Q(\d)/)
+    if (quarterMatch) {
+      const year = parseInt(quarterMatch[1])
+      const quarter = parseInt(quarterMatch[2])
+      const month = (quarter - 1) * 3
+      return new Date(year, month, 1)
+    }
+    // Try year format: "2026"
+    const yearMatch = dateStr.match(/^(\d{4})$/)
+    if (yearMatch) {
+      return new Date(parseInt(yearMatch[1]), 0, 1)
+    }
+    return null
+  }
+
   function getPresetRange(preset) {
     switch (preset) {
       case 'month':
@@ -27,19 +48,17 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
   }
 
   function isInTimeRange(dateStr) {
-    const dealDate = new Date(dateStr)
-    const isValidDate = !isNaN(dealDate)
+    const dealDate = parseCloseDate(dateStr)
+
+    if (!dealDate) return true // Include deals with unparseable dates
 
     if (timeRange === 'custom') {
-      if (!isValidDate) return true // Include deals with invalid dates when using custom range
       const start = customStart ? new Date(customStart) : null
       const end = customEnd ? new Date(customEnd) : null
       if (start && dealDate < start) return false
       if (end && dealDate > end) return false
       return true
     }
-
-    if (!isValidDate) return true // Include deals with invalid dates for preset ranges
 
     const { start, end } = getPresetRange(timeRange)
     if (start && dealDate < start) return false

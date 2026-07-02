@@ -14,6 +14,27 @@ export default function ReportsView({ deals, companies }) {
   const thisQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
   const thisYear = new Date(now.getFullYear(), 0, 1)
 
+  function parseCloseDate(dateStr) {
+    if (!dateStr) return null
+    // Try ISO date first
+    const isoDate = new Date(dateStr)
+    if (!isNaN(isoDate)) return isoDate
+    // Try quarter format: "2026-Q3"
+    const quarterMatch = dateStr.match(/(\d{4})-Q(\d)/)
+    if (quarterMatch) {
+      const year = parseInt(quarterMatch[1])
+      const quarter = parseInt(quarterMatch[2])
+      const month = (quarter - 1) * 3
+      return new Date(year, month, 1)
+    }
+    // Try year format: "2026"
+    const yearMatch = dateStr.match(/^(\d{4})$/)
+    if (yearMatch) {
+      return new Date(parseInt(yearMatch[1]), 0, 1)
+    }
+    return null
+  }
+
   const stages = ['Prospecting', 'Proposal', 'Negotiation', 'Won', 'Lost']
   const uniqueCompanies = [...new Set(deals.map(d => companies.find(c => c.id === d.companyId)?.name).filter(Boolean))].sort()
 
@@ -38,11 +59,10 @@ export default function ReportsView({ deals, companies }) {
       }
       if (filterStage && deal.stage !== filterStage) return false
 
-      const dealDate = new Date(deal.closeDate)
-      const isValidDate = !isNaN(dealDate)
+      const dealDate = parseCloseDate(deal.closeDate)
 
-      // If no valid date, include the deal in results (date filtering won't apply)
-      if (!isValidDate) return true
+      // If date can't be parsed, include the deal (date filtering won't apply)
+      if (!dealDate) return true
 
       if (timeRange === 'custom') {
         const start = customStart ? new Date(customStart) : null
@@ -65,10 +85,10 @@ export default function ReportsView({ deals, companies }) {
     const invalidDatesData = { pipelineValue: 0, expectedValue: 0, closed: 0, won: 0, dealsCount: 0, deals: [] }
 
     filtered.forEach((deal) => {
-      const dateObj = new Date(deal.closeDate)
+      const dateObj = parseCloseDate(deal.closeDate)
 
-      if (isNaN(dateObj)) {
-        // Group deals with invalid dates separately
+      if (!dateObj) {
+        // Group deals with unparseable dates separately
         invalidDatesData.dealsCount += 1
         invalidDatesData.deals.push(deal)
         if (deal.stage === 'Won') {
@@ -100,7 +120,7 @@ export default function ReportsView({ deals, companies }) {
       }
     })
 
-    // Add "Other" category for invalid dates if there are any
+    // Add "Other" category for unparseable dates if there are any
     if (invalidDatesData.dealsCount > 0) {
       monthlyData['0000-00'] = invalidDatesData
     }
