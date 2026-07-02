@@ -6,6 +6,8 @@ Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy).
 
+**Phase 1 Sprint**: 2-week sprint to finish CRM + HR before showing to management. See [SPRINT_PLAN.md](SPRINT_PLAN.md) for day-by-day breakdown (Days 1–14, starting 2026-07-02).
+
 ---
 
 ## The pivot (read this first if you're new here)
