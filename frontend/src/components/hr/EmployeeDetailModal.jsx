@@ -22,6 +22,14 @@ export default function EmployeeDetailModal({ employee, onClose }) {
               <div className="font-medium text-gray-800">{employee.dept}</div>
             </div>
             <div>
+              <label className="text-xs text-gray-500">Location</label>
+              <div className="font-medium text-gray-800">{employee.location}</div>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500">Employment Type</label>
+              <div className="font-medium text-gray-800">{employee.employmentType}</div>
+            </div>
+            <div>
               <label className="text-xs text-gray-500">Status</label>
               <div className="inline-block px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
                 {employee.status === 'active' ? 'Active' : 'Inactive'}
