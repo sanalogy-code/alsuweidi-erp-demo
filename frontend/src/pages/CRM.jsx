@@ -9,6 +9,7 @@ import PipelineView from '../components/crm/PipelineView'
 import TasksView from '../components/crm/TasksView'
 import ContactDetailModal from '../components/crm/ContactDetailModal'
 import CompanyEditModal from '../components/crm/CompanyEditModal'
+import DealEditModal from '../components/crm/DealEditModal'
 import ExportContactsModal from '../components/crm/ExportContactsModal'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
 
@@ -33,6 +34,7 @@ export default function CRM({ user, onLogout }) {
   const [viewContactId, setViewContactId] = useState(null)
   const [showExportContacts, setShowExportContacts] = useState(false)
   const [editingCompanyId, setEditingCompanyId] = useState(null)
+  const [editingDealId, setEditingDealId] = useState(null)
 
   const [showAddCompany, setShowAddCompany] = useState(false)
   const [showAddContact, setShowAddContact] = useState(false)
@@ -80,6 +82,16 @@ export default function CRM({ user, onLogout }) {
     setCompanies(companies.filter((c) => c.id !== companyId))
     setSelectedCompany(null)
     setEditingCompanyId(null)
+  }
+
+  function updateDeal(dealId, fields) {
+    setDeals(deals.map((d) => d.id === dealId ? { ...d, ...fields } : d))
+    setEditingDealId(null)
+  }
+
+  function deleteDeal(dealId) {
+    setDeals(deals.filter((d) => d.id !== dealId))
+    setEditingDealId(null)
   }
 
   function jumpToCompanyFromDetail(companyId) {
@@ -202,7 +214,7 @@ export default function CRM({ user, onLogout }) {
           <PipelineView
             deals={deals} companies={companies} contacts={contacts}
             onMoveStage={moveStage} onAddDeal={() => setShowAddDeal(true)}
-            onJumpToCompany={jumpToCompany}
+            onJumpToCompany={jumpToCompany} onEditDeal={setEditingDealId}
           />
         )}
 
@@ -452,6 +464,17 @@ export default function CRM({ user, onLogout }) {
           onClose={() => setEditingCompanyId(null)}
           onSave={updateCompany}
           onDelete={deleteCompany}
+        />
+      )}
+
+      {editingDealId && (
+        <DealEditModal
+          deal={deals.find((d) => d.id === editingDealId)}
+          companies={companies}
+          contacts={contacts}
+          onClose={() => setEditingDealId(null)}
+          onSave={updateDeal}
+          onDelete={deleteDeal}
         />
       )}
 

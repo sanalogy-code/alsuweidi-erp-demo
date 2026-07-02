@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import { STAGES, STAGE_COLOR, formatCurrencyShort } from '../../data/crmData'
 
-export default function PipelineView({ deals, companies, contacts, onMoveStage, onAddDeal, onJumpToCompany }) {
+export default function PipelineView({ deals, companies, contacts, onMoveStage, onAddDeal, onJumpToCompany, onEditDeal }) {
   const [dragId, setDragId] = useState(null)
 
   const openDeals = deals.filter((d) => d.stage !== 'Lost')
@@ -76,7 +76,18 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
                       onDragStart={() => setDragId(deal.id)}
                       className="bg-white rounded-md border border-gray-200 shadow-sm p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition"
                     >
-                      <div className="text-sm font-semibold text-gray-800 mb-1">{deal.title}</div>
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="text-sm font-semibold text-gray-800">{deal.title}</div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onEditDeal(deal.id)
+                          }}
+                          className="text-gray-400 hover:text-brand transition"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                      </div>
                       <button
                         onClick={() => onJumpToCompany(deal.companyId)}
                         className="text-xs text-brand font-medium hover:underline"
