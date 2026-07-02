@@ -8,15 +8,16 @@ import LeaveRequestModal from '../components/hr/LeaveRequestModal'
 import LeaveRequestsList from '../components/hr/LeaveRequestsList'
 import AccomplishmentsSearch from '../components/hr/AccomplishmentsSearch'
 import OrgChart from '../components/hr/OrgChart'
+import RenewalsReport from '../components/hr/RenewalsReport'
 import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS } from '../data/hrData'
+import { HR_STAFF_ROLES } from '../data/dashboardData'
 
-const TABS = [
+const BASE_TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'directory', label: 'Directory' },
   { key: 'orgchart', label: 'Org Chart' },
   { key: 'accomplishments', label: 'Accomplishments' },
   { key: 'leave', label: 'Leave' },
-  { key: 'onboarding', label: 'Onboarding' },
 ]
 
 export default function HR({ user, onLogout }) {
@@ -25,6 +26,15 @@ export default function HR({ user, onLogout }) {
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaveRequests, setLeaveRequests] = useState(LEAVE_REQUESTS)
+
+  const isHrStaff = HR_STAFF_ROLES.includes(user?.role)
+  const isNewHire = !!user?.isNewHire
+
+  const TABS = [
+    ...BASE_TABS,
+    ...(isHrStaff ? [{ key: 'renewals', label: 'Renewals' }] : []),
+    ...(isNewHire ? [{ key: 'onboarding', label: 'Onboarding' }] : []),
+  ]
 
   const handleAddDependent = (employeeId, dependent) => {
     setEmployees(employees.map((e) => (e.id === employeeId ? { ...e, dependents: [...e.dependents, dependent] } : e)))
@@ -73,17 +83,19 @@ export default function HR({ user, onLogout }) {
               </div>
             </div>
 
-            <button
-              onClick={() => setTab('onboarding')}
-              className="w-full bg-gradient-to-br from-brand to-brand-dark rounded-lg shadow-md p-6 text-left text-white hover:scale-[1.005] transition flex items-center justify-between"
-            >
-              <div>
-                <div className="text-xs uppercase tracking-wide text-white/80 mb-1">New here?</div>
-                <div className="text-lg font-bold">Complete your onboarding checklist</div>
-                <p className="text-sm text-white/80 mt-1">Policies, working hours, safety induction, and how-tos — read, watch, and acknowledge.</p>
-              </div>
-              <ArrowRight size={22} className="shrink-0" />
-            </button>
+            {isNewHire && (
+              <button
+                onClick={() => setTab('onboarding')}
+                className="w-full bg-gradient-to-br from-brand to-brand-dark rounded-lg shadow-md p-6 text-left text-white hover:scale-[1.005] transition flex items-center justify-between"
+              >
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-white/80 mb-1">New here?</div>
+                  <div className="text-lg font-bold">Complete your onboarding checklist</div>
+                  <p className="text-sm text-white/80 mt-1">Policies, working hours, safety induction, and how-tos — read, watch, and acknowledge.</p>
+                </div>
+                <ArrowRight size={22} className="shrink-0" />
+              </button>
+            )}
 
             <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
               <h3 className="text-sm font-semibold text-gray-800 mb-3">Quick Links</h3>
@@ -109,6 +121,8 @@ export default function HR({ user, onLogout }) {
 
         {tab === 'accomplishments' && <AccomplishmentsSearch employees={employees} />}
 
+        {tab === 'renewals' && isHrStaff && <RenewalsReport employees={employees} onViewEmployee={setSelectedEmployee} />}
+
         {tab === 'leave' && (
           <LeaveRequestsList
             requests={leaveRequests}
@@ -122,7 +136,7 @@ export default function HR({ user, onLogout }) {
           />
         )}
 
-        {tab === 'onboarding' && <OnboardingChecklist userName={user?.username} />}
+        {tab === 'onboarding' && isNewHire && <OnboardingChecklist userName={user?.username} />}
       </div>
 
       {selectedEmployee && (

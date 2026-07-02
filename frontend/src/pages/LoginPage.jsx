@@ -5,11 +5,12 @@ import { ROLES } from '../data/dashboardData'
 export default function LoginPage({ onLogin }) {
   const [username, setUsername] = useState('Sarah')
   const [role, setRole] = useState('sales')
+  const [isNewHire, setIsNewHire] = useState(false)
 
   const handleLogin = (e) => {
     e.preventDefault()
     if (!username.trim()) return
-    onLogin({ username: username.trim(), role })
+    onLogin({ username: username.trim(), role, isNewHire })
   }
 
   return (
@@ -37,6 +38,10 @@ export default function LoginPage({ onLogin }) {
               {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
           </div>
+          <label className="flex items-center gap-2 text-sm text-gray-600">
+            <input type="checkbox" checked={isNewHire} onChange={(e) => setIsNewHire(e.target.checked)} className="rounded border-gray-300 text-brand focus:ring-brand" />
+            I'm a new hire (show onboarding checklist)
+          </label>
           <button type="submit" className="w-full rounded-md bg-brand px-4 py-2 text-white text-sm font-medium hover:bg-brand-dark">
             Enter
           </button>

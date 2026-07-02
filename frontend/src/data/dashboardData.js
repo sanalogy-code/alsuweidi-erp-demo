@@ -66,6 +66,10 @@ export const ROLES = [
   { value: 'sales', label: 'Sales / Business Dev' },
   { value: 'pm', label: 'Project Manager' },
   { value: 'marketing', label: 'Marketing' },
+  { value: 'hr', label: 'HR' },
   { value: 'management', label: 'Management' },
   { value: 'admin', label: 'Admin' },
 ]
+
+// Roles that can see HR-sensitive views (visa/passport/contract renewals, compensation, etc.)
+export const HR_STAFF_ROLES = ['hr', 'admin']
