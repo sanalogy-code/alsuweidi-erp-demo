@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ArrowRight, GitCommit } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import {
   ANNOUNCEMENTS, COMPANY_UPDATES, RECENT_PROJECTS, TEAM_MEMBERS,
   QUICK_LINKS, QUICK_ACTIONS, MODULES,
 } from '../data/dashboardData'
+
+const buildDateLabel = __BUILD_DATE__
+  ? new Date(__BUILD_DATE__).toLocaleString('en-AE', { dateStyle: 'medium', timeStyle: 'short' })
+  : 'unknown'
 
 const STATUS_COLOR = {
   'In Progress': 'bg-blue-100 text-blue-700',
@@ -76,6 +80,16 @@ export default function HomePage({ user, onLogout }) {
         <div className="bg-white border-l-4 border-brand rounded-lg shadow-sm px-6 py-4 mb-6">
           <div className="text-xl font-semibold text-brand">{greeting()}, {user?.username}</div>
           <div className="text-sm text-gray-500">{today} • 2 pending approvals</div>
+        </div>
+
+        {/* Deployment info */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-start gap-3">
+          <GitCommit size={16} className="text-gray-400 mt-0.5 shrink-0" />
+          <div className="text-xs">
+            <span className="font-semibold text-gray-700">Build #{__BUILD_NUMBER__}</span>
+            <span className="text-gray-400"> · {__BUILD_HASH__} · {buildDateLabel}</span>
+            {__BUILD_MESSAGE__ && <div className="text-gray-600 mt-0.5">Latest: {__BUILD_MESSAGE__}</div>}
+          </div>
         </div>
 
         {/* Quick actions */}
