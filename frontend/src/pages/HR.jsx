@@ -3,6 +3,7 @@ import { ArrowRight, Users, Building2, UserPlus } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
 import EmployeeList from '../components/hr/EmployeeList'
+import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { HR_STATS, QUICK_LINKS, EMPLOYEES } from '../data/hrData'
 
 const TABS = [
@@ -87,6 +88,8 @@ export default function HR({ user, onLogout }) {
 
         {tab === 'onboarding' && <OnboardingChecklist userName={user?.username} />}
       </div>
+
+      {selectedEmployee && <EmployeeDetailModal employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} />}
     </div>
   )
 }
