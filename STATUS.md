@@ -2,7 +2,7 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-02 (end of session)
+**Last updated:** 2026-07-02 (org chart, reports-to, emergency contact, compensation)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy).
 
@@ -41,20 +41,22 @@ Tabs: **Overview → Pipeline → Companies → Contacts → Tasks → Reports**
 Two-tier contact taxonomy: `relationship` + `subType` scoped per relationship, `seniority` (Entry→C-Suite), `employmentType` enums.
 
 ### ✅ HR module — COMPLETE
-Tabs: **Overview → Directory → Accomplishments → Leave → Onboarding**
+Tabs: **Overview → Directory → Org Chart → Accomplishments → Leave → Onboarding**
 
 - **Overview** — stat cards (total employees, departments, new hires), call-out to onboarding
-- **Directory** — searchable employee list (name, title, dept, email, phone). **NEW:** Click name → full profile modal with tabs:
-  - **Info tab:** employment details (title, dept, location, employment type, start date, tenure)
+- **Directory** — searchable employee list (name, title, dept, email, phone). Click name → full profile modal with tabs:
+  - **Info tab:** employment details (title, dept, location, employment type, start date, tenure), **NEW:** "Reports To" (clickable link to manager's profile) and an Emergency Contact block
   - **Visa & Dependents tab:** visa status + expiry + sponsor + passport #; dependents list (name, relationship, DOB)
   - **Accomplishments tab:** searchable certifications (PE, BIM, Safety, etc.) with issuer, date issued, expiry
+  - **Compensation tab:** **NEW:** basic salary, housing/transport allowances, computed total monthly package, other benefits, notice period
   - **Documents tab:** placeholder for Phase 2 (CV, certificates, passport uploads)
-- **Accomplishments** — **NEW:** Global search across all employees. Filter by type (PE License, BIM Cert, Safety Induction, etc.). Shows "Who has a PE license?" or "Who's BIM certified?"
+- **Org Chart** — **NEW:** clickable tree built from each employee's manager, rooted at department heads; opens the same profile modal
+- **Accomplishments** — Global search across all employees. Filter by type (PE License, BIM Cert, Safety Induction, etc.). Shows "Who has a PE license?" or "Who's BIM certified?"
 - **Leave** — Leave Requests form + list view (pending/approved/denied status). **NOTE:** Approval workflow deferred to Phase 2 (needs manager/HR dashboard).
 - **Onboarding** — 7 sections (reading/policy/how-to/video), per-section checkbox + progress bar + final acknowledgement gate
 
 ### 📋 Not yet built (known gaps, roughly in priority order)
-- **No RBAC/permissions enforcement** (role picker is cosmetic) — the one real architectural risk of the UI-first approach, see SPEC.md §5. Recommend filtering at API level in Phase 2 (Option 2: everyone sees limited info, HR/Admin see full details).
+- **No RBAC/permissions enforcement** (role picker is cosmetic) — the one real architectural risk of the UI-first approach, see SPEC.md §5. Recommend filtering at API level in Phase 2 (Option 2: everyone sees limited info, HR/Admin see full details). The new Compensation tab and Org Chart already expose full salary data with no gating — worth flagging to management if this build gets shared beyond intended reviewers before Phase 2 lands.
 - **Leave approval workflow** (form is there, but no approval engine, manager dashboard, or conflict checking — too complex for Phase 1 without backend)
 - **Attendance tracking** (fingerprint/card readers + timesheet — needs backend integration, skipped for Phase 1 demo)
 - Won deals → actual Projects (explicitly deprioritized — "a little big" for now)

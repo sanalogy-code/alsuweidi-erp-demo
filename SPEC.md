@@ -109,6 +109,21 @@ erDiagram
 
 `Prospecting → Proposal → Negotiation → Won / Lost` (`STAGES` in `crmData.js`). `Won` and `Lost` are terminal. Pipeline value calculations generally exclude `Lost` (and often `Won`, when the question is "what's still open") — check each usage site, the exclusion isn't automatic.
 
+### HR Employee model (`frontend/src/data/hrData.js`)
+
+`EMPLOYEE` is a separate flat array, not (yet) related to the CRM entities above. Self-referential via `managerId` — root employees (department heads) have `managerId: null`; everyone else points to another employee's `id`, forming the org chart tree.
+
+| Field | Notes |
+|---|---|
+| `id`, `name`, `title`, `dept`, `location`, `employmentType`, `email`, `phone`, `mobilePhone` | basic directory fields |
+| `startDate`, `status` | tenure calc, active/inactive |
+| `managerId` | FK to another `EMPLOYEE.id`, nullable — drives `OrgChart.jsx` and "Reports To" on the Info tab |
+| `visa` | `{ status, expiryDate, sponsor, passportNumber }` |
+| `dependents` | `[{ name, relationship, dob }]` |
+| `accomplishments` | `[{ type, issuer, date, expiryDate }]`, `type` drawn from `ACCOMPLISHMENT_TYPES` |
+| `emergencyContact` | `{ name, relationship, phone }` |
+| `compensation` | `{ basicSalary, housingAllowance, transportAllowance, otherBenefits, noticePeriodDays }`, all AED/monthly except `otherBenefits` (free text) and `noticePeriodDays` |
+
 ---
 
 ## 3. Feature Map
@@ -128,13 +143,15 @@ Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `la
 
 1. **Overview** — stat cards (employees, departments, new hires), call-out to Onboarding, quick links (not yet functional).
 2. **Directory** (`EmployeeList`, `EmployeeDetailModal`) — searchable employee list (name, title, dept, email, phone). Click name → full profile modal with tabs:
-   - **Info tab:** employment details (title, dept, location, employment type, start date, tenure)
+   - **Info tab:** employment details (title, dept, location, employment type, start date, tenure), "Reports To" (linked to manager via `managerId`, clickable to jump to that employee's profile), and an Emergency Contact block (name, relationship, phone)
    - **Visa & Dependents tab:** visa status + expiry + sponsor + passport #; dependents (name, relationship, DOB)
    - **Accomplishments tab:** certifications (PE, BIM, Safety, etc.) with issuer, date issued, expiry
+   - **Compensation tab:** basic salary, housing/transport allowances, computed total monthly package, other benefits (free text), notice period
    - **Documents tab:** placeholder for Phase 2 (CV, certs, passport uploads)
-3. **Accomplishments** (`AccomplishmentsSearch`) — **NEW:** Global search + filter across all employees by accomplishment type. Answering "Who has a PE license?" or "Who's BIM certified?" Shows issuer, date, expiry.
-4. **Leave** (`LeaveRequestModal`, `LeaveRequestsList`) — form to request leave (type, dates, reason, auto-calculates days). List view shows all requests (pending/approved/denied). **Note:** approval workflow deferred to Phase 2 (needs manager/HR dashboard + conflict checking).
-5. **Onboarding** (`OnboardingChecklist`) — 7 sections (reading/policy/how-to/video), per-section checkbox + progress bar + final acknowledgement gate.
+3. **Org Chart** (`OrgChart`) — recursive tree built from `managerId`, rooted at employees with no manager. Each node is clickable and opens `EmployeeDetailModal`.
+4. **Accomplishments** (`AccomplishmentsSearch`) — Global search + filter across all employees by accomplishment type. Answering "Who has a PE license?" or "Who's BIM certified?" Shows issuer, date, expiry.
+5. **Leave** (`LeaveRequestModal`, `LeaveRequestsList`) — form to request leave (type, dates, reason, auto-calculates days). List view shows all requests (pending/approved/denied). **Note:** approval workflow deferred to Phase 2 (needs manager/HR dashboard + conflict checking).
+6. **Onboarding** (`OnboardingChecklist`) — 7 sections (reading/policy/how-to/video), per-section checkbox + progress bar + final acknowledgement gate.
 
 ---
 
@@ -151,7 +168,7 @@ Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `la
 
 This is the honest risk list, not just a TODO.
 
-- **No RBAC / permissions enforcement.** The role picker at login is cosmetic. The original ERP planning docs specced real role-based permissions (marketing read-only, PMs see only their projects, etc.). This is the one area where "UI first, backend later" carries real risk — access control changes *what renders*, not just what an API returns, so retrofitting it onto screens built assuming "show everything" may require rework. Recommend Option 2 for Phase 2 backend: everyone sees limited info (name, title, email, phone, location), HR/Admin see full details (visa, dependents, accomplishments, salary-related fields).
+- **No RBAC / permissions enforcement.** The role picker at login is cosmetic. The original ERP planning docs specced real role-based permissions (marketing read-only, PMs see only their projects, etc.). This is the one area where "UI first, backend later" carries real risk — access control changes *what renders*, not just what an API returns, so retrofitting it onto screens built assuming "show everything" may require rework. Recommend Option 2 for Phase 2 backend: everyone sees limited info (name, title, email, phone, location), HR/Admin see full details (visa, dependents, accomplishments, compensation). The Compensation tab and org chart already expose full salary data to anyone with the URL — no gating in the current UI-only build.
 - **No persistence.** Every add/edit/delete is `setState` on in-memory arrays. Refreshing resets to seed data. Fine for Phase 1 demo; Phase 2 backend will fix this.
 - **No Leave approval workflow.** Form exists to request leave, but no approval engine, manager/HR dashboard, or conflict checking (preventing 5 people from the same team being out simultaneously). Too complex for Phase 1 without backend; defer to Phase 2.
 - **No Attendance tracking.** Fingerprint/card readers + timesheet integration require backend (biometric API, hours validation against projects). Skipped Phase 1.
