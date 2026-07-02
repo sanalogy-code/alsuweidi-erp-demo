@@ -347,7 +347,7 @@ export default function CRM({ user, onLogout }) {
       )}
 
       {showAddTask && (
-        <Modal title="New Task" onClose={() => setShowAddTask(false)}>
+        <Modal title="New Task" onClose={() => setShowAddTask(false)} layered>
           <form onSubmit={addTask} className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Contact</label>
@@ -378,7 +378,7 @@ export default function CRM({ user, onLogout }) {
       )}
 
       {showLogInteraction && (
-        <Modal title="Log Interaction" onClose={() => setShowLogInteraction(false)}>
+        <Modal title="Log Interaction" onClose={() => setShowLogInteraction(false)} layered>
           <form onSubmit={addInteraction} className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Contact</label>
