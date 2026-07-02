@@ -2,11 +2,11 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-02 (org chart, reports-to, emergency contact, compensation)
+**Last updated:** 2026-07-02 (end of day — HR expansion wave + sidebar navigation redesign)
 
-**Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy).
+**Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed.
 
-**Phase 1 Status:** Feature-complete (CRM + HR). Ready to show management. Real backend work starts after Phase 1 validation.
+**Phase 1 Status:** Feature-complete (CRM + full HR suite). Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md) — headline: **2 working days, 86 commits, AED 0 infrastructure**.
 
 ---
 
@@ -20,7 +20,7 @@ The original plan (FastAPI + React + Supabase, backend on Railway) hit repeated 
 
 ## Documentation & source of truth
 
-Everything about this project lives in **this GitHub repo** — no Google Drive dependency, no per-device sync setup needed. Clone it, open Claude Code there, and you have everything: code, SPEC.md, STATUS.md, and the `/erp` and `/update-erp` skills (in `.claude/skills/`).
+Everything about this project lives in **this GitHub repo** — no Google Drive dependency, no per-device sync setup needed. Clone it, open Claude Code there, and you have everything: code, SPEC.md, STATUS.md, STATS.md (build stats for management), and the `/erp` and `/update-erp` skills (in `.claude/skills/`).
 
 The one thing that can't live in the repo: **WN (the ALSUWEIDI Knowledge Base Obsidian vault)**. That's a local desktop app tied to a specific work computer — reachable only when a session runs on that machine with Obsidian open and the vault active. Both skills try it and skip gracefully if it's not reachable.
 
@@ -40,28 +40,35 @@ Tabs: **Overview → Pipeline → Companies → Contacts → Tasks → Reports**
 
 Two-tier contact taxonomy: `relationship` + `subType` scoped per relationship, `seniority` (Entry→C-Suite), `employmentType` enums.
 
-### ✅ HR module — COMPLETE
-Tabs: **Overview → Directory → Org Chart → Accomplishments → Leave → Onboarding**
+### ✅ HR module — COMPLETE (full suite, sidebar navigation)
 
-- **Overview** — stat cards (total employees, departments, new hires), call-out to onboarding
-- **Directory** — searchable employee list (name, title, dept, email, phone). Click name → full profile modal with tabs:
-  - **Info tab:** employment details (title, dept, location, employment type, start date, tenure), **NEW:** "Reports To" (clickable link to manager's profile) and an Emergency Contact block
-  - **Visa & Dependents tab:** visa status + expiry + sponsor + passport #; dependents list (name, relationship, DOB)
-  - **Accomplishments tab:** searchable certifications (PE, BIM, Safety, etc.) with issuer, date issued, expiry
-  - **Compensation tab:** **NEW:** basic salary, housing/transport allowances, computed total monthly package, other benefits, notice period
-  - **Documents tab:** placeholder for Phase 2 (CV, certificates, passport uploads)
-- **Org Chart** — **NEW:** clickable tree built from each employee's manager, rooted at department heads; opens the same profile modal
-- **Accomplishments** — Global search across all employees. Filter by type (PE License, BIM Cert, Safety Induction, etc.). Shows "Who has a PE license?" or "Who's BIM certified?"
-- **Leave** — Leave Requests form + list view (pending/approved/denied status). **NOTE:** Approval workflow deferred to Phase 2 (needs manager/HR dashboard).
-- **Onboarding** — 7 sections (reading/policy/how-to/video), per-section checkbox + progress bar + final acknowledgement gate
+Redesigned from 11 flat tabs into a **grouped sidebar with two lenses** — employees see self-service; HR staff get an "HR Workspace" group; management gets the workspace minus complaint handling.
+
+**Everyone:**
+- **My HR** — personal hub: leave balance, request-certificate / raise-a-concern cards, next approved public holiday, pending-request count. HR/management also see org stats and callout cards (inbox count, renewals due).
+- **People** — directory with three views: searchable **List**, clickable **Org Chart** (built from manager links), **Accomplishments** search ("who has a PE license?"). Profile modal: Info + Accomplishments for everyone; **Visa & Dependents, Compensation, and Documents only for HR/Admin/Management**. Full passport/visa/Emirates ID per person and per dependent, dependent insurance, add-dependent form. Employees can add their own certificates/courses — flagged "Pending HR verification" until HR verifies.
+- **My requests** — the employee's own leave + certificates + concerns in one filterable, status-chipped list.
+- **Careers** — open positions with referral bonuses; refer a candidate or apply internally.
+- **Onboarding** — only for logins that check "I'm a new hire". 7 sections + acknowledgement gate.
+
+**HR Workspace (role-gated):**
+- **Inbox** — one queue of everything waiting on HR (pending leave, certificate requests, open concerns, new candidates), oldest first, actioned inline. Recently issued letters below.
+- **Leave planner** — month calendar of who's off with **same-team overlap warnings**, holiday/weekend shading, annual balances (30-day entitlement); plus full request history with approve/deny.
+- **Renewals** — visas, passports, contracts, and dependent insurance expiring within 90 days or overdue — employees *and* dependents.
+- **Attendance** — today's snapshot dashboard (office/site/leave/absent, check-ins, weekly hours). Fingerprint feed is Phase 2; layout is for sign-off.
+- **Payroll** — monthly WPS run (basic + allowances + overtime − deductions), Draft → Generate SIF → Submitted → Paid workflow, payslip modal with estimated end-of-service gratuity.
+- **Holidays** — HR approves/edits/adds public holidays (Islamic dates pending until moon sighting); approved ones appear automatically on every employee's home dashboard.
+
+**Certificate letters:** six UAE letter types (salary, employment, salary transfer, NOC, embassy, experience) auto-drafted from the employee record in English/Arabic/bilingual — HR edits, prints to PDF on letterhead, letter saved on the request. Zoho Sign step is mocked pending Phase 2.
 
 ### 📋 Not yet built (known gaps, roughly in priority order)
-- **No RBAC/permissions enforcement** (role picker is cosmetic) — the one real architectural risk of the UI-first approach, see SPEC.md §5. Recommend filtering at API level in Phase 2 (Option 2: everyone sees limited info, HR/Admin see full details). The new Compensation tab and Org Chart already expose full salary data with no gating — worth flagging to management if this build gets shared beyond intended reviewers before Phase 2 lands.
-- **Leave approval workflow** (form is there, but no approval engine, manager dashboard, or conflict checking — too complex for Phase 1 without backend)
-- **Attendance tracking** (fingerprint/card readers + timesheet — needs backend integration, skipped for Phase 1 demo)
+- **RBAC is prototyped, not enforced** — the UI genuinely gates by role now (sensitive tabs, HR workspace), which doubles as the Phase 2 access-control spec, but it's client-side against a password-less login. Real enforcement (auth + API filtering) is the first backend job — see SPEC.md §5.
+- **Leave approval is single-step** — approve/deny + overlap warnings exist; manager-first chains, notifications, and hard conflict blocking are Phase 2.
+- **Attendance device feed + project timesheets** — dashboard is mocked; fingerprint/biometric integration and the weekly project-linked timesheet module (modeled on the current external system) need the backend.
+- **Zoho Sign integration** (mocked), **document/CV storage** (placeholders), **appraisals** (awaiting spec — cycle, reviewers, rating model).
 - Won deals → actual Projects (explicitly deprioritized — "a little big" for now)
-- Email sending (structurally can't be done client-side; needs serverless function + provider)
-- Global search, role-based filtered views
+- Email sending / notifications (structurally can't be done client-side; needs serverless function + provider)
+- Global search
 
 ---
 

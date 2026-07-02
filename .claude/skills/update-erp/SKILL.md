@@ -28,6 +28,10 @@ Don't just append a changelog entry — re-derive the spec's content from the ac
 
 Same repo, root-level file — the fast-skim companion to SPEC.md. Should agree with whatever SPEC.md now says (same facts, different audience — this one's for a quick read, not a developer digging into the data model). Update the "Current status" and "Not yet built" sections to match what's actually true now.
 
+## Step 3b: Refresh STATS.md
+
+Root-level `STATS.md` is the "how long did this actually take" log Sana shares with management. Refresh its numbers from git (the commands are listed at the bottom of the file itself): commit count, working days, LOC, component count, and the "as of" date. Also update the "what got built" list if this session shipped something headline-worthy. Keep the honest footnotes — the 2-day figure is impressive *because* it includes the backend detour and *because* the doc is upfront that Phase 2 is the real engineering.
+
 ## Step 4: Commit and push
 
 From the repo root:

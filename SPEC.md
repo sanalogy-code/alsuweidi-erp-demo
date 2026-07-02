@@ -123,6 +123,25 @@ erDiagram
 | `accomplishments` | `[{ type, issuer, date, expiryDate }]`, `type` drawn from `ACCOMPLISHMENT_TYPES` |
 | `emergencyContact` | `{ name, relationship, phone }` |
 | `compensation` | `{ basicSalary, housingAllowance, transportAllowance, otherBenefits, noticePeriodDays }`, all AED/monthly except `otherBenefits` (free text) and `noticePeriodDays` |
+| `contractEndDate` | drives the Renewals report alongside visa/passport/insurance expiries |
+
+Since the passport/visa/EID split, employees and each dependent carry their own `passport` `{ number, country, type, issueDate, expiryDate }`, `visa` (null for UAE nationals), `emiratesId`, and (dependents) `insurance`.
+
+### Other HR entities (`hrData.js`)
+
+| Entity | Shape / notes |
+|---|---|
+| `PUBLIC_HOLIDAYS` | `{ name, date, endDate?, status: approved\|pending, note }` — state lifted to `App.jsx` so HR approvals reach the Home tile in-session; Islamic dates stay pending until moon sighting |
+| `LEAVE_REQUESTS` | `{ employeeId, employeeName, type, startDate, endDate, days, reason, status: pending\|approved\|denied, requestedDate }` — `requestedDate` is what the HR Inbox sorts by |
+| `CERTIFICATE_REQUESTS` | `{ employeeId, employeeName, type (6 UAE letter types), addressedTo, language (En/Ar/bilingual), purpose, nocObject, status: pending\|issued\|rejected, letterText }` — `letterText` persists the issued letter; templates live in `data/certificateTemplates.js` |
+| `COMPLAINTS` | `{ category, description, anonymous, submittedBy (null if anonymous), status: submitted\|under_review\|resolved }` — HR-staff-visible only |
+| `OPEN_POSITIONS` / `CANDIDATES` | job board + pipeline; candidates are `kind: referral\|internal`, `status: new\|interviewing\|hired\|rejected` |
+| `PAYROLL_MONTHS` / `PAYROLL_ADJUSTMENTS` | per-month overtime/deduction adjustments layered on `compensation`; WPS run status draft → submitted → paid |
+| `ATTENDANCE_TODAY` | illustrative snapshot (present/site/on_leave/absent, check-ins, weekly hours) — real feed is a Phase 2 backend item |
+
+### Role groups (`dashboardData.js`)
+
+`HR_STAFF_ROLES = ['hr', 'admin']` (process requests: inbox, certificates, complaints, holidays). `SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']` (view sensitive data: visa/dependents/compensation tabs, renewals, payroll, attendance, leave planner). Client-side gating only — see §5.
 
 ---
 
@@ -141,17 +160,29 @@ Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `la
 
 ### HR (`pages/HR.jsx`)
 
-1. **Overview** — stat cards (employees, departments, new hires), call-out to Onboarding, quick links (not yet functional).
-2. **Directory** (`EmployeeList`, `EmployeeDetailModal`) — searchable employee list (name, title, dept, email, phone). Click name → full profile modal with tabs:
-   - **Info tab:** employment details (title, dept, location, employment type, start date, tenure), "Reports To" (linked to manager via `managerId`, clickable to jump to that employee's profile), and an Emergency Contact block (name, relationship, phone)
-   - **Visa & Dependents tab:** visa status + expiry + sponsor + passport #; dependents (name, relationship, DOB)
-   - **Accomplishments tab:** certifications (PE, BIM, Safety, etc.) with issuer, date issued, expiry
-   - **Compensation tab:** basic salary, housing/transport allowances, computed total monthly package, other benefits (free text), notice period
-   - **Documents tab:** placeholder for Phase 2 (CV, certs, passport uploads)
-3. **Org Chart** (`OrgChart`) — recursive tree built from `managerId`, rooted at employees with no manager. Each node is clickable and opens `EmployeeDetailModal`.
-4. **Accomplishments** (`AccomplishmentsSearch`) — Global search + filter across all employees by accomplishment type. Answering "Who has a PE license?" or "Who's BIM certified?" Shows issuer, date, expiry.
-5. **Leave** (`LeaveRequestModal`, `LeaveRequestsList`) — form to request leave (type, dates, reason, auto-calculates days). List view shows all requests (pending/approved/denied). **Note:** approval workflow deferred to Phase 2 (needs manager/HR dashboard + conflict checking).
-6. **Onboarding** (`OnboardingChecklist`) — 7 sections (reading/policy/how-to/video), per-section checkbox + progress bar + final acknowledgement gate.
+Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, which had grown to 11 tabs). Employees see self-service; HR staff additionally see an "HR Workspace" group; management sees the workspace minus Inbox and Holidays (complaint handling is HR-only).
+
+**Everyone:**
+
+1. **My HR** — personal hub: action cards (Request leave with own remaining balance, Request certificate, Raise a concern, My requests count), next approved public holiday, org-wide stat cards for privileged roles, HR callouts (inbox count, renewals due), onboarding banner for new hires. The logged-in user is matched to an employee record by name.
+2. **People** — one view, three toggles: **List** (`EmployeeList`), **Org Chart** (`OrgChart`, recursive tree from `managerId`), **Accomplishments** (`AccomplishmentsSearch`, "who has a PE license?"). Click any person → `EmployeeDetailModal`:
+   - **Info:** employment details, nationality, "Reports To" (clickable), emergency contact — visible to all
+   - **Accomplishments:** visible to all; employees can add their own entries (flagged "Pending HR verification" until HR verifies — HR-added entries are pre-verified)
+   - **Visa & Dependents / Compensation / Documents:** `SENSITIVE_VIEW_ROLES` only. Full passport/visa/EID per person and per dependent, dependent insurance, add-dependent form; salary package + notice period; Documents is a Phase 2 placeholder
+3. **My requests** (`MyRequests`) — the employee's own leave + certificate + concern submissions in one filterable list with status chips. Anonymous concerns are deliberately not tracked here.
+4. **Careers** (`CareersTab`) — open positions with referral bonuses; refer a candidate or apply internally; HR sees and advances the per-role pipeline (New → Interviewing → Hired/Rejected).
+5. **Onboarding** (`OnboardingChecklist`) — only when the user checked "I'm a new hire" at login. 7 sections + acknowledgement gate.
+
+**HR Workspace (role-gated):**
+
+6. **Inbox** (`HRInbox`) — the HR work queue: pending leave, pending certificates, open concerns, and new candidates in one list, oldest first, actioned inline (approve/deny, prepare letter, start review/resolve, interview/reject). Recently issued letters listed below. Badge = queue size.
+7. **Leave planner** — toggle between `LeaveDashboard` (month timeline of who's off, same-team overlap warnings, holiday/weekend shading, annual balances at 30 days) and `LeaveRequestsList` (full history + approve/deny).
+8. **Renewals** (`RenewalsReport`) — everything expiring within 90 days or overdue: visas, passports, contracts (`contractEndDate`), dependent insurance — employees and dependents both. Also surfaced as a My HR callout.
+9. **Attendance** (`AttendanceTab`) — today's snapshot (in office / on site / on leave / absent), check-ins, weekly hours, late/absence counts. Fingerprint feed is Phase 2; data is illustrative.
+10. **Payroll** (`PayrollTab`) — monthly WPS run: basic + allowances + overtime − deductions per employee, month selector, run status (Draft → Generate WPS SIF → Submitted → Paid), payslip modal per employee incl. estimated end-of-service gratuity (21 days basic/yr first 5 years, 30 after).
+11. **Holidays** (`HolidaysTab`, HR staff only) — approve/edit/add public holidays; approved ones feed the Home dashboard tile and the leave calendar shading.
+
+**Certificate letters** (`CertificateLetterModal` + `data/certificateTemplates.js`): six UAE letter types (salary, employment, salary transfer, NOC, embassy, experience) with suggested wording auto-filled from the employee record in English/Arabic/bilingual; HR edits freely, prints to PDF on letterhead (hidden-iframe print), Zoho Sign step is a mocked workflow preview pending the Phase 2 backend.
 
 ---
 
@@ -168,12 +199,15 @@ Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `la
 
 This is the honest risk list, not just a TODO.
 
-- **No RBAC / permissions enforcement.** The role picker at login is cosmetic. The original ERP planning docs specced real role-based permissions (marketing read-only, PMs see only their projects, etc.). This is the one area where "UI first, backend later" carries real risk — access control changes *what renders*, not just what an API returns, so retrofitting it onto screens built assuming "show everything" may require rework. Recommend Option 2 for Phase 2 backend: everyone sees limited info (name, title, email, phone, location), HR/Admin see full details (visa, dependents, accomplishments, compensation). The Compensation tab and org chart already expose full salary data to anyone with the URL — no gating in the current UI-only build.
-- **No persistence.** Every add/edit/delete is `setState` on in-memory arrays. Refreshing resets to seed data. Fine for Phase 1 demo; Phase 2 backend will fix this.
-- **No Leave approval workflow.** Form exists to request leave, but no approval engine, manager/HR dashboard, or conflict checking (preventing 5 people from the same team being out simultaneously). Too complex for Phase 1 without backend; defer to Phase 2.
-- **No Attendance tracking.** Fingerprint/card readers + timesheet integration require backend (biometric API, hours validation against projects). Skipped Phase 1.
+- **RBAC is prototyped, not enforced.** The UI now genuinely gates by role (`HR_STAFF_ROLES` / `SENSITIVE_VIEW_ROLES` hide sensitive views, and the two-lens HR design answers the "what should each role see" question) — but it's all client-side against a password-less login where anyone can pick "HR" from a dropdown. The gating is the *spec* for Phase 2, not security. Real enforcement (auth + API-level filtering) is the first backend job.
+- **No persistence.** Every add/edit/delete is `setState` on in-memory arrays. Refreshing resets to seed data — visibly so, now that there are inbox queues and badges. Fine for Phase 1 demo; Phase 2 backend will fix this.
+- **Leave approval is single-step.** HR can approve/deny from the Inbox and the planner flags same-team overlaps — but there's no manager-first approval chain, no notifications, and nothing *prevents* approving a conflicting request. Multi-level chains are Phase 2.
+- **Attendance is a mock dashboard.** The layout exists for sign-off; the actual fingerprint/card-reader feed and timesheet validation need the Phase 2 backend. Project-linked weekly timesheets (modeled on the current external system) are specced-by-screenshot but not built.
+- **Zoho Sign is mocked.** The certificate-letter flow ends at print-to-PDF; the e-signature step is a workflow preview because API credentials can't live in a frontend-only app. Needs a small serverless function in Phase 2.
+- **No document storage.** CVs, passport scans, signed letters — the Documents tab and candidate CV upload are placeholders pending Phase 2 file storage.
+- **Appraisals not started** — waiting on a specification (cycle, reviewers, rating model).
 - **Won deals don't become Projects.** Explicitly deprioritized. A deal that reaches `Won` just sits there; no linked delivery/project entity with timeline/team/budget.
-- **No email sending.** Structurally can't be done client-side — needs serverless function + provider (Resend recommended).
+- **No email sending / notifications.** Structurally can't be done client-side — needs serverless function + provider (Resend recommended). Increasingly relevant now that there are approval flows people would expect to be notified about.
 - **Leaked credential in git history.** Supabase `service_role` key in `backend/populate_db.py` (commit `6985c30`). Needs rotating in Supabase dashboard — the key is still live until rotated. Not confirmed done as of this writing.
 - **No global search**, no charts beyond Overview's bar breakdowns.
 
