@@ -4,13 +4,34 @@ import { STAGES, STAGE_COLOR, formatCurrencyShort } from '../../data/crmData'
 
 export default function PipelineView({ deals, companies, contacts, onMoveStage, onAddDeal, onJumpToCompany, onEditDeal }) {
   const [dragId, setDragId] = useState(null)
+  const [timeFilter, setTimeFilter] = useState('all')
 
-  const openDeals = deals.filter((d) => d.stage !== 'Lost')
+  const now = new Date()
+  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const thisQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
+  const thisYear = new Date(now.getFullYear(), 0, 1)
+
+  function isInTimeRange(dateStr) {
+    const dealDate = new Date(dateStr)
+    switch (timeFilter) {
+      case 'month':
+        return dealDate >= thisMonth
+      case 'quarter':
+        return dealDate >= thisQuarter
+      case 'year':
+        return dealDate >= thisYear
+      default:
+        return true
+    }
+  }
+
+  const filteredDeals = deals.filter((d) => isInTimeRange(d.closeDate))
+  const openDeals = filteredDeals.filter((d) => d.stage !== 'Lost')
   const openValue = openDeals.filter((d) => d.stage !== 'Won').reduce((s, d) => s + d.value, 0)
   const weightedValue = openDeals.filter((d) => d.stage !== 'Won').reduce((s, d) => s + d.value * (d.probability / 100), 0)
-  const wonValue = deals.filter((d) => d.stage === 'Won').reduce((s, d) => s + d.value, 0)
-  const closedCount = deals.filter((d) => d.stage === 'Won' || d.stage === 'Lost').length
-  const winRate = closedCount ? Math.round((deals.filter((d) => d.stage === 'Won').length / closedCount) * 100) : 0
+  const wonValue = filteredDeals.filter((d) => d.stage === 'Won').reduce((s, d) => s + d.value, 0)
+  const closedCount = filteredDeals.filter((d) => d.stage === 'Won' || d.stage === 'Lost').length
+  const winRate = closedCount ? Math.round((filteredDeals.filter((d) => d.stage === 'Won').length / closedCount) * 100) : 0
 
   function handleDrop(stage) {
     if (dragId != null) onMoveStage(dragId, stage)
@@ -19,6 +40,28 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
 
   return (
     <div className="space-y-6">
+      {/* Time filter */}
+      <div className="flex gap-2">
+        {[
+          { value: 'all', label: 'All Time' },
+          { value: 'year', label: 'This Year' },
+          { value: 'quarter', label: 'This Quarter' },
+          { value: 'month', label: 'This Month' },
+        ].map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setTimeFilter(opt.value)}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+              timeFilter === opt.value
+                ? 'bg-brand text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       {/* Summary bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
@@ -52,7 +95,7 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
       {/* Kanban board */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {STAGES.map((stage) => {
-          const stageDeals = deals.filter((d) => d.stage === stage)
+          const stageDeals = filteredDeals.filter((d) => d.stage === stage)
           const stageValue = stageDeals.reduce((s, d) => s + d.value, 0)
           return (
             <div

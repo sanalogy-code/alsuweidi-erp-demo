@@ -7,6 +7,7 @@ import CompaniesView from '../components/crm/CompaniesView'
 import ContactsView from '../components/crm/ContactsView'
 import PipelineView from '../components/crm/PipelineView'
 import TasksView from '../components/crm/TasksView'
+import ReportsView from '../components/crm/ReportsView'
 import ContactDetailModal from '../components/crm/ContactDetailModal'
 import CompanyEditModal from '../components/crm/CompanyEditModal'
 import DealEditModal from '../components/crm/DealEditModal'
@@ -19,6 +20,7 @@ const TABS = [
   { key: 'companies', label: 'Companies' },
   { key: 'contacts', label: 'Contacts' },
   { key: 'tasks', label: 'Tasks' },
+  { key: 'reports', label: 'Reports' },
 ]
 
 export default function CRM({ user, onLogout }) {
@@ -243,6 +245,10 @@ export default function CRM({ user, onLogout }) {
             onAddTask={openAddTask} onToggle={toggleTask} onDelete={deleteTask}
             onJumpToCompany={jumpToCompany}
           />
+        )}
+
+        {tab === 'reports' && (
+          <ReportsView deals={deals} companies={companies} />
         )}
       </div>
 
