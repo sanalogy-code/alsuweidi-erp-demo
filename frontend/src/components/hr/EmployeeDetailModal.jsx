@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import { X, FileText, Award } from 'lucide-react'
+import { X, FileText, Award, DollarSign } from 'lucide-react'
 import Modal from '../crm/Modal'
 
-export default function EmployeeDetailModal({ employee, onClose }) {
+export default function EmployeeDetailModal({ employee, employees = [], onClose, onViewEmployee }) {
   const [detailTab, setDetailTab] = useState('info')
 
   if (!employee) return null
 
   const startDate = new Date(employee.startDate)
   const yearsAtCompany = ((new Date() - startDate) / (1000 * 60 * 60 * 24 * 365)).toFixed(1)
+  const manager = employees.find((e) => e.id === employee.managerId)
+  const totalMonthly = employee.compensation
+    ? employee.compensation.basicSalary + employee.compensation.housingAllowance + employee.compensation.transportAllowance
+    : null
 
   const visaStatusColor = {
     Valid: 'bg-green-100 text-green-700',
@@ -38,6 +42,13 @@ export default function EmployeeDetailModal({ employee, onClose }) {
         >
           <Award size={14} className="inline mr-1" />
           Accomplishments
+        </button>
+        <button
+          onClick={() => setDetailTab('compensation')}
+          className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'compensation' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
+        >
+          <DollarSign size={14} className="inline mr-1" />
+          Compensation
         </button>
         <button
           onClick={() => setDetailTab('documents')}
@@ -80,6 +91,19 @@ export default function EmployeeDetailModal({ employee, onClose }) {
               <div className="font-medium text-gray-800">{startDate.toLocaleDateString('en-AE')}</div>
               <div className="text-xs text-gray-500 mt-1">{yearsAtCompany} years at ALSUWEIDI</div>
             </div>
+            <div>
+              <label className="text-xs text-gray-500">Reports To</label>
+              {manager ? (
+                <button
+                  onClick={() => onViewEmployee?.(manager)}
+                  className="font-medium text-brand hover:underline block"
+                >
+                  {manager.name} <span className="text-gray-400 font-normal">— {manager.title}</span>
+                </button>
+              ) : (
+                <div className="font-medium text-gray-800">— (no manager, department head)</div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -99,6 +123,19 @@ export default function EmployeeDetailModal({ employee, onClose }) {
               </a>
             </div>
           </div>
+
+          {employee.emergencyContact && (
+            <>
+              <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3 mt-5">Emergency Contact</h3>
+              <div className="space-y-1 text-sm">
+                <div className="font-medium text-gray-800">{employee.emergencyContact.name}</div>
+                <div className="text-xs text-gray-500">{employee.emergencyContact.relationship}</div>
+                <a href={`tel:${employee.emergencyContact.phone}`} className="text-brand hover:underline block">
+                  {employee.emergencyContact.phone}
+                </a>
+              </div>
+            </>
+          )}
         </div>
         </div>
       )}
@@ -167,6 +204,42 @@ export default function EmployeeDetailModal({ employee, onClose }) {
           ) : (
             <div className="text-sm text-gray-500">No accomplishments recorded yet</div>
           )}
+        </div>
+      )}
+
+      {detailTab === 'compensation' && employee.compensation && (
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">Monthly Package (AED)</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Basic Salary:</span>
+                <span className="font-medium">{employee.compensation.basicSalary.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Housing Allowance:</span>
+                <span className="font-medium">{employee.compensation.housingAllowance.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Transport Allowance:</span>
+                <span className="font-medium">{employee.compensation.transportAllowance.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-gray-200">
+                <span className="text-gray-800 font-semibold">Total Monthly Package:</span>
+                <span className="font-semibold text-brand">{totalMonthly.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">Other Benefits</h3>
+            <div className="text-sm text-gray-700">{employee.compensation.otherBenefits}</div>
+          </div>
+
+          <div>
+            <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">Notice Period</h3>
+            <div className="text-sm text-gray-700">{employee.compensation.noticePeriodDays} days</div>
+          </div>
         </div>
       )}
 

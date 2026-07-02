@@ -7,11 +7,13 @@ import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import LeaveRequestModal from '../components/hr/LeaveRequestModal'
 import LeaveRequestsList from '../components/hr/LeaveRequestsList'
 import AccomplishmentsSearch from '../components/hr/AccomplishmentsSearch'
+import OrgChart from '../components/hr/OrgChart'
 import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS } from '../data/hrData'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'directory', label: 'Directory' },
+  { key: 'orgchart', label: 'Org Chart' },
   { key: 'accomplishments', label: 'Accomplishments' },
   { key: 'leave', label: 'Leave' },
   { key: 'onboarding', label: 'Onboarding' },
@@ -81,7 +83,11 @@ export default function HR({ user, onLogout }) {
               <h3 className="text-sm font-semibold text-gray-800 mb-3">Quick Links</h3>
               <div className="grid grid-cols-2 gap-2">
                 {QUICK_LINKS.map((l) => (
-                  <button key={l.label} className="text-left text-sm text-brand font-medium hover:underline px-1 py-1">
+                  <button
+                    key={l.label}
+                    onClick={() => l.label === 'Org Chart' && setTab('orgchart')}
+                    className="text-left text-sm text-brand font-medium hover:underline px-1 py-1"
+                  >
                     → {l.label}
                   </button>
                 ))}
@@ -92,6 +98,8 @@ export default function HR({ user, onLogout }) {
         )}
 
         {tab === 'directory' && <EmployeeList employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
+
+        {tab === 'orgchart' && <OrgChart employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
 
         {tab === 'accomplishments' && <AccomplishmentsSearch employees={EMPLOYEES} />}
 
@@ -111,7 +119,14 @@ export default function HR({ user, onLogout }) {
         {tab === 'onboarding' && <OnboardingChecklist userName={user?.username} />}
       </div>
 
-      {selectedEmployee && <EmployeeDetailModal employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} />}
+      {selectedEmployee && (
+        <EmployeeDetailModal
+          employee={selectedEmployee}
+          employees={EMPLOYEES}
+          onClose={() => setSelectedEmployee(null)}
+          onViewEmployee={setSelectedEmployee}
+        />
+      )}
 
       {showLeaveModal && (
         <LeaveRequestModal
