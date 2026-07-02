@@ -8,6 +8,7 @@ import ContactsView from '../components/crm/ContactsView'
 import PipelineView from '../components/crm/PipelineView'
 import TasksView from '../components/crm/TasksView'
 import ContactDetailModal from '../components/crm/ContactDetailModal'
+import CompanyEditModal from '../components/crm/CompanyEditModal'
 import ExportContactsModal from '../components/crm/ExportContactsModal'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
 
@@ -31,6 +32,7 @@ export default function CRM({ user, onLogout }) {
   const [search, setSearch] = useState('')
   const [viewContactId, setViewContactId] = useState(null)
   const [showExportContacts, setShowExportContacts] = useState(false)
+  const [editingCompanyId, setEditingCompanyId] = useState(null)
 
   const [showAddCompany, setShowAddCompany] = useState(false)
   const [showAddContact, setShowAddContact] = useState(false)
@@ -67,6 +69,17 @@ export default function CRM({ user, onLogout }) {
 
   function updateContact(contactId, fields) {
     setContacts(contacts.map((c) => c.id === contactId ? { ...c, ...fields } : c))
+  }
+
+  function updateCompany(companyId, fields) {
+    setCompanies(companies.map((c) => c.id === companyId ? { ...c, ...fields } : c))
+    setEditingCompanyId(null)
+  }
+
+  function deleteCompany(companyId) {
+    setCompanies(companies.filter((c) => c.id !== companyId))
+    setSelectedCompany(null)
+    setEditingCompanyId(null)
   }
 
   function jumpToCompanyFromDetail(companyId) {
@@ -199,7 +212,7 @@ export default function CRM({ user, onLogout }) {
             selectedCompany={selectedCompany} setSelectedCompany={setSelectedCompany}
             search={search} setSearch={setSearch}
             onAddContact={openAddContact} onLogInteraction={openLogInteraction} onAddTask={openAddTask}
-            onViewContact={setViewContactId}
+            onViewContact={setViewContactId} onEditCompany={setEditingCompanyId}
           />
         )}
 
@@ -430,6 +443,15 @@ export default function CRM({ user, onLogout }) {
           onJumpToCompany={jumpToCompanyFromDetail}
           onLogInteraction={openLogInteraction}
           onAddTask={openAddTask}
+        />
+      )}
+
+      {editingCompanyId && (
+        <CompanyEditModal
+          company={companies.find((c) => c.id === editingCompanyId)}
+          onClose={() => setEditingCompanyId(null)}
+          onSave={updateCompany}
+          onDelete={deleteCompany}
         />
       )}
 

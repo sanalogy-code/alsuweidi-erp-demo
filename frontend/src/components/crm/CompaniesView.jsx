@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { Mail, Phone, FileText, Search, Bell, Plus, History } from 'lucide-react'
+import { Mail, Phone, FileText, Search, Bell, Plus, History, Pencil } from 'lucide-react'
 import { getStatusColor, formatCurrency, daysSince } from '../../data/crmData'
 import InteractionIcon from './InteractionIcon'
 
 export default function CompaniesView({
   companies, contacts, deals, interactions, selectedCompany, setSelectedCompany,
-  search, setSearch, onAddContact, onLogInteraction, onAddTask, onViewContact,
+  search, setSearch, onAddContact, onLogInteraction, onAddTask, onViewContact, onEditCompany,
 }) {
   const [activeTab, setActiveTab] = useState('contacts')
 
@@ -75,7 +75,13 @@ export default function CompaniesView({
                   <h2 className="text-xl font-bold text-gray-800">{company.name}</h2>
                   <p className="text-sm text-gray-500">{company.industry} • {company.location}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right space-y-2">
+                  <button
+                    onClick={() => onEditCompany(company.id)}
+                    className="text-xs text-brand hover:text-brand-dark font-medium flex items-center gap-1 ml-auto"
+                  >
+                    <Pencil size={13} /> Edit
+                  </button>
                   <div className="text-2xl font-bold text-brand">{formatCurrency(openValue)}</div>
                   <p className="text-xs text-gray-500">Open Pipeline Value</p>
                 </div>
