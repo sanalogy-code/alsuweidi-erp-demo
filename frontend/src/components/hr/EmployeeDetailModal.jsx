@@ -100,8 +100,8 @@ export default function EmployeeDetailModal({ employee, onClose }) {
             </div>
           </div>
         </div>
+        </div>
       )}
-
 
       {detailTab === 'visa' && (
         <div className="space-y-6">
