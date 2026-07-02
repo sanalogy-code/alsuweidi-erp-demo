@@ -1,11 +1,9 @@
-import { useState, useMemo } from 'react'
-import { FileSpreadsheet, FileText } from 'lucide-react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { FileSpreadsheet, FileText, ChevronDown } from 'lucide-react'
 import Modal from './Modal'
 import {
   RELATIONSHIP_TYPES, SUBTYPES_BY_RELATIONSHIP, SENIORITY_LEVELS, EMPLOYMENT_TYPES, daysSince,
 } from '../../data/crmData'
-
-const ALL_SUBTYPES = [...new Set(Object.values(SUBTYPES_BY_RELATIONSHIP).flat())]
 
 const LAST_CONTACTED_OPTIONS = [
   { value: 'any', label: 'Any time' },
@@ -19,37 +17,63 @@ function daysSinceNumber(date) {
   return Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24))
 }
 
-function FilterGroup({ title, options, selected, onChange }) {
-  const allSelected = options.every((o) => selected.has(o))
+function MultiSelectDropdown({ label, options, selected, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  const allSelected = options.length > 0 && options.every((o) => selected.has(o))
+  const summary =
+    options.length === 0 ? 'No options'
+    : allSelected ? 'All'
+    : selected.size === 0 ? 'None selected'
+    : `${selected.size} of ${options.length} selected`
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-2">
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</h4>
-        <button
-          onClick={() => onChange(allSelected ? new Set() : new Set(options))}
-          className="text-[11px] text-brand font-medium hover:underline"
-        >
-          {allSelected ? 'Clear' : 'Select all'}
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((o) => {
-          const active = selected.has(o)
-          return (
-            <button
-              key={o}
-              onClick={() => {
-                const next = new Set(selected)
-                active ? next.delete(o) : next.add(o)
-                onChange(next)
-              }}
-              className={`text-xs px-2.5 py-1 rounded-full border transition ${active ? 'bg-brand text-white border-brand' : 'bg-white text-gray-600 border-gray-200 hover:border-brand'}`}
-            >
-              {o}
-            </button>
-          )
-        })}
-      </div>
+    <div className="relative" ref={ref}>
+      <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">{label}</label>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        disabled={options.length === 0}
+        className="w-full flex justify-between items-center border border-gray-300 rounded-md px-3 py-2 text-sm bg-white hover:border-brand focus:outline-none focus:ring-1 focus:ring-brand disabled:bg-gray-50 disabled:text-gray-400"
+      >
+        <span className={selected.size === 0 ? 'text-gray-400' : 'text-gray-700'}>{summary}</span>
+        <ChevronDown size={14} className={`text-gray-400 transition shrink-0 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-56 overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => onChange(allSelected ? new Set() : new Set(options))}
+            className="w-full text-left px-3 py-2 text-xs font-medium text-brand hover:bg-gray-50 border-b border-gray-100 sticky top-0 bg-white"
+          >
+            {allSelected ? 'Clear all' : 'Select all'}
+          </button>
+          {options.map((o) => (
+            <label key={o} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selected.has(o)}
+                onChange={() => {
+                  const next = new Set(selected)
+                  selected.has(o) ? next.delete(o) : next.add(o)
+                  onChange(next)
+                }}
+                className="w-4 h-4 accent-current text-brand rounded"
+              />
+              <span className="text-gray-700">{o}</span>
+            </label>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -57,10 +81,27 @@ function FilterGroup({ title, options, selected, onChange }) {
 export default function ExportContactsModal({ contacts, companies, onClose }) {
   const [selCompanies, setSelCompanies] = useState(new Set(companies.map((c) => c.id)))
   const [selRelationships, setSelRelationships] = useState(new Set(RELATIONSHIP_TYPES))
-  const [selSubTypes, setSelSubTypes] = useState(new Set(ALL_SUBTYPES))
+  const [selSubTypes, setSelSubTypes] = useState(
+    new Set(RELATIONSHIP_TYPES.flatMap((r) => SUBTYPES_BY_RELATIONSHIP[r] || []))
+  )
   const [selSeniority, setSelSeniority] = useState(new Set(SENIORITY_LEVELS))
   const [selEmployment, setSelEmployment] = useState(new Set(EMPLOYMENT_TYPES))
   const [lastContacted, setLastContacted] = useState('any')
+
+  // Sub-type options are scoped to whichever relationships are currently selected.
+  const availableSubTypes = useMemo(
+    () => [...new Set([...selRelationships].flatMap((r) => SUBTYPES_BY_RELATIONSHIP[r] || []))],
+    [selRelationships]
+  )
+
+  function handleRelationshipChange(nextRelationships) {
+    setSelRelationships(nextRelationships)
+    const nextSubTypes = [...new Set([...nextRelationships].flatMap((r) => SUBTYPES_BY_RELATIONSHIP[r] || []))]
+    setSelSubTypes(new Set(nextSubTypes))
+  }
+
+  const companyOptions = companies.map((c) => c.name)
+  const selCompanyNames = new Set([...selCompanies].map((id) => companies.find((c) => c.id === id)?.name))
 
   const filtered = useMemo(() => {
     return contacts.filter((c) => {
@@ -121,27 +162,26 @@ export default function ExportContactsModal({ contacts, companies, onClose }) {
 
   return (
     <Modal wide title="Export Contacts" onClose={onClose}>
-      <div className="space-y-5 mb-6">
-        <FilterGroup title="Company" options={companies.map((c) => c.name)} selected={new Set([...selCompanies].map((id) => companies.find((c) => c.id === id)?.name))}
-          onChange={(namesSet) => setSelCompanies(new Set(companies.filter((c) => namesSet.has(c.name)).map((c) => c.id)))} />
-        <FilterGroup title="Relationship" options={RELATIONSHIP_TYPES} selected={selRelationships} onChange={setSelRelationships} />
-        <FilterGroup title="Sub-Type" options={ALL_SUBTYPES} selected={selSubTypes} onChange={setSelSubTypes} />
-        <FilterGroup title="Seniority" options={SENIORITY_LEVELS} selected={selSeniority} onChange={setSelSeniority} />
-        <FilterGroup title="Employment Type" options={EMPLOYMENT_TYPES} selected={selEmployment} onChange={setSelEmployment} />
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <MultiSelectDropdown
+          label="Company"
+          options={companyOptions}
+          selected={selCompanyNames}
+          onChange={(namesSet) => setSelCompanies(new Set(companies.filter((c) => namesSet.has(c.name)).map((c) => c.id)))}
+        />
+        <MultiSelectDropdown label="Relationship" options={RELATIONSHIP_TYPES} selected={selRelationships} onChange={handleRelationshipChange} />
+        <MultiSelectDropdown label="Sub-Type" options={availableSubTypes} selected={selSubTypes} onChange={setSelSubTypes} />
+        <MultiSelectDropdown label="Seniority" options={SENIORITY_LEVELS} selected={selSeniority} onChange={setSelSeniority} />
+        <MultiSelectDropdown label="Employment Type" options={EMPLOYMENT_TYPES} selected={selEmployment} onChange={setSelEmployment} />
         <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Last Contacted</h4>
-          <div className="flex flex-wrap gap-1.5">
-            {LAST_CONTACTED_OPTIONS.map((o) => (
-              <button
-                key={o.value}
-                onClick={() => setLastContacted(o.value)}
-                className={`text-xs px-2.5 py-1 rounded-full border transition ${lastContacted === o.value ? 'bg-brand text-white border-brand' : 'bg-white text-gray-600 border-gray-200 hover:border-brand'}`}
-              >
-                {o.label}
-              </button>
-            ))}
-          </div>
+          <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Last Contacted</label>
+          <select
+            value={lastContacted}
+            onChange={(e) => setLastContacted(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-brand"
+          >
+            {LAST_CONTACTED_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
         </div>
       </div>
 
