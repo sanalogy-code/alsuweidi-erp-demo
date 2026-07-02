@@ -21,9 +21,15 @@ const TABS = [
 
 export default function HR({ user, onLogout }) {
   const [tab, setTab] = useState('overview')
+  const [employees, setEmployees] = useState(EMPLOYEES)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaveRequests, setLeaveRequests] = useState(LEAVE_REQUESTS)
+
+  const handleAddDependent = (employeeId, dependent) => {
+    setEmployees(employees.map((e) => (e.id === employeeId ? { ...e, dependents: [...e.dependents, dependent] } : e)))
+    setSelectedEmployee((prev) => (prev && prev.id === employeeId ? { ...prev, dependents: [...prev.dependents, dependent] } : prev))
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -97,11 +103,11 @@ export default function HR({ user, onLogout }) {
           </div>
         )}
 
-        {tab === 'directory' && <EmployeeList employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
+        {tab === 'directory' && <EmployeeList employees={employees} onViewEmployee={setSelectedEmployee} />}
 
-        {tab === 'orgchart' && <OrgChart employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
+        {tab === 'orgchart' && <OrgChart employees={employees} onViewEmployee={setSelectedEmployee} />}
 
-        {tab === 'accomplishments' && <AccomplishmentsSearch employees={EMPLOYEES} />}
+        {tab === 'accomplishments' && <AccomplishmentsSearch employees={employees} />}
 
         {tab === 'leave' && (
           <LeaveRequestsList
@@ -122,15 +128,16 @@ export default function HR({ user, onLogout }) {
       {selectedEmployee && (
         <EmployeeDetailModal
           employee={selectedEmployee}
-          employees={EMPLOYEES}
+          employees={employees}
           onClose={() => setSelectedEmployee(null)}
           onViewEmployee={setSelectedEmployee}
+          onAddDependent={handleAddDependent}
         />
       )}
 
       {showLeaveModal && (
         <LeaveRequestModal
-          employee={EMPLOYEES[0]}
+          employee={employees[0]}
           onClose={() => setShowLeaveModal(false)}
           onSubmit={(newRequest) => {
             setLeaveRequests([...leaveRequests, { ...newRequest, id: Math.max(...leaveRequests.map((r) => r.id), 0) + 1 }])
