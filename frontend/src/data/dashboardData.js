@@ -56,7 +56,7 @@ export const QUICK_ACTIONS = [
 export const MODULES = [
   { key: 'crm', icon: '📊', label: 'CRM', description: 'Companies, contacts & pipeline', path: '/crm', status: 'live' },
   { key: 'projects', icon: '🏗️', label: 'Projects', description: 'Project tracking & files', path: '/projects', status: 'soon' },
-  { key: 'hr', icon: '👥', label: 'HR', description: 'Employees, leave & timesheets', path: '/hr', status: 'soon' },
+  { key: 'hr', icon: '👥', label: 'HR', description: 'Onboarding, policies & more', path: '/hr', status: 'live' },
   { key: 'marketing', icon: '📈', label: 'Marketing', description: 'LinkedIn, website & analytics', path: '/marketing', status: 'soon' },
   { key: 'content', icon: '🗓️', label: 'Content', description: 'Content calendar & collaboration', path: '/content', status: 'soon' },
   { key: 'admin', icon: '⚙️', label: 'Admin Center', description: 'Users, roles & permissions', path: '/admin', status: 'soon' },

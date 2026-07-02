@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import CRM from './pages/CRM'
+import HR from './pages/HR'
 import ComingSoon from './pages/ComingSoon'
 
 export default function App() {
@@ -34,7 +35,7 @@ export default function App() {
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} />} />
       <Route path="/projects" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="projects" />} />
-      <Route path="/hr" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="hr" />} />
+      <Route path="/hr" element={<HR user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="marketing" />} />
       <Route path="/content" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="content" />} />
       <Route path="/admin" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="admin" />} />
