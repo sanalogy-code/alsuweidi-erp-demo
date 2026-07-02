@@ -4,8 +4,7 @@ import { STAGES, STAGE_COLOR, formatCurrencyShort } from '../../data/crmData'
 
 export default function PipelineView({ deals, companies, contacts, onMoveStage, onAddDeal, onJumpToCompany, onEditDeal }) {
   const [dragId, setDragId] = useState(null)
-  const [filterMode, setFilterMode] = useState('all') // 'preset' or 'custom'
-  const [preset, setPreset] = useState('all')
+  const [timeRange, setTimeRange] = useState('all')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
 
@@ -14,8 +13,8 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
   const thisQuarter = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1)
   const thisYear = new Date(now.getFullYear(), 0, 1)
 
-  function getPresetRange(presetType) {
-    switch (presetType) {
+  function getPresetRange(preset) {
+    switch (preset) {
       case 'month':
         return { start: thisMonth, end: null }
       case 'quarter':
@@ -30,7 +29,7 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
   function isInTimeRange(dateStr) {
     const dealDate = new Date(dateStr)
 
-    if (filterMode === 'custom') {
+    if (timeRange === 'custom') {
       const start = customStart ? new Date(customStart) : null
       const end = customEnd ? new Date(customEnd) : null
       if (start && dealDate < start) return false
@@ -38,11 +37,18 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
       return true
     }
 
-    const { start, end } = getPresetRange(preset)
+    const { start, end } = getPresetRange(timeRange)
     if (start && dealDate < start) return false
     if (end && dealDate > end) return false
     return true
   }
+
+  const displayRange = timeRange === 'custom' && (customStart || customEnd)
+    ? `${customStart || '?'} to ${customEnd || '?'}`
+    : timeRange === 'month' ? 'This Month'
+    : timeRange === 'quarter' ? 'This Quarter'
+    : timeRange === 'year' ? 'This Year'
+    : 'All Time'
 
   const filteredDeals = deals.filter((d) => isInTimeRange(d.closeDate))
   const openDeals = filteredDeals.filter((d) => d.stage !== 'Lost')
@@ -60,50 +66,32 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
   return (
     <div className="space-y-6">
       {/* Time filter */}
-      <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-        {/* Mode selector */}
-        <div className="flex gap-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              value="preset"
-              checked={filterMode === 'preset'}
-              onChange={(e) => setFilterMode(e.target.value)}
-              className="cursor-pointer"
-            />
-            <span className="text-sm font-medium text-gray-700">Preset</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              value="custom"
-              checked={filterMode === 'custom'}
-              onChange={(e) => setFilterMode(e.target.value)}
-              className="cursor-pointer"
-            />
-            <span className="text-sm font-medium text-gray-700">Custom Range</span>
-          </label>
-        </div>
-
-        {/* Preset dropdown */}
-        {filterMode === 'preset' && (
+      <div className="flex gap-3 items-end flex-wrap">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-2">Date Range</label>
           <select
-            value={preset}
-            onChange={(e) => setPreset(e.target.value)}
-            className="w-full sm:w-48 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+            value={timeRange}
+            onChange={(e) => {
+              setTimeRange(e.target.value)
+              if (e.target.value !== 'custom') {
+                setCustomStart('')
+                setCustomEnd('')
+              }
+            }}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-brand"
           >
             <option value="all">All Time</option>
             <option value="year">This Year</option>
             <option value="quarter">This Quarter</option>
             <option value="month">This Month</option>
+            <option value="custom">Custom Range</option>
           </select>
-        )}
+        </div>
 
-        {/* Custom date range */}
-        {filterMode === 'custom' && (
-          <div className="flex gap-3 items-end">
+        {timeRange === 'custom' && (
+          <>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+              <label className="block text-xs font-medium text-gray-600 mb-2">From</label>
               <input
                 type="date"
                 value={customStart}
@@ -112,7 +100,7 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+              <label className="block text-xs font-medium text-gray-600 mb-2">To</label>
               <input
                 type="date"
                 value={customEnd}
@@ -125,13 +113,14 @@ export default function PipelineView({ deals, companies, contacts, onMoveStage, 
                 onClick={() => {
                   setCustomStart('')
                   setCustomEnd('')
+                  setTimeRange('all')
                 }}
                 className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium"
               >
                 Clear
               </button>
             )}
-          </div>
+          </>
         )}
       </div>
 
