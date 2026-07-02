@@ -1,15 +1,13 @@
 import { useState } from 'react'
-import { Mail, Phone, FileText, Search, Bell, Plus, History, ChevronDown, ChevronUp } from 'lucide-react'
+import { Mail, Phone, FileText, Search, Bell, Plus, History } from 'lucide-react'
 import { getStatusColor, formatCurrency, daysSince } from '../../data/crmData'
 import InteractionIcon from './InteractionIcon'
-import InteractionHistory from './InteractionHistory'
 
 export default function CompaniesView({
   companies, contacts, deals, interactions, selectedCompany, setSelectedCompany,
-  search, setSearch, onAddContact, onLogInteraction, onAddTask,
+  search, setSearch, onAddContact, onLogInteraction, onAddTask, onViewContact,
 }) {
   const [activeTab, setActiveTab] = useState('contacts')
-  const [expandedContactId, setExpandedContactId] = useState(null)
 
   const filteredCompanies = companies.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) || c.industry.toLowerCase().includes(search.toLowerCase())
@@ -128,10 +126,10 @@ export default function CompaniesView({
                     {companyContacts.map((contact) => (
                       <div key={contact.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition">
                         <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-semibold text-gray-800 text-sm">{contact.name}</h4>
+                          <button onClick={() => onViewContact(contact.id)} className="text-left group">
+                            <h4 className="font-semibold text-gray-800 text-sm group-hover:text-brand group-hover:underline">{contact.name}</h4>
                             <p className="text-xs text-gray-500">{contact.title}</p>
-                          </div>
+                          </button>
                           <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${contact.lastContact ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                             {daysSince(contact.lastContact)}
                           </span>
@@ -141,26 +139,17 @@ export default function CompaniesView({
                           <div className="flex items-center gap-1.5"><Phone size={13} className="text-gray-400" />{contact.phone || '—'}</div>
                         </div>
                         {contact.notes && <p className="text-xs text-gray-500 italic mb-2">"{contact.notes}"</p>}
-                        <div className="flex items-center gap-3 mb-1">
+                        <div className="flex items-center gap-3">
                           <button onClick={() => onLogInteraction(contact.id)} className="text-brand text-xs font-medium hover:underline">
                             Log Interaction →
                           </button>
                           <button onClick={() => onAddTask(contact.id)} title="Remind me to reconnect" className="text-gray-400 hover:text-brand transition flex items-center gap-1 text-xs">
                             <Bell size={13} /> Remind me
                           </button>
-                          <button
-                            onClick={() => setExpandedContactId(expandedContactId === contact.id ? null : contact.id)}
-                            className="text-gray-400 hover:text-brand transition flex items-center gap-1 text-xs ml-auto"
-                          >
-                            <History size={13} /> History
-                            {expandedContactId === contact.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                          <button onClick={() => onViewContact(contact.id)} className="text-gray-400 hover:text-brand transition flex items-center gap-1 text-xs ml-auto">
+                            <History size={13} /> {interactions.filter((i) => i.contactId === contact.id).length}
                           </button>
                         </div>
-                        {expandedContactId === contact.id && (
-                          <div className="border-t border-gray-100 pt-3 mt-2">
-                            <InteractionHistory interactions={interactions} contactId={contact.id} />
-                          </div>
-                        )}
                       </div>
                     ))}
                     {companyContacts.length === 0 && (

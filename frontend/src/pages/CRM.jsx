@@ -7,6 +7,7 @@ import CompaniesView from '../components/crm/CompaniesView'
 import ContactsView from '../components/crm/ContactsView'
 import PipelineView from '../components/crm/PipelineView'
 import TasksView from '../components/crm/TasksView'
+import ContactDetailModal from '../components/crm/ContactDetailModal'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
 
 const TABS = [
@@ -27,6 +28,7 @@ export default function CRM({ user, onLogout }) {
   const [tab, setTab] = useState('overview')
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [search, setSearch] = useState('')
+  const [viewContactId, setViewContactId] = useState(null)
 
   const [showAddCompany, setShowAddCompany] = useState(false)
   const [showAddContact, setShowAddContact] = useState(false)
@@ -59,6 +61,15 @@ export default function CRM({ user, onLogout }) {
   function openLogInteraction(contactId) {
     setInteractionForm({ contactId: contactId || '', type: 'Call', note: '', date: todayISO() })
     setShowLogInteraction(true)
+  }
+
+  function updateContact(contactId, fields) {
+    setContacts(contacts.map((c) => c.id === contactId ? { ...c, ...fields } : c))
+  }
+
+  function jumpToCompanyFromDetail(companyId) {
+    setViewContactId(null)
+    jumpToCompany(companyId)
   }
 
   function addCompany(e) {
@@ -186,6 +197,7 @@ export default function CRM({ user, onLogout }) {
             selectedCompany={selectedCompany} setSelectedCompany={setSelectedCompany}
             search={search} setSearch={setSearch}
             onAddContact={openAddContact} onLogInteraction={openLogInteraction} onAddTask={openAddTask}
+            onViewContact={setViewContactId}
           />
         )}
 
@@ -193,7 +205,7 @@ export default function CRM({ user, onLogout }) {
           <ContactsView
             contacts={contacts} companies={companies} deals={deals} interactions={interactions}
             onAddContact={openAddContact} onLogInteraction={openLogInteraction} onAddTask={openAddTask}
-            onJumpToCompany={jumpToCompany}
+            onJumpToCompany={jumpToCompany} onViewContact={setViewContactId}
           />
         )}
 
@@ -403,6 +415,19 @@ export default function CRM({ user, onLogout }) {
             </button>
           </form>
         </Modal>
+      )}
+
+      {viewContactId && (
+        <ContactDetailModal
+          contact={contacts.find((c) => c.id === viewContactId)}
+          company={companies.find((co) => co.id === contacts.find((c) => c.id === viewContactId)?.companyId)}
+          deals={deals} interactions={interactions}
+          onClose={() => setViewContactId(null)}
+          onSave={updateContact}
+          onJumpToCompany={jumpToCompanyFromDetail}
+          onLogInteraction={openLogInteraction}
+          onAddTask={openAddTask}
+        />
       )}
     </div>
   )
