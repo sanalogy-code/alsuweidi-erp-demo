@@ -1,16 +1,18 @@
 import { useState } from 'react'
-import { ArrowRight, Users, Building2, UserPlus } from 'lucide-react'
+import { ArrowRight, Users, Building2, UserPlus, Award } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
 import EmployeeList from '../components/hr/EmployeeList'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import LeaveRequestModal from '../components/hr/LeaveRequestModal'
 import LeaveRequestsList from '../components/hr/LeaveRequestsList'
+import AccomplishmentsSearch from '../components/hr/AccomplishmentsSearch'
 import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS } from '../data/hrData'
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'directory', label: 'Directory' },
+  { key: 'accomplishments', label: 'Accomplishments' },
   { key: 'leave', label: 'Leave' },
   { key: 'onboarding', label: 'Onboarding' },
 ]
@@ -90,6 +92,8 @@ export default function HR({ user, onLogout }) {
         )}
 
         {tab === 'directory' && <EmployeeList employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
+
+        {tab === 'accomplishments' && <AccomplishmentsSearch employees={EMPLOYEES} />}
 
         {tab === 'leave' && (
           <LeaveRequestsList
