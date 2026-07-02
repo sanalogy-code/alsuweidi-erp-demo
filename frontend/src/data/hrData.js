@@ -101,7 +101,7 @@ export const QUICK_LINKS = [
   { label: 'Employee Handbook' },
   { label: 'Leave Policy (Full)' },
   { label: 'IT Helpdesk' },
-  { label: 'Org Chart' },
+  { label: 'Request Certificate' },
 ]
 
 export const LEAVE_TYPES = ['Vacation', 'Sick', 'Unpaid', 'Bereavement', 'Parental']
@@ -110,6 +110,36 @@ export const LEAVE_REQUESTS = [
   { id: 1, employeeId: 1, employeeName: 'Osama Hussain', type: 'Vacation', startDate: '2026-07-15', endDate: '2026-07-22', days: 8, reason: 'Summer holiday', status: 'approved', approvedBy: 'Layla Al Mazrouei', approvedDate: '2026-06-28' },
   { id: 2, employeeId: 5, employeeName: 'Layla Al Mazrouei', type: 'Sick', startDate: '2026-07-08', endDate: '2026-07-08', days: 1, reason: 'Medical appointment', status: 'pending', approvedBy: null, approvedDate: null },
   { id: 3, employeeId: 2, employeeName: 'Naseeb Shaheen', type: 'Vacation', startDate: '2026-08-01', endDate: '2026-08-15', days: 15, reason: 'Eid holiday', status: 'pending', approvedBy: null, approvedDate: null },
+]
+
+// UAE HR letter/certificate requests — the standard set most companies field: proof of employment
+// and income (salary/employment certificates), bank-facing letters, embassy/visa letters, an NOC for
+// anything requiring the employer's sign-off (driving license, part-time work, sponsor transfer), and
+// experience/service letters for leavers.
+export const CERTIFICATE_TYPES = [
+  { value: 'salary', label: 'Salary Certificate', description: 'States current basic salary and allowances — for loans, credit cards, visa sponsorship.' },
+  { value: 'employment', label: 'Employment Certificate', description: 'Confirms job title, department, and employment status — general proof of employment.' },
+  { value: 'salary_transfer', label: 'Salary Transfer Letter', description: 'Confirms salary is paid via WPS to a specific bank — for opening a bank account.' },
+  { value: 'noc', label: 'No Objection Certificate (NOC)', description: "Employer's sign-off for something outside work — driving license, part-time work, visa sponsorship transfer, etc." },
+  { value: 'embassy', label: 'Embassy / Visa Letter', description: 'Formal letter for an embassy or consulate supporting a visa application.' },
+  { value: 'experience', label: 'Experience / Service Certificate', description: 'Full tenure, role history, and last drawn salary — typically requested when leaving the company.' },
+]
+
+export const CERTIFICATE_LANGUAGES = ['English', 'Arabic', 'Bilingual (English & Arabic)']
+
+export const ADDRESSEE_SUGGESTIONS = [
+  'To Whom It May Concern',
+  'Emirates NBD Bank',
+  'ADCB',
+  'UAE Embassy',
+  'GDRFA (General Directorate of Residency and Foreigners Affairs)',
+  'RTA (Roads and Transport Authority)',
+]
+
+export const CERTIFICATE_REQUESTS = [
+  { id: 1, employeeId: 1, employeeName: 'Osama Hussain', type: 'salary', addressedTo: 'Emirates NBD Bank', language: 'English', purpose: 'Personal loan application', nocObject: '', status: 'issued', requestedDate: '2026-06-20', resolvedDate: '2026-06-22' },
+  { id: 2, employeeId: 3, employeeName: 'Mohammad Kubba', type: 'noc', addressedTo: 'RTA (Roads and Transport Authority)', language: 'English', purpose: 'Driving license renewal', nocObject: 'UAE driving license renewal', status: 'pending', requestedDate: '2026-06-29', resolvedDate: null },
+  { id: 3, employeeId: 8, employeeName: 'Hassan Al Shamsi', type: 'embassy', addressedTo: 'UAE Embassy', language: 'Bilingual (English & Arabic)', purpose: 'Family visit visa sponsorship', nocObject: '', status: 'pending', requestedDate: '2026-07-01', resolvedDate: null },
 ]
 
 export const ACCOMPLISHMENT_TYPES = ['PE License', 'BIM Certification', 'Safety Induction', 'ISO Training', 'AutoCAD', 'Revit', 'Site Supervision', 'Project Management']

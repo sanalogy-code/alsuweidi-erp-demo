@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight, Users, Building2, UserPlus, Award } from 'lucide-react'
+import { ArrowRight, Users, Building2, UserPlus, Award, List, Network, FileText } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
 import EmployeeList from '../components/hr/EmployeeList'
@@ -9,26 +9,32 @@ import LeaveRequestsList from '../components/hr/LeaveRequestsList'
 import AccomplishmentsSearch from '../components/hr/AccomplishmentsSearch'
 import OrgChart from '../components/hr/OrgChart'
 import RenewalsReport from '../components/hr/RenewalsReport'
-import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS } from '../data/hrData'
+import CertificateRequestModal from '../components/hr/CertificateRequestModal'
+import CertificateRequestsList from '../components/hr/CertificateRequestsList'
+import { HR_STATS, QUICK_LINKS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS } from '../data/hrData'
 import { HR_STAFF_ROLES } from '../data/dashboardData'
 
 const BASE_TABS = [
   { key: 'overview', label: 'Overview' },
   { key: 'directory', label: 'Directory' },
-  { key: 'orgchart', label: 'Org Chart' },
   { key: 'accomplishments', label: 'Accomplishments' },
   { key: 'leave', label: 'Leave' },
+  { key: 'certificates', label: 'Certificates' },
 ]
 
 export default function HR({ user, onLogout }) {
   const [tab, setTab] = useState('overview')
+  const [directoryView, setDirectoryView] = useState('list')
   const [employees, setEmployees] = useState(EMPLOYEES)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaveRequests, setLeaveRequests] = useState(LEAVE_REQUESTS)
+  const [certificateRequests, setCertificateRequests] = useState(CERTIFICATE_REQUESTS)
+  const [showCertModal, setShowCertModal] = useState(false)
 
   const isHrStaff = HR_STAFF_ROLES.includes(user?.role)
   const isNewHire = !!user?.isNewHire
+  const pendingCertCount = certificateRequests.filter((r) => r.status === 'pending').length
 
   const TABS = [
     ...BASE_TABS,
@@ -39,6 +45,10 @@ export default function HR({ user, onLogout }) {
   const handleAddDependent = (employeeId, dependent) => {
     setEmployees(employees.map((e) => (e.id === employeeId ? { ...e, dependents: [...e.dependents, dependent] } : e)))
     setSelectedEmployee((prev) => (prev && prev.id === employeeId ? { ...prev, dependents: [...prev.dependents, dependent] } : prev))
+  }
+
+  const handleQuickLink = (label) => {
+    if (label === 'Request Certificate') setShowCertModal(true)
   }
 
   return (
@@ -56,9 +66,14 @@ export default function HR({ user, onLogout }) {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${tab === t.key ? 'text-brand border-brand' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
+              className={`relative px-4 py-2 text-sm font-medium border-b-2 transition ${tab === t.key ? 'text-brand border-brand' : 'text-gray-500 border-transparent hover:text-gray-700'}`}
             >
               {t.label}
+              {t.key === 'certificates' && isHrStaff && pendingCertCount > 0 && (
+                <span className="absolute -top-0.5 -right-1.5 bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
+                  {pendingCertCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -83,6 +98,22 @@ export default function HR({ user, onLogout }) {
               </div>
             </div>
 
+            {isHrStaff && pendingCertCount > 0 && (
+              <button
+                onClick={() => setTab('certificates')}
+                className="w-full bg-white border border-amber-200 rounded-lg shadow-sm p-4 text-left hover:border-amber-300 transition flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText size={20} className="text-amber-600" />
+                  <div>
+                    <div className="text-sm font-semibold text-gray-800">{pendingCertCount} new certificate request{pendingCertCount > 1 ? 's' : ''} pending</div>
+                    <div className="text-xs text-gray-500">Salary, employment, NOC, bank, or embassy letters awaiting review.</div>
+                  </div>
+                </div>
+                <ArrowRight size={18} className="text-gray-400 shrink-0" />
+              </button>
+            )}
+
             {isNewHire && (
               <button
                 onClick={() => setTab('onboarding')}
@@ -103,7 +134,7 @@ export default function HR({ user, onLogout }) {
                 {QUICK_LINKS.map((l) => (
                   <button
                     key={l.label}
-                    onClick={() => l.label === 'Org Chart' && setTab('orgchart')}
+                    onClick={() => handleQuickLink(l.label)}
                     className="text-left text-sm text-brand font-medium hover:underline px-1 py-1"
                   >
                     → {l.label}
@@ -115,9 +146,31 @@ export default function HR({ user, onLogout }) {
           </div>
         )}
 
-        {tab === 'directory' && <EmployeeList employees={employees} onViewEmployee={setSelectedEmployee} />}
-
-        {tab === 'orgchart' && <OrgChart employees={employees} onViewEmployee={setSelectedEmployee} />}
+        {tab === 'directory' && (
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <div className="inline-flex bg-gray-100 rounded-md p-1 gap-1">
+                <button
+                  onClick={() => setDirectoryView('list')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition ${directoryView === 'list' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <List size={13} /> List
+                </button>
+                <button
+                  onClick={() => setDirectoryView('chart')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition ${directoryView === 'chart' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  <Network size={13} /> Org Chart
+                </button>
+              </div>
+            </div>
+            {directoryView === 'list' ? (
+              <EmployeeList employees={employees} onViewEmployee={setSelectedEmployee} />
+            ) : (
+              <OrgChart employees={employees} onViewEmployee={setSelectedEmployee} />
+            )}
+          </div>
+        )}
 
         {tab === 'accomplishments' && <AccomplishmentsSearch employees={employees} />}
 
@@ -132,6 +185,20 @@ export default function HR({ user, onLogout }) {
             }}
             onDeny={(id) => {
               setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status: 'denied' } : r)))
+            }}
+          />
+        )}
+
+        {tab === 'certificates' && (
+          <CertificateRequestsList
+            requests={certificateRequests}
+            isHrStaff={isHrStaff}
+            onNewRequest={() => setShowCertModal(true)}
+            onIssue={(id) => {
+              setCertificateRequests(certificateRequests.map((r) => (r.id === id ? { ...r, status: 'issued', resolvedDate: new Date().toISOString().slice(0, 10) } : r)))
+            }}
+            onReject={(id) => {
+              setCertificateRequests(certificateRequests.map((r) => (r.id === id ? { ...r, status: 'rejected', resolvedDate: new Date().toISOString().slice(0, 10) } : r)))
             }}
           />
         )}
@@ -155,6 +222,16 @@ export default function HR({ user, onLogout }) {
           onClose={() => setShowLeaveModal(false)}
           onSubmit={(newRequest) => {
             setLeaveRequests([...leaveRequests, { ...newRequest, id: Math.max(...leaveRequests.map((r) => r.id), 0) + 1 }])
+          }}
+        />
+      )}
+
+      {showCertModal && (
+        <CertificateRequestModal
+          employees={employees}
+          onClose={() => setShowCertModal(false)}
+          onSubmit={(newRequest) => {
+            setCertificateRequests([...certificateRequests, { ...newRequest, id: Math.max(...certificateRequests.map((r) => r.id), 0) + 1 }])
           }}
         />
       )}
