@@ -30,13 +30,13 @@ The one thing that can't live in the repo: **WN (the ALSUWEIDI Knowledge Base Ob
 Tabs: **Overview → Pipeline → Companies → Contacts → Tasks → Reports**
 
 - **Overview** — dashboard: stat cards + widgets (Needs Follow-Up, Reminders, Closing Soon, Top Clients, Pipeline by Stage)
-- **Pipeline** — Kanban board by deal stage, drag-and-drop or dropdown to change stage. **NEW:** Time filters (This Month / This Quarter / This Year / All Time) update pipeline value + expected value dynamically. Edit/Delete buttons on each deal card (modal with inline editing).
-- **Companies** — list + detail drill-down (Contacts/Deals/Activity tabs). **NEW:** Edit button (inline modal) to change name/industry/location/status; Delete button with confirmation.
+- **Pipeline** — Kanban board by deal stage, drag-and-drop or dropdown to change stage. **Unified date range selector** (preset: All Time/This Year/This Quarter/This Month, or custom From/To date picker). Filters respond in real-time. Handles ISO dates, quarter format (2026-Q3), year format (2026). Edit/Delete buttons on each deal card.
+- **Companies** — list + detail drill-down (Contacts/Deals/Activity tabs). Edit/Delete buttons with modals.
 - **Contacts** — searchable directory; full profile modal (info, inline edit, linked deals, complete interaction history, quick actions). "Export" button opens filtered export panel.
-- **Tasks** — reconnect reminders tied to a contact, grouped Overdue/Due This Week/Later/Done
+- **Tasks** — reminders tied to a contact, grouped Overdue/Due This Week/Later/Done
 - **Contact Export** — dropdown filters (Company, Relationship, Sub-Type [cascades], Seniority, Employment Type, Last Contacted) → live match count/preview → Excel or CSV export, entirely client-side
 - **Interaction logging** — "Log Interaction" form (type/note/date), feeds company Activity tab + contact history
-- **Reports** — **NEW:** Monthly pipeline breakdown table (Pipeline Value, Expected/Weighted, Won Value, Deal Count). Summary cards: Total Pipeline, Total Expected, Total Won. For forecasting: "How much closes this month?" or "What's our Q3 pipeline?"
+- **Reports** — **Redesigned:** Unified date range selector (same as Pipeline). Two simultaneous views: Monthly Breakdown (aggregated metrics) + All Deals list (individual rows). Company/Stage filters inline. One-click Excel download includes both views. Date filtering handles all formats (ISO, quarter, year).
 
 Two-tier contact taxonomy: `relationship` + `subType` scoped per relationship, `seniority` (Entry→C-Suite), `employmentType` enums.
 
