@@ -1,14 +1,36 @@
-import { AlertTriangle } from 'lucide-react'
+import { useState } from 'react'
+import { AlertTriangle, Plus } from 'lucide-react'
 import { parseLocalDate, todayLocal } from '../../utils/date'
 
 // Software licenses — seats and renewal dates. Same radar idea as HR's renewals:
 // anything within 60 days is flagged, overdue is red.
 
-export default function LicensesView({ licenses }) {
+const inputCls = 'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand'
+const labelCls = 'block text-xs font-medium text-gray-600 mb-1'
+
+export default function LicensesView({ licenses, onAdd }) {
+  const [adding, setAdding] = useState(false)
+  const [form, setForm] = useState({ name: '', owner: '', seats: '', seatsUsed: '', costAedYearly: '', renewalDate: '' })
+
   const daysTo = (d) => Math.ceil((parseLocalDate(d) - todayLocal()) / (1000 * 60 * 60 * 24))
   const rows = [...licenses].sort((a, b) => a.renewalDate.localeCompare(b.renewalDate))
   const totalYearly = licenses.reduce((s, l) => s + (l.costAedYearly || 0), 0)
   const dueSoon = rows.filter((l) => daysTo(l.renewalDate) <= 60)
+
+  const submit = (e) => {
+    e.preventDefault()
+    if (!form.name.trim() || !form.renewalDate) return
+    onAdd({
+      name: form.name.trim(),
+      owner: form.owner.trim() || '—',
+      seats: Number(form.seats) || 1,
+      seatsUsed: Number(form.seatsUsed) || 0,
+      costAedYearly: Number(form.costAedYearly) || 0,
+      renewalDate: form.renewalDate,
+    })
+    setForm({ name: '', owner: '', seats: '', seatsUsed: '', costAedYearly: '', renewalDate: '' })
+    setAdding(false)
+  }
 
   return (
     <div className="space-y-4">
@@ -22,10 +44,35 @@ export default function LicensesView({ licenses }) {
       )}
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-800">Software licenses ({licenses.length})</h2>
-          <p className="text-xs text-gray-500">Total AED {totalYearly.toLocaleString()} / year across all subscriptions.</p>
+        <div className="p-4 border-b border-gray-200 flex justify-between items-start gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800">Software licenses ({licenses.length})</h2>
+            <p className="text-xs text-gray-500">Total AED {totalYearly.toLocaleString()} / year across all subscriptions.</p>
+          </div>
+          {!adding && (
+            <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white hover:bg-brand-dark transition shrink-0">
+              <Plus size={13} /> Add license
+            </button>
+          )}
         </div>
+
+        {adding && (
+          <form onSubmit={submit} className="p-4 border-b border-gray-200 bg-blue-50/50 space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div><label className={labelCls}>Name *</label><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} /></div>
+              <div><label className={labelCls}>Vendor / owner</label><input value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })} className={inputCls} /></div>
+              <div><label className={labelCls}>Seats total *</label><input type="number" min="1" required value={form.seats} onChange={(e) => setForm({ ...form, seats: e.target.value })} className={inputCls} /></div>
+              <div><label className={labelCls}>Seats used</label><input type="number" min="0" value={form.seatsUsed} onChange={(e) => setForm({ ...form, seatsUsed: e.target.value })} className={inputCls} /></div>
+              <div><label className={labelCls}>Cost / yr (AED)</label><input type="number" min="0" value={form.costAedYearly} onChange={(e) => setForm({ ...form, costAedYearly: e.target.value })} className={inputCls} /></div>
+              <div><label className={labelCls}>Renewal date *</label><input type="date" required value={form.renewalDate} onChange={(e) => setForm({ ...form, renewalDate: e.target.value })} className={inputCls} /></div>
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="flex-1 bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark">Add license</button>
+              <button type="button" onClick={() => setAdding(false)} className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-md text-sm font-medium hover:bg-gray-200">Cancel</button>
+            </div>
+          </form>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">

@@ -1,16 +1,38 @@
 import { useState } from 'react'
-import { Mail, Phone, FileText, Search, Bell, Plus, History, Pencil } from 'lucide-react'
-import { getStatusColor, formatCurrency, daysSince } from '../../data/crmData'
+import { Mail, Phone, FileText, Search, Bell, Plus, History, Pencil, Globe, Users2, Wrench } from 'lucide-react'
+import { getStatusColor, formatCurrency, daysSince, todayISO, COMPANY_TAGS, COMPANY_TAG_COLOR } from '../../data/crmData'
+import { PROJECTS } from '../../data/projectsData'
 import InteractionIcon from './InteractionIcon'
+import NotesList from './NotesList'
+
+function TagChips({ tags, size = 'text-[10px]' }) {
+  if (!tags?.length) return null
+  return (
+    <div className="flex flex-wrap gap-1">
+      {tags.map((t) => (
+        <span key={t} className={`${size} px-2 py-0.5 rounded-full font-medium ${COMPANY_TAG_COLOR[t] || 'bg-gray-100 text-gray-700'}`}>{t}</span>
+      ))}
+    </div>
+  )
+}
 
 export default function CompaniesView({
-  companies, contacts, deals, interactions, selectedCompany, setSelectedCompany,
-  search, setSearch, onAddContact, onLogInteraction, onAddTask, onViewContact, onEditCompany,
+  companies, contacts, deals, interactions, projects = [], selectedCompany, setSelectedCompany,
+  search, setSearch, onAddContact, onLogInteraction, onAddTask, onViewContact, onEditCompany, onUpdateCompany,
 }) {
   const [activeTab, setActiveTab] = useState('contacts')
+  const [tagFilter, setTagFilter] = useState('')
+  const [serviceFilter, setServiceFilter] = useState('')
+  const [addingHistory, setAddingHistory] = useState(false)
+  const [historyForm, setHistoryForm] = useState({ projectId: '', scope: '', note: '' })
+
+  const projectOptions = projects.length ? projects : PROJECTS
+  const allServices = [...new Set(companies.flatMap((c) => c.services || []))].sort()
 
   const filteredCompanies = companies.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) || c.industry.toLowerCase().includes(search.toLowerCase())
+    (c.name.toLowerCase().includes(search.toLowerCase()) || c.industry.toLowerCase().includes(search.toLowerCase())) &&
+    (!tagFilter || (c.tags || []).includes(tagFilter)) &&
+    (!serviceFilter || (c.services || []).includes(serviceFilter))
   )
 
   const company = selectedCompany ? companies.find((c) => c.id === selectedCompany) : null
@@ -21,6 +43,26 @@ export default function CompaniesView({
   const companyInteractions = [...interactions]
     .filter((i) => companyContactIds.includes(i.contactId))
     .sort((a, b) => b.date.localeCompare(a.date))
+
+  const isSubconsultant = (company?.tags || []).includes('Subconsultant')
+  const projectHistory = company?.projectHistory || []
+
+  function addHistoryRecord(e) {
+    e.preventDefault()
+    if (!historyForm.projectId || !historyForm.scope.trim()) return
+    const id = Math.max(0, ...projectHistory.map((r) => r.id)) + 1
+    onUpdateCompany(company.id, {
+      projectHistory: [...projectHistory, {
+        id,
+        projectId: Number(historyForm.projectId),
+        scope: historyForm.scope.trim(),
+        note: historyForm.note.trim(),
+        date: todayISO(),
+      }],
+    })
+    setHistoryForm({ projectId: '', scope: '', note: '' })
+    setAddingHistory(false)
+  }
 
   return (
     <div className="grid grid-cols-12 gap-6">
@@ -38,6 +80,24 @@ export default function CompaniesView({
                 className="w-full pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={tagFilter}
+                onChange={(e) => setTagFilter(e.target.value)}
+                className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand text-gray-600"
+              >
+                <option value="">All tags</option>
+                {COMPANY_TAGS.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select
+                value={serviceFilter}
+                onChange={(e) => setServiceFilter(e.target.value)}
+                className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-brand text-gray-600"
+              >
+                <option value="">All services</option>
+                {allServices.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
           </div>
           <div className="divide-y divide-gray-100 max-h-[32rem] overflow-y-auto">
             {filteredCompanies.map((comp) => {
@@ -50,6 +110,7 @@ export default function CompaniesView({
                 >
                   <div className="font-semibold text-gray-800 text-sm">{comp.name}</div>
                   <div className="text-xs text-gray-500">{comp.industry}</div>
+                  <div className="mt-1.5"><TagChips tags={comp.tags} /></div>
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-xs text-gray-400">{comp.location}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusColor(comp.status)}`}>{comp.status}</span>
@@ -71,9 +132,21 @@ export default function CompaniesView({
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex justify-between items-start mb-4">
-                <div>
+                <div className="space-y-1.5">
                   <h2 className="text-xl font-bold text-gray-800">{company.name}</h2>
                   <p className="text-sm text-gray-500">{company.industry} • {company.location}</p>
+                  <TagChips tags={company.tags} size="text-[11px]" />
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 pt-1">
+                    {company.website && (
+                      <a href={company.website} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-brand hover:underline">
+                        <Globe size={12} /> {company.website.replace(/^https?:\/\/(www\.)?/, '')}
+                      </a>
+                    )}
+                    {company.size && <span className="flex items-center gap-1"><Users2 size={12} className="text-gray-400" /> {company.size} employees</span>}
+                    {(company.services || []).length > 0 && (
+                      <span className="flex items-center gap-1"><Wrench size={12} className="text-gray-400" /> {company.services.join(', ')}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right space-y-2">
                   <button
@@ -106,7 +179,7 @@ export default function CompaniesView({
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="border-b border-gray-200 flex">
-                {['Contacts', 'Deals', 'Activity'].map((tab) => (
+                {['Contacts', 'Deals', 'Activity', 'Notes', ...(isSubconsultant ? ['Project History'] : [])].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab.toLowerCase())}
@@ -237,6 +310,89 @@ export default function CompaniesView({
                         <p className="text-gray-400 text-sm text-center py-8">No interactions logged yet.</p>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {activeTab === 'notes' && (
+                  <NotesList
+                    notes={company.keepInMind || []}
+                    onAdd={(note) => onUpdateCompany(company.id, { keepInMind: [...(company.keepInMind || []), note] })}
+                    emptyText="Nothing to keep in mind yet. Add the first note."
+                    placeholder="e.g. Always quote the PO number on invoices..."
+                  />
+                )}
+
+                {activeTab === 'project history' && isSubconsultant && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-semibold text-gray-800">Project History</h3>
+                      {!addingHistory && (
+                        <button
+                          onClick={() => setAddingHistory(true)}
+                          className="bg-brand text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-brand-dark flex items-center gap-1"
+                        >
+                          <Plus size={14} /> Add Record
+                        </button>
+                      )}
+                    </div>
+
+                    {addingHistory && (
+                      <form onSubmit={addHistoryRecord} className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Project</label>
+                          <select
+                            required value={historyForm.projectId}
+                            onChange={(e) => setHistoryForm({ ...historyForm, projectId: e.target.value })}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                          >
+                            <option value="">Select a project...</option>
+                            {projectOptions.map((p) => <option key={p.id} value={p.id}>{p.projectNo} — {p.name}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Scope / discipline</label>
+                          <input
+                            required placeholder="e.g. Geotechnical investigation" value={historyForm.scope}
+                            onChange={(e) => setHistoryForm({ ...historyForm, scope: e.target.value })}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">How did it go?</label>
+                          <textarea
+                            rows={2} placeholder="Short note on performance..." value={historyForm.note}
+                            onChange={(e) => setHistoryForm({ ...historyForm, note: e.target.value })}
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand resize-none"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button type="submit" className="px-3 py-1.5 bg-brand text-white rounded-md text-xs font-medium hover:bg-brand-dark">Save Record</button>
+                          <button type="button" onClick={() => setAddingHistory(false)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200">Cancel</button>
+                        </div>
+                      </form>
+                    )}
+
+                    {[...projectHistory].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map((rec) => {
+                      const project = projectOptions.find((p) => p.id === rec.projectId)
+                      return (
+                        <div key={rec.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition">
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex items-start gap-3">
+                              <FileText size={18} className="text-gray-400 mt-0.5" />
+                              <div>
+                                <h4 className="font-semibold text-gray-800 text-sm">{project ? `${project.projectNo} — ${project.name}` : `Project #${rec.projectId}`}</h4>
+                                <p className="text-xs text-brand font-medium">{rec.scope}</p>
+                              </div>
+                            </div>
+                            <span className="text-xs text-gray-400 whitespace-nowrap">{rec.date}</span>
+                          </div>
+                          {rec.note && <p className="text-xs text-gray-500 italic mt-2">"{rec.note}"</p>}
+                        </div>
+                      )
+                    })}
+                    {projectHistory.length === 0 && !addingHistory && (
+                      <p className="text-gray-400 text-sm text-center py-8">No project records yet for this subconsultant.</p>
+                    )}
                   </div>
                 )}
               </div>

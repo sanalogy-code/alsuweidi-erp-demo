@@ -6,22 +6,24 @@ import AssetRegistry from '../components/it/AssetRegistry'
 import LicensesView from '../components/it/LicensesView'
 import { IT_ASSETS, SOFTWARE_LICENSES, IT_REQUESTS } from '../data/itData'
 import { EMPLOYEES } from '../data/hrData'
-import { SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
+import { IT_VIEW_ROLES } from '../data/dashboardData'
 import { parseLocalDate, todayLocal } from '../utils/date'
 
 // IT & Assets — every employee can raise hardware/software requests; the
-// workspace (requests queue, asset registry, license radar) is gated the same
-// way as HR's sensitive views. Links both ways with HR: new joiners need kit,
-// and offboarding's equipment-return step checks the registry.
+// workspace (requests queue, asset registry, license radar) is owned by the IT
+// role, with admin + management retaining access (see IT_VIEW_ROLES). Links
+// both ways with HR: new joiners need kit, and offboarding's equipment-return
+// step checks the registry.
 
 export default function IT({ user, onLogout }) {
-  const canManage = SENSITIVE_VIEW_ROLES.includes(user?.role)
+  const canManage = IT_VIEW_ROLES.includes(user?.role)
   const [view, setView] = useState(canManage ? 'queue' : 'mine')
   const [requests, setRequests] = useState(IT_REQUESTS)
   const [assets, setAssets] = useState(IT_ASSETS)
+  const [licenses, setLicenses] = useState(SOFTWARE_LICENSES)
 
   const pendingCount = requests.filter((r) => r.status === 'pending').length
-  const licensesDue = SOFTWARE_LICENSES.filter(
+  const licensesDue = licenses.filter(
     (l) => (parseLocalDate(l.renewalDate) - todayLocal()) / (1000 * 60 * 60 * 24) <= 60
   ).length
 
@@ -101,7 +103,12 @@ export default function IT({ user, onLogout }) {
             />
           )}
 
-          {view === 'licenses' && canManage && <LicensesView licenses={SOFTWARE_LICENSES} />}
+          {view === 'licenses' && canManage && (
+            <LicensesView
+              licenses={licenses}
+              onAdd={(l) => setLicenses([...licenses, { ...l, id: Math.max(...licenses.map((x) => x.id), 0) + 1 }])}
+            />
+          )}
         </main>
       </div>
     </div>

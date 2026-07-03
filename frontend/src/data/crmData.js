@@ -3,13 +3,39 @@
 
 export const STAGES = ['Prospecting', 'Proposal', 'Negotiation', 'Won', 'Lost']
 
+// Company relationship tags — multi-select: a company can be Client AND Supplier at once.
+export const COMPANY_TAGS = ['Client', 'Prospect', 'Subconsultant', 'Supplier', 'Partner', 'Government']
+
+// Full literal class names so Tailwind's content scanner can see them.
+export const COMPANY_TAG_COLOR = {
+  Client: 'bg-green-100 text-green-700',
+  Prospect: 'bg-gray-100 text-gray-700',
+  Subconsultant: 'bg-purple-100 text-purple-700',
+  Supplier: 'bg-orange-100 text-orange-700',
+  Partner: 'bg-blue-100 text-blue-700',
+  Government: 'bg-teal-100 text-teal-700',
+}
+
+export const COMPANY_SIZES = ['1–10', '11–50', '51–200', '201–1000', '1000+']
+
+// keepInMind: free-text notes ({ id, text, date, author }) — things to remember about this company.
+// projectHistory (Subconsultants): per-project link records ({ id, projectId, scope, note, date })
+// referencing projectsData PROJECTS by id.
 export const INITIAL_COMPANIES = [
-  { id: 1, name: 'ADNOC', industry: 'Oil & Gas', location: 'Abu Dhabi', status: 'Active' },
-  { id: 2, name: 'Etihad Airways', industry: 'Aviation', location: 'Abu Dhabi', status: 'Active' },
-  { id: 3, name: 'DEWA', industry: 'Utilities', location: 'Dubai', status: 'Active' },
-  { id: 4, name: 'Emaar Properties', industry: 'Real Estate', location: 'Dubai', status: 'Negotiation' },
-  { id: 5, name: 'DP World', industry: 'Logistics', location: 'Dubai', status: 'Prospect' },
-  { id: 6, name: 'Gulf Steel Fabrication', industry: 'Industrial Supply', location: 'Sharjah', status: 'Active' },
+  { id: 1, name: 'ADNOC', industry: 'Oil & Gas', location: 'Abu Dhabi', status: 'Active', website: 'https://www.adnoc.ae', size: '1000+', tags: ['Client', 'Government'], services: ['Oil & Gas Facilities'], keepInMind: [{ id: 1, text: 'Procurement portal registration must be renewed every January — missed it once in 2024 and lost a month.', date: '2026-05-12', author: 'Sana Diab' }], projectHistory: [] },
+  { id: 2, name: 'Etihad Airways', industry: 'Aviation', location: 'Abu Dhabi', status: 'Active', website: 'https://www.etihad.com', size: '1000+', tags: ['Client'], services: ['Aviation Facilities'], keepInMind: [], projectHistory: [] },
+  { id: 3, name: 'DEWA', industry: 'Utilities', location: 'Dubai', status: 'Active', website: 'https://www.dewa.gov.ae', size: '1000+', tags: ['Client', 'Government'], services: ['Utilities Infrastructure'], keepInMind: [], projectHistory: [] },
+  { id: 4, name: 'Emaar Properties', industry: 'Real Estate', location: 'Dubai', status: 'Negotiation', website: 'https://www.emaar.com', size: '1000+', tags: ['Client'], services: ['Real Estate Development'], keepInMind: [{ id: 1, text: 'Invoices only processed if the PO number is quoted on every page — finance rejects otherwise.', date: '2026-06-02', author: 'Omar Haddad' }], projectHistory: [] },
+  { id: 5, name: 'DP World', industry: 'Logistics', location: 'Dubai', status: 'Prospect', website: 'https://www.dpworld.com', size: '1000+', tags: ['Prospect'], services: ['Ports & Logistics'], keepInMind: [], projectHistory: [] },
+  // Both Client (Fabrication Plant Extension is their project) and Supplier (steel for Pump Station Upgrade).
+  { id: 6, name: 'Gulf Steel Fabrication', industry: 'Industrial Supply', location: 'Sharjah', status: 'Active', website: 'https://www.gulfsteelfab.ae', size: '201–1000', tags: ['Client', 'Supplier'], services: ['Steel Fabrication', 'Structural Steel Supply'], keepInMind: [{ id: 1, text: 'Design fee dispute on the Fabrication Plant Extension is with Finance — keep supplier orders separate from that conversation.', date: '2026-04-20', author: 'Sana Diab' }], projectHistory: [] },
+  { id: 7, name: 'Apex Geotechnical Services', industry: 'Engineering Services', location: 'Abu Dhabi', status: 'Active', website: 'https://www.apexgeo.ae', size: '51–200', tags: ['Subconsultant'], services: ['Geotechnical Investigation', 'Surveying'], keepInMind: [{ id: 1, text: 'Ask for Eng. Waleed by name — their junior crews need close supervision on logging quality.', date: '2026-03-18', author: 'Khalid Mansour' }], projectHistory: [
+    { id: 1, projectId: 1, scope: 'Geotechnical investigation & soil report', note: 'Boreholes delivered on time; report needed one revision cycle. Would use again.', date: '2024-05-20' },
+    { id: 2, projectId: 3, scope: 'Topographic survey — 14 km corridor', note: 'Excellent field work, slow on final deliverable formatting.', date: '2025-09-10' },
+  ] },
+  { id: 8, name: 'Lumina Lighting Studio', industry: 'Specialist Design', location: 'Dubai', status: 'Active', website: 'https://www.luminastudio.ae', size: '11–50', tags: ['Subconsultant', 'Partner'], services: ['Lighting Design', 'Facade Lighting'], keepInMind: [], projectHistory: [
+    { id: 1, projectId: 5, scope: 'External & landscape lighting design', note: 'Strong concepts, integrated well with our BIM workflow. Fee was on the high side.', date: '2024-11-05' },
+  ] },
 ]
 
 // Two-tier contact taxonomy. relationship = tier 1, subType = tier 2 (scoped to a relationship).
@@ -29,13 +55,13 @@ export const SENIORITY_LEVELS = ['Entry', 'Senior', 'Manager', 'Director', 'VP',
 export const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contractor', 'Consultant', 'Freelance']
 
 export const INITIAL_CONTACTS = [
-  { id: 1, companyId: 1, name: 'Ahmed Al Mazrouei', title: 'Engineering Manager', email: 'ahmed@adnoc.ae', phone: '+971-2-401-2201', lastContact: '2026-06-28', notes: 'Discussed pump specifications', relationship: 'Client', subType: 'Technical Contact', seniority: 'Manager', employmentType: 'Full-time' },
+  { id: 1, companyId: 1, name: 'Ahmed Al Mazrouei', title: 'Engineering Manager', email: 'ahmed@adnoc.ae', phone: '+971-2-401-2201', lastContact: '2026-06-28', notes: 'Discussed pump specifications', relationship: 'Client', subType: 'Technical Contact', seniority: 'Manager', employmentType: 'Full-time', keepInMind: [{ id: 1, text: 'Prefers WhatsApp over email for anything urgent. Never call during Friday prayers.', date: '2026-05-30', author: 'Sana Diab' }] },
   { id: 2, companyId: 1, name: 'Fatima Al Mansoori', title: 'Project Lead', email: 'fatima@adnoc.ae', phone: '+971-2-401-2245', lastContact: '2026-06-20', notes: 'Requested proposal for Q3 project', relationship: 'Client', subType: 'Technical Contact', seniority: 'Senior', employmentType: 'Full-time' },
   { id: 3, companyId: 2, name: 'Mohammed Al Ketbi', title: 'Technical Director', email: 'mkb@etihad.ae', phone: '+971-2-599-1102', lastContact: '2026-06-25', notes: 'Maintenance contract renewal', relationship: 'Client', subType: 'Decision Maker', seniority: 'Director', employmentType: 'Full-time' },
   { id: 4, companyId: 2, name: 'Noura Al Zaabi', title: 'Procurement Manager', email: 'noura@etihad.ae', phone: '+971-2-599-1187', lastContact: '2026-06-10', notes: 'Reviewing GSE upgrade scope', relationship: 'Client', subType: 'Procurement', seniority: 'Manager', employmentType: 'Full-time' },
   { id: 5, companyId: 3, name: 'Sara Al Mansoori', title: 'Operations Manager', email: 'sara@dewa.gov.ae', phone: '+971-4-324-6610', lastContact: '2026-06-22', notes: 'Follow up on grid upgrade project', relationship: 'Government/Regulator', subType: 'Client Agency', seniority: 'Manager', employmentType: 'Full-time' },
   { id: 6, companyId: 3, name: 'Khalid Al Shehhi', title: 'Procurement', email: 'khalid@dewa.gov.ae', phone: '+971-4-324-6688', lastContact: '2026-05-15', notes: 'Waiting for RFQ approval', relationship: 'Government/Regulator', subType: 'Regulator', seniority: 'Entry', employmentType: 'Full-time' },
-  { id: 7, companyId: 4, name: 'Layla Al Mansouri', title: 'VP Engineering', email: 'layla@emaar.ae', phone: '+971-4-367-3300', lastContact: '2026-06-15', notes: 'Proposal under review', relationship: 'Client', subType: 'Decision Maker', seniority: 'VP', employmentType: 'Full-time' },
+  { id: 7, companyId: 4, name: 'Layla Al Mansouri', title: 'VP Engineering', email: 'layla@emaar.ae', phone: '+971-4-367-3300', lastContact: '2026-06-15', notes: 'Proposal under review', relationship: 'Client', subType: 'Decision Maker', seniority: 'VP', employmentType: 'Full-time', keepInMind: [{ id: 1, text: 'Wants a one-page executive summary on top of every proposal — will not read past page one without it.', date: '2026-06-16', author: 'Omar Haddad' }] },
   { id: 8, companyId: 4, name: 'Rashid Al Nuaimi', title: 'Finance Director', email: 'rashid@emaar.ae', phone: '+971-4-367-3355', lastContact: null, notes: 'Introduced via Layla, not yet contacted directly', relationship: 'Client', subType: 'Decision Maker', seniority: 'Director', employmentType: 'Full-time' },
   { id: 9, companyId: 5, name: 'Omar Al Mazrouei', title: 'CEO', email: 'omar@dpworld.ae', phone: '+971-4-881-5200', lastContact: null, notes: 'Cold prospect - needs warm introduction', relationship: 'Prospect', subType: 'Cold Lead', seniority: 'C-Suite', employmentType: 'Full-time' },
   { id: 10, companyId: 1, name: 'Yousef Al Kaabi', title: 'Site Engineer (ALSUWEIDI)', email: 'yousef.alkaabi@alsuweidi.ae', phone: '+971-2-401-2299', lastContact: '2026-06-18', notes: 'Seconded to ADNOC site full-time, reports on ground progress weekly', relationship: 'Employee', subType: 'Secondment', seniority: 'Senior', employmentType: 'Full-time' },

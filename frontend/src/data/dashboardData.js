@@ -67,17 +67,36 @@ export const ROLES = [
   { value: 'pm', label: 'Project Manager' },
   { value: 'marketing', label: 'Marketing' },
   { value: 'hr', label: 'HR' },
+  { value: 'it', label: 'IT' },
+  { value: 'adminstaff', label: 'Admin Staff (office administration)' },
   { value: 'management', label: 'Management' },
-  { value: 'admin', label: 'Admin' },
+  { value: 'admin', label: 'Admin (system)' },
   { value: 'pro', label: 'PRO / Government Services (external)' },
 ]
+
+// Role → workspace matrix. Every role gets the employee-level views (My requests,
+// timesheets, leave, branding materials). Workspace ownership on top of that:
+//
+//   role        | HR workspace | IT workspace | Marketing workspace
+//   ------------|--------------|--------------|--------------------
+//   hr          | owner        | —            | —
+//   it          | —            | owner        | —
+//   marketing   | —            | —            | owner
+//   adminstaff  | —            | —            | —   (office admin: employee-level only, no sensitive data)
+//   management  | yes          | yes          | yes
+//   admin       | yes          | yes          | yes (system role)
+//   sales / pm / pro | —       | —            | —
 
 // HR staff who process requests (issue certificates, run payroll actions)
 export const HR_STAFF_ROLES = ['hr', 'admin']
 
 // Roles allowed to view sensitive employee data: visa/passport, dependents, compensation,
-// renewals, payroll. HR staff plus top management — nobody else.
+// renewals, payroll. HR staff plus top management — nobody else (not IT, not admin staff).
 export const SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']
+
+// IT & Assets workspace (request queue, asset registry, license radar):
+// owned by IT, with admin + top management retaining access.
+export const IT_VIEW_ROLES = ['it', 'admin', 'management']
 
 // Marketing workspace (inbox, content calendar, portfolio, proposals, analytics):
 // marketing + top management only. Branding materials are visible to everyone.

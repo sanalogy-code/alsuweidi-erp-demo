@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { FolderKanban, Camera, PenLine, EyeOff, Eye, CheckCircle2, AlertCircle, Search } from 'lucide-react'
+import { FolderKanban, Camera, PenLine, EyeOff, Eye, CheckCircle2, AlertCircle, Search, FileText, Plus, Trash2, Image } from 'lucide-react'
 import Modal from '../crm/Modal'
-import { PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_SCOPES, GENERAL_STATUS, scopeOf } from '../../data/projectsData'
+import { PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_SCOPES, GENERAL_STATUS, scopeOf, yearStartedOf, yearCompletedOf } from '../../data/projectsData'
+import { usePortfolioPacks, addPortfolioPack, removePortfolioPack } from '../../data/portfolioPacksStore'
 
 // Built-up-area bands for "find me a project about this size" searches.
 // Projects with no recorded area (0 / infrastructure) only match "All sizes".
@@ -25,6 +26,19 @@ export default function PortfolioView({ projects, onUpdateProject, onCompleteDes
   const [readyFilter, setReadyFilter] = useState('')
   const [descProject, setDescProject] = useState(null)
   const [descText, setDescText] = useState('')
+
+  // Portfolio packs — category PDFs CRM can download; shared store so the CRM
+  // page sees adds/removes without an App.jsx prop chain.
+  const packs = usePortfolioPacks()
+  const [packForm, setPackForm] = useState({ category: '', fileName: '' })
+  const packCategories = [...new Set(packs.map((p) => p.category))].sort()
+
+  const addPack = (e) => {
+    e.preventDefault()
+    if (!packForm.category.trim() || !packForm.fileName.trim()) return
+    addPortfolioPack({ category: packForm.category.trim(), fileName: packForm.fileName.trim() })
+    setPackForm({ category: '', fileName: '' })
+  }
 
   const readiness = (p) => {
     if (p.confidential) return 'confidential'
@@ -176,11 +190,81 @@ export default function PortfolioView({ projects, onUpdateProject, onCompleteDes
                 {p.marketingDescription && !p.confidential && (
                   <p className="text-xs text-gray-600 mt-1.5 bg-gray-50 rounded-md px-3 py-2">{p.marketingDescription}</p>
                 )}
+                {/* The proposal-ready facts — the fields that used to live in the Proposal Builder */}
+                {!p.confidential && (
+                  <div className="text-[11px] text-gray-500 mt-1.5 flex items-center gap-3 flex-wrap">
+                    <span>{p.location}</span>
+                    {yearStartedOf(p) && <span>{yearStartedOf(p)} → {yearCompletedOf(p) || 'ongoing'}</span>}
+                    {p.constructionCost != null && <span>~{(p.constructionCost / 1000000).toLocaleString()}M AED construction</span>}
+                    {p.images?.length > 0 && <span className="flex items-center gap-1"><Image size={10} /> {p.images.length} image{p.images.length !== 1 ? 's' : ''}</span>}
+                    {p.specialFeatures?.map((f) => (
+                      <span key={f} className="px-1.5 py-0.5 rounded bg-purple-50 border border-purple-200 text-purple-700">{f}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })}
           {filtered.length === 0 && <div className="p-8 text-center text-sm text-gray-400">No projects match these filters.</div>}
         </div>
+      </div>
+
+      {/* Portfolio packs — the curated category PDFs CRM hands to clients.
+          Prepared/uploaded by Marketing (not auto-generated); file names only until Phase 2. */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+            <FileText size={15} className="text-brand" /> Portfolio packs
+            <span className="text-xs font-normal text-gray-400">{packs.length}</span>
+          </h3>
+          <p className="text-xs text-gray-500">
+            Category PDFs available for download in CRM. Type a new category to add one to the list.
+          </p>
+        </div>
+        <div className="divide-y divide-gray-100">
+          {packs.map((pack) => (
+            <div key={pack.id} className="px-4 py-2.5 flex items-center gap-3">
+              <span className="w-28 shrink-0 px-2 py-0.5 rounded text-[10px] font-medium text-center truncate bg-brand/10 text-brand">{pack.category}</span>
+              <span className="flex-1 min-w-0 text-xs text-gray-700 font-mono truncate">{pack.fileName}</span>
+              <span className="w-24 shrink-0 text-right text-xs text-gray-400 whitespace-nowrap">
+                {new Date(pack.uploadedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+              <button
+                onClick={() => window.confirm(`Remove "${pack.fileName}" from the CRM download list?`) && removePortfolioPack(pack.id)}
+                className="shrink-0 text-gray-300 hover:text-red-500"
+                title="Remove pack"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+          {packs.length === 0 && <div className="p-6 text-center text-sm text-gray-400">No packs uploaded yet.</div>}
+        </div>
+        <form onSubmit={addPack} className="p-3 border-t border-gray-100 flex items-center gap-2">
+          <input
+            list="pack-categories"
+            value={packForm.category}
+            onChange={(e) => setPackForm({ ...packForm, category: e.target.value })}
+            placeholder="Category (pick or type new)"
+            className="w-44 border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
+          />
+          <datalist id="pack-categories">
+            {packCategories.map((c) => <option key={c} value={c} />)}
+          </datalist>
+          <input
+            value={packForm.fileName}
+            onChange={(e) => setPackForm({ ...packForm, fileName: e.target.value })}
+            placeholder="File name, e.g. ALSUWEIDI-Portfolio-Healthcare-2026.pdf"
+            className="flex-1 border border-gray-200 rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-brand"
+          />
+          <button
+            type="submit"
+            disabled={!packForm.category.trim() || !packForm.fileName.trim()}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white hover:bg-brand-dark disabled:opacity-40"
+          >
+            <Plus size={12} /> Add pack
+          </button>
+        </form>
       </div>
 
       {descProject && (

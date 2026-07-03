@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { Inbox, CalendarDays, FolderKanban, Palette, FileStack, LineChart, FileUser } from 'lucide-react'
+import { Inbox, CalendarDays, FolderKanban, Palette, LineChart, FileUser } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import MarketingInbox from '../components/marketing/MarketingInbox'
 import ContentCalendar from '../components/marketing/ContentCalendar'
 import PortfolioView from '../components/marketing/PortfolioView'
 import BrandAssetsView from '../components/marketing/BrandAssetsView'
-import ProposalBuilder from '../components/marketing/ProposalBuilder'
 import MarketingAnalytics from '../components/marketing/MarketingAnalytics'
 import CvSearch from '../components/hr/CvSearch'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
@@ -13,7 +12,7 @@ import { CONTENT_ITEMS } from '../data/marketingData'
 import { EMPLOYEES } from '../data/hrData'
 import { MARKETING_VIEW_ROLES, HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 
-// Marketing module — content calendar, portfolio, proposals, CVs, and analytics
+// Marketing module — content calendar, portfolio, CVs, and analytics
 // are for marketing + top management only. Branding materials are the exception:
 // visible to every employee (that's the whole point of a brand library).
 export default function Marketing({ user, onLogout, projects = [], onUpdateProject, deals = [], marketingTasks = [], onCompleteTask }) {
@@ -32,7 +31,6 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
     { key: 'inbox', label: 'Inbox', icon: Inbox, badge: openTasks },
     { key: 'calendar', label: 'Content calendar', icon: CalendarDays },
     { key: 'portfolio', label: 'Portfolio', icon: FolderKanban, badge: missingDesc },
-    { key: 'proposals', label: 'Proposal builder', icon: FileStack },
     { key: 'cvs', label: 'CV search', icon: FileUser },
     { key: 'analytics', label: 'Analytics', icon: LineChart },
   ] : []
@@ -111,10 +109,6 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
               onUpdateProject={onUpdateProject}
               onCompleteDescriptionTask={completeDescriptionTask}
             />
-          )}
-
-          {view === 'proposals' && canManage && (
-            <ProposalBuilder projects={projects} employees={EMPLOYEES} />
           )}
 
           {view === 'cvs' && canManage && (

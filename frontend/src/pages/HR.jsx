@@ -4,7 +4,7 @@ import {
   ArrowRight, Users, Building2, UserPlus, List, Network, Award, AlertTriangle,
   Home, ClipboardList, Briefcase, GraduationCap, Inbox, CalendarRange,
   CalendarClock, Fingerprint, Banknote, CalendarDays, Plane, FileText, ShieldAlert,
-  UserMinus, Landmark, LineChart, TrendingUp, FileUser, Clock, ClipboardCheck,
+  UserMinus, Landmark, LineChart, TrendingUp, FileUser, Clock, ClipboardCheck, CreditCard,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
@@ -34,15 +34,17 @@ import ProTasksView from '../components/hr/ProTasksView'
 import StaffPlanningTab from '../components/hr/StaffPlanningTab'
 import MyTimesheet from '../components/hr/MyTimesheet'
 import TimesheetApprovals from '../components/hr/TimesheetApprovals'
+import BusinessCardRequestModal from '../components/hr/BusinessCardRequestModal'
 import {
   HR_STATS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS, COMPLAINTS, OPEN_POSITIONS, CANDIDATES,
   ANNUAL_LEAVE_ENTITLEMENT, NEW_JOINERS, OFFBOARDINGS, PRO_TASKS, STAFF_PLANS, REFERRAL_BONUS_AED,
+  BUSINESS_CARD_REQUESTS, LEAVE_PENDING_STATUSES, leaveStatusForNew,
 } from '../data/hrData'
-import { TIMESHEETS, weekStartOf, addDays, toLocalISO } from '../data/timesheetData'
+import { weekStartOf, addDays, toLocalISO } from '../data/timesheetData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 import { parseLocalDate, todayLocal } from '../utils/date'
 
-export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [], onEmployeeAdded }) {
+export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [], onEmployeeAdded, timesheets = [], setTimesheets }) {
   const location = useLocation()
   // Home-page quick actions deep-link straight to a view (e.g. Fill Timesheet)
   const [view, setView] = useState(location.state?.view || 'myhr')
@@ -58,12 +60,13 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
   const [offboardings, setOffboardings] = useState(OFFBOARDINGS)
   const [proTasks, setProTasks] = useState(PRO_TASKS)
   const [staffPlans, setStaffPlans] = useState(STAFF_PLANS)
-  const [timesheets, setTimesheets] = useState(TIMESHEETS)
+  const [businessCardRequests, setBusinessCardRequests] = useState(BUSINESS_CARD_REQUESTS)
   const [referralBonuses, setReferralBonuses] = useState([])
   const [reviewJoiner, setReviewJoiner] = useState(null)
   const [showAddEmployee, setShowAddEmployee] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [showCertModal, setShowCertModal] = useState(false)
+  const [showCardModal, setShowCardModal] = useState(false)
   const [showConcernModal, setShowConcernModal] = useState(false)
   const [letterRequest, setLetterRequest] = useState(null)
 
@@ -82,7 +85,10 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
   const teamTimesheets = timesheets.filter((t) => teamIds.has(t.employeeId))
 
   const pendingJoiners = newJoiners.filter((j) => j.status === 'submitted')
-  const inboxCount = isHrStaff ? buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }).length + pendingJoiners.length : 0
+  const inboxCount = isHrStaff ? buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates, businessCardRequests }).length + pendingJoiners.length : 0
+
+  // Leave two-step chain: the manager's team-leave queue (step 1), then HR (step 2).
+  const teamLeavePending = leaveRequests.filter((r) => teamIds.has(r.employeeId) && r.status === 'pending_manager')
 
   // Probation endings within 60 days (guaranteed increments must not be missed)
   const probationDue = canViewSensitive
@@ -97,8 +103,9 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     ? leaveRequests.filter((r) => r.employeeId === matchedEmployee.id && r.status === 'approved' && r.type === 'Vacation').reduce((s, r) => s + r.days, 0)
     : null
   const myPendingCount =
-    leaveRequests.filter((r) => r.employeeName.toLowerCase() === myName && r.status === 'pending').length +
+    leaveRequests.filter((r) => r.employeeName.toLowerCase() === myName && LEAVE_PENDING_STATUSES.includes(r.status)).length +
     certificateRequests.filter((r) => r.employeeName.toLowerCase() === myName && r.status === 'pending').length +
+    businessCardRequests.filter((r) => r.employeeName.toLowerCase() === myName && r.status === 'pending').length +
     complaints.filter((c) => !c.anonymous && (c.submittedBy || '').toLowerCase() === myName && c.status !== 'resolved').length
 
   const nextHoliday = holidays
@@ -108,11 +115,11 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
   // Timesheets: upsert my week; count submitted weeks for the approvals badge;
   // count last week's non-submitters for the payroll hold flag.
   const saveTimesheet = (ts) => {
-    if (ts.id) setTimesheets(timesheets.map((t) => (t.id === ts.id ? ts : t)))
-    else setTimesheets([...timesheets, { ...ts, id: Math.max(...timesheets.map((t) => t.id), 0) + 1 }])
+    if (ts.id) setTimesheets((prev) => prev.map((t) => (t.id === ts.id ? ts : t)))
+    else setTimesheets((prev) => [...prev, { ...ts, id: Math.max(...prev.map((t) => t.id), 0) + 1 }])
   }
   const actionTimesheet = (ts) => {
-    setTimesheets(timesheets.map((t) => (t.id === ts.id ? { ...ts, approvedBy: ts.status === 'approved' ? user?.username : null } : t)))
+    setTimesheets((prev) => prev.map((t) => (t.id === ts.id ? { ...ts, approvedBy: ts.status === 'approved' ? user?.username : null } : t)))
   }
   const submittedTimesheets = timesheets.filter((t) => t.status === 'submitted').length
   const lastWeekISO = toLocalISO(addDays(weekStartOf(new Date()), -7))
@@ -125,7 +132,10 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     { key: 'myhr', label: 'My HR', icon: Home },
     { key: 'people', label: 'People', icon: Users },
     { key: 'mytimesheet', label: 'My timesheet', icon: Clock },
-    ...(isManager ? [{ key: 'teamtimesheets', label: 'Team timesheets', icon: ClipboardCheck, badge: teamTimesheets.filter((t) => t.status === 'submitted').length }] : []),
+    ...(isManager ? [
+      { key: 'teamtimesheets', label: 'Team timesheets', icon: ClipboardCheck, badge: teamTimesheets.filter((t) => t.status === 'submitted').length },
+      { key: 'teamleave', label: 'Team leave', icon: Plane, badge: teamLeavePending.length },
+    ] : []),
     { key: 'requests', label: 'My requests', icon: ClipboardList, badge: myPendingCount },
     { key: 'careers', label: 'Careers', icon: Briefcase },
     ...(isNewHire ? [
@@ -202,8 +212,21 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     setNewJoiners(newJoiners.map((j) => (j.id === joinerId ? { ...j, status: 'approved' } : j)))
   }
 
+  // Two-step leave chain: line manager first, then HR final approval.
   const handleLeaveAction = (id, status) => {
     setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status, approvedBy: status === 'approved' ? user?.username : null, approvedDate: new Date().toISOString().slice(0, 10) } : r)))
+  }
+  // Manager step: approve forwards the request to HR; deny ends it.
+  const handleManagerLeaveAction = (id, approve) => {
+    setLeaveRequests(leaveRequests.map((r) => (r.id === id
+      ? approve
+        ? { ...r, status: 'pending_hr', managerApprovedBy: user?.username, managerApprovedDate: new Date().toISOString().slice(0, 10) }
+        : { ...r, status: 'denied' }
+      : r)))
+  }
+
+  const handleFulfilCard = (id) => {
+    setBusinessCardRequests(businessCardRequests.map((r) => (r.id === id ? { ...r, status: 'delivered', resolvedDate: new Date().toISOString().slice(0, 10) } : r)))
   }
 
   const handleRejectCert = (id) => {
@@ -303,7 +326,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
                     <Inbox size={20} className="text-blue-600" />
                     <div>
                       <div className="text-sm font-semibold text-gray-800">{inboxCount} item{inboxCount > 1 ? 's' : ''} waiting in your inbox</div>
-                      <div className="text-xs text-gray-500">Leave, certificates, concerns, and candidates — oldest first.</div>
+                      <div className="text-xs text-gray-500">Leave, certificates, business cards, concerns, and candidates — oldest first.</div>
                     </div>
                   </div>
                   <ArrowRight size={18} className="text-gray-400 shrink-0" />
@@ -376,7 +399,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
                 </button>
               )}
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
                 <button onClick={() => setShowLeaveModal(true)} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 text-left hover:border-brand hover:shadow-md transition">
                   <Plane size={18} className="text-brand mb-2" />
                   <div className="text-sm font-semibold text-gray-800">Request leave</div>
@@ -388,6 +411,11 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
                   <FileText size={18} className="text-brand mb-2" />
                   <div className="text-sm font-semibold text-gray-800">Request certificate</div>
                   <div className="text-xs text-gray-500 mt-0.5">Salary, NOC, embassy…</div>
+                </button>
+                <button onClick={() => setShowCardModal(true)} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 text-left hover:border-brand hover:shadow-md transition">
+                  <CreditCard size={18} className="text-brand mb-2" />
+                  <div className="text-sm font-semibold text-gray-800">Business card</div>
+                  <div className="text-xs text-gray-500 mt-0.5">Printed &amp; delivered by HR</div>
                 </button>
                 <button onClick={() => setShowConcernModal(true)} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 text-left hover:border-brand hover:shadow-md transition">
                   <ShieldAlert size={18} className="text-brand mb-2" />
@@ -473,8 +501,10 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
               leaveRequests={leaveRequests}
               certificateRequests={certificateRequests}
               complaints={complaints}
+              businessCardRequests={businessCardRequests}
               onNewLeave={() => setShowLeaveModal(true)}
               onNewCertificate={() => setShowCertModal(true)}
+              onNewBusinessCard={() => setShowCardModal(true)}
               onNewConcern={() => setShowConcernModal(true)}
             />
           )}
@@ -534,6 +564,8 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
               certificateRequests={certificateRequests}
               complaints={complaints}
               candidates={candidates}
+              businessCardRequests={businessCardRequests}
+              onFulfilCard={handleFulfilCard}
               onLeaveAction={handleLeaveAction}
               onPrepareCert={(req) => setLetterRequest(req)}
               onRejectCert={handleRejectCert}
@@ -570,6 +602,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
                   onRequestNewLeave={() => setShowLeaveModal(true)}
                   onApprove={(id) => handleLeaveAction(id, 'approved')}
                   onDeny={(id) => handleLeaveAction(id, 'denied')}
+                  actionable={['pending', 'pending_hr']}
                 />
               )}
             </div>
@@ -584,6 +617,22 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
               timesheets={timesheets}
               onSave={saveTimesheet}
             />
+          )}
+
+          {view === 'teamleave' && isManager && (
+            <div className="space-y-3">
+              <p className="text-xs text-gray-500">
+                Leave requests from your direct reports — you approve first, then HR gives final approval.
+              </p>
+              <LeaveRequestsList
+                requests={leaveRequests.filter((r) => teamIds.has(r.employeeId))}
+                onRequestNewLeave={() => setShowLeaveModal(true)}
+                onApprove={(id) => handleManagerLeaveAction(id, true)}
+                onDeny={(id) => handleManagerLeaveAction(id, false)}
+                actionable={['pending_manager']}
+                approveLabel="Approve → HR"
+              />
+            </div>
           )}
 
           {view === 'teamtimesheets' && isManager && (
@@ -608,7 +657,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
 
           {view === 'attendance' && canViewSensitive && <AttendanceTab employees={employees} />}
 
-          {view === 'payroll' && canViewSensitive && <PayrollTab employees={employees} referralBonuses={referralBonuses} timesheetHold={timesheetHold} onViewTimesheets={() => setView('timesheets')} />}
+          {view === 'payroll' && canViewSensitive && <PayrollTab employees={employees} offboardings={offboardings} referralBonuses={referralBonuses} timesheetHold={timesheetHold} onViewTimesheets={() => setView('timesheets')} />}
 
           {view === 'holidays' && isHrStaff && <HolidaysTab holidays={holidays} onUpdateHolidays={onUpdateHolidays} />}
         </main>
@@ -625,7 +674,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
           onAddDependent={handleAddDependent}
           onAddAccomplishment={handleAddAccomplishment}
           onVerifyAccomplishment={handleVerifyAccomplishment}
-          onUpdateDocuments={isHrStaff ? handleUpdateDocuments : undefined}
+          onUpdateDocuments={handleUpdateDocuments}
           canViewSensitive={canViewSensitive}
         />
       )}
@@ -635,7 +684,24 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
           employee={matchedEmployee || { id: null, name: user?.username || 'Unknown' }}
           onClose={() => setShowLeaveModal(false)}
           onSubmit={(newRequest) => {
-            setLeaveRequests([...leaveRequests, { ...newRequest, id: Math.max(...leaveRequests.map((r) => r.id), 0) + 1 }])
+            // Two-step chain: to the line manager first; straight to HR when there is none.
+            setLeaveRequests([...leaveRequests, {
+              ...newRequest,
+              status: leaveStatusForNew(matchedEmployee),
+              managerApprovedBy: null, managerApprovedDate: null,
+              id: Math.max(...leaveRequests.map((r) => r.id), 0) + 1,
+            }])
+          }}
+        />
+      )}
+
+      {showCardModal && (
+        <BusinessCardRequestModal
+          user={user}
+          employees={employees}
+          onClose={() => setShowCardModal(false)}
+          onSubmit={(req) => {
+            setBusinessCardRequests([...businessCardRequests, { ...req, id: Math.max(...businessCardRequests.map((r) => r.id), 0) + 1 }])
           }}
         />
       )}

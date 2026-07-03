@@ -1,15 +1,25 @@
 import { useState } from 'react'
 import { Pencil, Check, X as XIcon, Trash2 } from 'lucide-react'
 import Modal from './Modal'
+import { COMPANY_TAGS, COMPANY_TAG_COLOR, COMPANY_SIZES } from '../../data/crmData'
 
 export default function CompanyEditModal({ company, onClose, onSave, onDelete }) {
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({
+  const initialForm = () => ({
     name: company.name,
     industry: company.industry,
     location: company.location,
     status: company.status,
+    website: company.website || '',
+    size: company.size || '',
+    tags: company.tags || [],
+    servicesText: (company.services || []).join(', '),
   })
+  const [form, setForm] = useState(initialForm)
+
+  const toggleTag = (tag) => {
+    setForm((f) => ({ ...f, tags: f.tags.includes(tag) ? f.tags.filter((t) => t !== tag) : [...f.tags, tag] }))
+  }
 
   const handleSave = (e) => {
     e.preventDefault()
@@ -17,12 +27,17 @@ export default function CompanyEditModal({ company, onClose, onSave, onDelete })
       alert('Company name is required')
       return
     }
-    onSave(company.id, form)
+    const { servicesText, ...fields } = form
+    onSave(company.id, {
+      ...fields,
+      website: form.website.trim(),
+      services: servicesText.split(',').map((s) => s.trim()).filter(Boolean),
+    })
     setEditing(false)
   }
 
   const handleCancel = () => {
-    setForm({ name: company.name, industry: company.industry, location: company.location, status: company.status })
+    setForm(initialForm())
     setEditing(false)
   }
 
@@ -63,6 +78,53 @@ export default function CompanyEditModal({ company, onClose, onSave, onDelete })
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Website</label>
+              <input
+                placeholder="https://..."
+                value={form.website}
+                onChange={(e) => setForm({ ...form, website: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Company Size</label>
+              <select
+                value={form.size}
+                onChange={(e) => setForm({ ...form, size: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+              >
+                <option value="">Not set</option>
+                {COMPANY_SIZES.map((s) => <option key={s} value={s}>{s} employees</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Relationship Tags</label>
+            <div className="flex flex-wrap gap-1.5">
+              {COMPANY_TAGS.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium border transition ${form.tags.includes(tag) ? `${COMPANY_TAG_COLOR[tag]} border-transparent ring-1 ring-brand/40` : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'}`}
+                >
+                  {form.tags.includes(tag) ? '✓ ' : ''}{tag}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-gray-400 mt-1">A company can hold several roles at once, e.g. Client and Supplier.</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Main Services / Disciplines</label>
+            <input
+              placeholder="e.g. Structural, MEP, Surveying (comma-separated)"
+              value={form.servicesText}
+              onChange={(e) => setForm({ ...form, servicesText: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+            />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
@@ -108,6 +170,38 @@ export default function CompanyEditModal({ company, onClose, onSave, onDelete })
               <div className="text-xs text-gray-500 mb-1">Status</div>
               <div className="font-medium text-gray-800">{company.status}</div>
             </div>
+            <div>
+              <div className="text-xs text-gray-500 mb-1">Website</div>
+              <div className="font-medium text-gray-800 truncate">
+                {company.website ? (
+                  <a href={company.website} target="_blank" rel="noreferrer" className="text-brand hover:underline">
+                    {company.website.replace(/^https?:\/\/(www\.)?/, '')}
+                  </a>
+                ) : '—'}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500 mb-1">Company Size</div>
+              <div className="font-medium text-gray-800">{company.size ? `${company.size} employees` : '—'}</div>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs text-gray-500 mb-1">Relationship Tags</div>
+            {(company.tags || []).length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {company.tags.map((t) => (
+                  <span key={t} className={`text-xs px-2.5 py-1 rounded-full font-medium ${COMPANY_TAG_COLOR[t] || 'bg-gray-100 text-gray-700'}`}>{t}</span>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-400">No tags yet</div>
+            )}
+          </div>
+
+          <div>
+            <div className="text-xs text-gray-500 mb-1">Main Services / Disciplines</div>
+            <div className="font-medium text-gray-800 text-sm">{(company.services || []).join(', ') || '—'}</div>
           </div>
 
           <div className="flex gap-2 pt-4 border-t border-gray-200">

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Modal from '../crm/Modal'
 import {
   PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_LOCATIONS, CONTRACT_TYPES,
-  FUND_SOURCES, GENERAL_STATUS,
+  FUND_SOURCES, GENERAL_STATUS, yearStartedOf, yearCompletedOf,
 } from '../../data/projectsData'
 
 // Edit the core project record. Scope/stage structure is not editable here —
@@ -33,6 +33,11 @@ export default function EditProjectModal({ project, employees, canViewSensitive,
     cpmId: project.cpmId ?? '',
     contractValue: project.contractValue ?? '',
     constructionCost: project.constructionCost ?? '',
+    yearStarted: yearStartedOf(project) ?? '',
+    yearCompleted: yearCompletedOf(project) ?? '',
+    // File-name-only lists (Phase 2 storage placeholder) — edited one per line.
+    images: (project.images || []).join('\n'),
+    specialFeatures: (project.specialFeatures || []).join('\n'),
   })
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value })
@@ -81,6 +86,10 @@ export default function EditProjectModal({ project, employees, canViewSensitive,
       contractorName: form.contractorName.trim() || null,
       dpmId: form.dpmId ? Number(form.dpmId) : null,
       cpmId: form.cpmId ? Number(form.cpmId) : null,
+      yearStarted: form.yearStarted === '' ? null : Number(form.yearStarted),
+      yearCompleted: form.yearCompleted === '' ? null : Number(form.yearCompleted),
+      images: form.images.split('\n').map((s) => s.trim()).filter(Boolean),
+      specialFeatures: form.specialFeatures.split('\n').map((s) => s.trim()).filter(Boolean),
       ...(canViewSensitive ? {
         contractValue: form.contractValue === '' ? null : Number(form.contractValue),
         constructionCost: form.constructionCost === '' ? null : Number(form.constructionCost),
@@ -143,6 +152,14 @@ export default function EditProjectModal({ project, employees, canViewSensitive,
             <input value={form.contractorName} onChange={set('contractorName')} className={inputCls} />
           </div>
           <div>
+            <label className={labelCls}>Year started</label>
+            <input type="number" min="1990" max="2100" value={form.yearStarted} onChange={set('yearStarted')} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Year completed</label>
+            <input type="number" min="1990" max="2100" value={form.yearCompleted} onChange={set('yearCompleted')} className={inputCls} />
+          </div>
+          <div>
             <label className={labelCls}>Contract type</label>
             <select value={form.contractType} onChange={set('contractType')} className={inputCls}>
               {CONTRACT_TYPES.map((c) => <option key={c}>{c}</option>)}
@@ -196,6 +213,20 @@ export default function EditProjectModal({ project, employees, canViewSensitive,
         <div>
           <label className={labelCls}>Description</label>
           <textarea rows={2} value={form.description} onChange={set('description')} className={inputCls} />
+        </div>
+
+        {/* Portfolio fields (replaced the Proposal Builder) — one entry per line */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className={labelCls}>Images — one file name per line</label>
+            <textarea rows={3} value={form.images} onChange={set('images')} placeholder={'hero-shot.jpg\naerial-view.jpg'} className={`${inputCls} font-mono text-xs`} />
+            <p className="text-[10px] text-gray-400 mt-0.5">File names only until Phase 2 storage.</p>
+          </div>
+          <div>
+            <label className={labelCls}>Special features — one per line</label>
+            <textarea rows={3} value={form.specialFeatures} onChange={set('specialFeatures')} placeholder={'1,200 students\n99.99% uptime'} className={inputCls} />
+            <p className="text-[10px] text-gray-400 mt-0.5">Free-form — whatever is notable for this project type.</p>
+          </div>
         </div>
 
         {completionBlocked && marketingGate && (

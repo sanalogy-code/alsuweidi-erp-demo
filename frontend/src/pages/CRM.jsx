@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Home, TrendingUp, Building2, Users, CheckSquare, BarChart3 } from 'lucide-react'
+import { Plus, Home, TrendingUp, Building2, Users, CheckSquare, BarChart3, FileText } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Modal from '../components/crm/Modal'
 import CreateProjectFromDealModal from '../components/projects/CreateProjectFromDealModal'
@@ -11,6 +11,7 @@ import ContactsView from '../components/crm/ContactsView'
 import PipelineView from '../components/crm/PipelineView'
 import TasksView from '../components/crm/TasksView'
 import ReportsView from '../components/crm/ReportsView'
+import PortfolioDownloads from '../components/crm/PortfolioDownloads'
 import ContactDetailModal from '../components/crm/ContactDetailModal'
 import CompanyEditModal from '../components/crm/CompanyEditModal'
 import DealEditModal from '../components/crm/DealEditModal'
@@ -75,6 +76,11 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
     setEditingCompanyId(null)
   }
 
+  // In-place field updates (notes, subconsultant history) — no edit modal involved.
+  function patchCompany(companyId, fields) {
+    setCompanies(companies.map((c) => c.id === companyId ? { ...c, ...fields } : c))
+  }
+
   function deleteCompany(companyId) {
     setCompanies(companies.filter((c) => c.id !== companyId))
     setSelectedCompany(null)
@@ -100,7 +106,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
     e.preventDefault()
     if (!companyForm.name.trim()) return
     const id = Math.max(0, ...companies.map((c) => c.id)) + 1
-    setCompanies([...companies, { id, ...companyForm }])
+    setCompanies([...companies, { id, tags: [], services: [], keepInMind: [], projectHistory: [], ...companyForm }])
     setCompanyForm({ name: '', industry: '', location: '', status: 'Prospect' })
     setShowAddCompany(false)
     setSelectedCompany(id)
@@ -194,6 +200,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
       label: 'Insights',
       items: [
         { key: 'reports', label: 'Reports', icon: BarChart3 },
+        { key: 'portfolio', label: 'Portfolio PDFs', icon: FileText },
       ],
     },
   ]
@@ -255,7 +262,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
           <OverviewView
             companies={companies} contacts={contacts} deals={deals} tasks={tasks}
             onLogInteraction={openLogInteraction} onToggleTask={toggleTask}
-            onJumpToCompany={jumpToCompany} setTab={setTab}
+            onJumpToCompany={jumpToCompany} setTab={setTab} onViewContact={setViewContactId}
           />
         )}
 
@@ -271,11 +278,11 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
 
         {tab === 'companies' && (
           <CompaniesView
-            companies={companies} contacts={contacts} deals={deals} interactions={interactions}
+            companies={companies} contacts={contacts} deals={deals} interactions={interactions} projects={projects}
             selectedCompany={selectedCompany} setSelectedCompany={setSelectedCompany}
             search={search} setSearch={setSearch}
             onAddContact={openAddContact} onLogInteraction={openLogInteraction} onAddTask={openAddTask}
-            onViewContact={setViewContactId} onEditCompany={setEditingCompanyId}
+            onViewContact={setViewContactId} onEditCompany={setEditingCompanyId} onUpdateCompany={patchCompany}
           />
         )}
 
@@ -299,6 +306,8 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
         {tab === 'reports' && (
           <ReportsView deals={deals} companies={companies} />
         )}
+
+        {tab === 'portfolio' && <PortfolioDownloads />}
         </main>
       </div>
 

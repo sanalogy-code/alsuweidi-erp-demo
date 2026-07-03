@@ -540,13 +540,16 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
       {detailTab === 'documents' && canViewIdentity && (
         <div className="space-y-3">
           <p className="text-xs text-gray-500">
-            Every document is typed, and required ones are flagged when missing. Files are name-only until Phase 2 storage.
+            Every document is typed, and required ones are flagged when missing. HR reviews each upload —
+            rejected documents show the reason and ask for a re-upload. Files are name-only until Phase 2 storage.
           </p>
           <DocumentChecklist
             docTypes={EMPLOYEE_DOCUMENT_TYPES}
             documents={employee.documents || []}
             onChange={(docs) => onUpdateDocuments?.(employee.id, docs)}
-            readOnly={readOnly || !onUpdateDocuments}
+            readOnly={readOnly || !onUpdateDocuments || !(isHrStaff || isSelf)}
+            canReview={isHrStaff && !readOnly && !!onUpdateDocuments}
+            reviewerName={user?.username || 'HR'}
             ctx={{ nonUaeNational: employee.nationality !== 'United Arab Emirates' }}
           />
         </div>

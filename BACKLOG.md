@@ -4,7 +4,14 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-03 (Batch 5 shipped: confidential-flag hardening, scannable queue
+**Last updated:** 2026-07-03 (Batch 6 shipped — 19 items, nearly the whole "Next batch": CRM
+company tags/details + subconsultant tracking + lessons & notes + clickable Needs Follow-Up +
+portfolio PDF downloads; Marketing proposal-builder removal + richer project record + 4-step
+photo workflow + content calendar rework + branding overhaul; HR/timesheets faster entry +
+overhead codes + reminder/ERP lockout, business card requests, document review statuses,
+payroll offboarding cutoff + mid-month-hire catch-up, two-step leave approval; new IT +
+Admin-staff roles and IT add-license. Remaining in Next batch: PRO dashboard (needs decision),
+Grade field (ask management), Campaigns (needs scoping). Earlier: Batch 5 shipped: confidential-flag hardening, scannable queue
 layouts, marketing portfolio search, line-manager timesheet approval, per-employee work-week
 patterns. Earlier same day: Batches 3 & 4 — Marketing module + Timesheets. Since then: Sana's
 review of Marketing added a large batch of new requirements (proposal builder removed in favor
@@ -26,47 +33,48 @@ six of the seven open decisions below.)
   client, description) + industry (mainFunction), built-up-area bands, scope, status, and
   readiness filters with a live "N of M" counter; scope now derives via shared `scopeOf()`
   in projectsData (seeds have no scope field).
-- [ ] **Company details fields** (3 Jul, refined 3 Jul — decision made) — CRM companies get:
-  website, head office location, size (employee band), and **relationship tags — multi-select,
-  not a single type** (a company can be Client AND Supplier at once, e.g.). Add relationship
-  tag(s) as a filter, plus filters based on the company's experience/main service (disciplines
-  for subconsultants, or main business line generally). This closes the "Companies naming"
-  decision below — name stays "Companies", the tag does the work a rename would have.
-- [ ] **Subconsultant tracking** (3 Jul) — track subconsultants: what they do (disciplines),
-  contacts/people, last worked with (per project), notes. = CRM company with a 'Subconsultant'
-  relationship tag (see above, now multi-select) + a per-project link (which project, what
-  scope, how did it go) rather than a separate module.
-- [ ] **Lessons learned & notes** (3 Jul) — lessons learned per project (list on the project
-  record); "keep in mind" notes on companies/clients/people (CRM + subconsultants). Same
-  free-text + date + author shape everywhere.
+- [x] ~~Company details fields~~ — **Shipped Batch 6 (3 Jul):** companies carry website, size
+  (employee band), multi-select relationship tags (Client/Prospect/Subconsultant/Supplier/
+  Partner/Government — Gulf Steel Fabrication seeds as Client + Supplier) and main services/
+  disciplines; tag + service filters in the Companies list; edit modal covers all new fields.
+  Name stays "Companies" — the tags do the work a rename would have.
+- [x] ~~Subconsultant tracking~~ — **Shipped Batch 6 (3 Jul):** Subconsultant-tagged companies
+  get a "Project History" tab (which project, scope/discipline, how it went, when) with an
+  inline add form. Seeds: Apex Geotechnical Services and Lumina Lighting Studio.
+- [x] ~~Lessons learned & notes~~ — **Shipped Batch 6 (3 Jul):** shared `NotesList` component
+  (text + date + author, inline add) used for a Lessons tab on the project record and
+  "Keep in Mind" notes on company detail and contact detail.
 - [x] ~~Timesheets~~ — **Shipped Batch 4 (3 Jul night):** My timesheet in HR (Sun–Sat week grid,
   hours per project code per day, draft/submit, resubmit after rejection), Timesheet approvals in
   HR workspace (queue with per-day breakdown, approve/reject with reason, missing-last-week list),
   payroll banner flags unsubmitted employees ("blocks WPS" per policy — real enforcement Phase 2).
   Home quick actions now deep-link (Fill Timesheet, Request Leave/Certificate, Hardware Request).
   PM/manager approval chain still a pending decision — HR approves for now.
-- [ ] **Timesheets: faster entry** (3 Jul) — filling the week is fully manual today. Add
-  faster paths: "copy last week" button, remember my usual projects, and/or a default row set
-  per employee. (Sana: "employee to add manually — or if there is a faster way".)
+- [x] ~~Timesheets: faster entry~~ — **Shipped Batch 6 (3 Jul):** "Copy last week" button
+  pre-fills rows + hours from the previous week, and a blank week defaults to your usual
+  project rows (last week's codes, hours empty) so filling is one pass of numbers.
 - [x] ~~Timesheets: line-manager approval~~ — **Shipped Batch 5 (3 Jul):** anyone with direct
   reports gets a "Team timesheets" view (badge = team's submitted weeks) and approves their own
   team; HR's Timesheets view is now company-wide oversight showing who each week is awaiting
   ("awaiting <manager>", or "HR (no line manager)") and can still step in.
-- [ ] **Timesheets: overhead codes & clearer labels** (3 Jul) — "Code" is unclear. Hours aren't
-  always project-linked: expand the non-project buckets to real overhead categories (Admin, IT,
-  Marketing, General, Leave, Training…) and label the column so nobody has to ask what a code is.
-- [ ] **Timesheets: reminder + ERP lockout** (3 Jul — decision made) — if the week isn't filled,
-  the employee gets a reminder on the **last working day of the week**, and their **ERP access is
-  blocked** until the timesheet is submitted (demo: a blocking modal on login/navigation; real
-  notification needs Phase 2 email/notifications).
-- [ ] **New roles: IT and Admin staff** (3 Jul) — add an **IT** role (owns the IT & Assets
-  workspace instead of piggybacking on HR/admin/management) and an **Admin staff** role (office
-  administration — distinct from the current `admin` system role). Re-map workspace gating
-  accordingly (`SENSITIVE_VIEW_ROLES` etc. — worth a small role-matrix pass so each workspace
-  has an explicit owner role).
-- [ ] **IT: add license** (3 Jul) — the license registry is read-only; assets already have "Add
-  asset" but licenses need the same (name, vendor, seats, yearly cost, renewal date) so IT can
-  register new subscriptions without a code change.
+- [x] ~~Timesheets: overhead codes & clearer labels~~ — **Shipped Batch 6 (3 Jul):**
+  `OVERHEAD_CODES` (Admin, IT, Marketing, General, Leave, Training) replace the old three
+  buckets; the column is now "Project / overhead" with an inline hint, matched in the
+  approval breakdown.
+- [x] ~~Timesheets: reminder + ERP lockout~~ — **Shipped Batch 6 (3 Jul):** app-level
+  `TimesheetGate` — reminder banner on the employee's own last working day (work-week
+  pattern aware) when this week isn't submitted; full-screen lockout modal on any page when
+  *last* week is unsubmitted, with a "Fill timesheet now" deep link and a small "demo:
+  dismiss" escape hatch. Applies only to logins mapping to an employee with timesheet
+  history — demo the lockout with "Fatima Al Mansouri" (her last week is a stuck draft);
+  the Friday reminder shows for e.g. "Osama Hussain".
+- [x] ~~New roles: IT and Admin staff~~ — **Shipped Batch 6 (3 Jul):** `it` and `adminstaff`
+  roles added; new `IT_VIEW_ROLES` (it/admin/management) owns the IT workspace — HR staff no
+  longer piggyback; Admin staff kept to employee-level access (no HR-sensitive data); role →
+  workspace matrix documented in `dashboardData.js`.
+- [x] ~~IT: add license~~ — **Shipped Batch 6 (3 Jul):** "Add license" button + form on the
+  license registry (name, vendor/owner, seats, yearly cost, renewal date), same pattern as
+  Add asset; new licenses get the same 60-day renewal radar automatically.
 - [x] ~~Work-week patterns on timesheets~~ — **Shipped Batch 5 (3 Jul):** `WORK_WEEK_PATTERNS`
   on the employee record (Mon–Fri company default, Sun–Thu Jordan office, Mon–Sat site 6-day),
   auto-defaulted from employment type on the employment form (location rule ready for when the
@@ -81,67 +89,60 @@ six of the seven open decisions below.)
   (seniority covers the demo). If the company genuinely uses pay grades, add it back as an
   HR-side field. **Ask management which.**
 
-- [ ] **Remove Proposal Builder; move its fields onto the project record** (3 Jul — Sana's
-  review) — "Portfolio + CV search is enough — the proposal builder doesn't work because this
-  information needs to live in the actual documents, not a separate assembly tool." Remove the
-  Proposal Builder tile/page entirely. Instead expand the **project record** with the richer
-  fields Marketing actually needs: client, size, project value, location, year started, year
-  completed, scope, description, and **images** (no image field exists today — file-name-only
-  is fine, matching the Phase 2 storage placeholder pattern used elsewhere), plus a free-form
-  **"special features" list** for anything project-specific and notable (number of students,
-  number of beds, uptime %, or whatever else applies) — not a fixed schema, since this varies
-  wildly by project type.
-- [ ] **Project photo task becomes a real multi-step workflow, not one click** (3 Jul) — Today
-  Marketing's inbox has a single "Approve photos" button. Replace with a small state machine:
-  (1) arrange a photographer or an in-house Marketing person, (2) coordinate with the
-  **Supervision team** so the shoot happens *before* the project is released/handed over,
-  (3) photos taken, (4) photos reviewed, approved, and uploaded — only then is the task done.
-  Ties into the completion gate already in place (SPEC.md §Marketing).
-- [ ] **Content calendar: fixed channel set + copy/media as the primary fields** (3 Jul) —
-  Channels are only **Website, LinkedIn, Email** (drop Instagram/Print/Event from
-  `CONTENT_CHANNELS` in `marketingData.js`). Title becomes optional ("for reference" only) —
-  the real content is the **copy** (text) and **media** (any attached image/asset); make those
-  the fields that matter, not the title.
-- [ ] **Content list view: structured columns, like the Batch 5 inbox rework** (3 Jul) — Sana
-  liked the fixed-column alignment from Batch 5 (type chip / description / age / actions, status
-  clearly stacked, quick actions aligned across rows). Apply that same treatment to the Content
-  calendar's list view — and treat it as the **house style for any listed page going forward**
-  (projects, inboxes, whatever), not a one-off.
-- [ ] **Content calendar: custom date range view** (3 Jul) — add a From/To custom range option
-  alongside the month view, matching the date-range selector already built for CRM
-  Pipeline/Reports.
+- [x] ~~Remove Proposal Builder; move its fields onto the project record~~ — **Shipped Batch 6
+  (3 Jul):** ProposalBuilder deleted (tile + page). Project record gains year started/completed
+  (derived from sub-records, overridable), images (file-name-only, Phase 2 storage pattern) and
+  a free-form special-features list — visible on the record, editable in the Edit modal, and
+  surfaced per portfolio-ready project in Marketing's Portfolio view.
+- [x] ~~Project photo task becomes a real multi-step workflow~~ — **Shipped Batch 6 (3 Jul):**
+  4-step state machine on the inbox task (arrange photographer [external/in-house modal] →
+  coordinate with Supervision before handover → photos taken → reviewed/approved/uploaded);
+  progress stored on the project (`photoWorkflow`); only the final step sets `photosApproved`
+  and satisfies the completion gate. Seed: project 6 mid-flow.
+- [x] ~~Content calendar: fixed channel set + copy/media as primary fields~~ — **Shipped
+  Batch 6 (3 Jul):** channels are Website/LinkedIn/Email only; copy (textarea) + media
+  (file-name) are the primary fields; title optional, "for reference".
+- [x] ~~Content list view: structured columns~~ — **Shipped Batch 6 (3 Jul):** Batch 5 house
+  style applied (type + status chips / description / right-aligned age / right-aligned actions).
+  House-style rule for future listed pages stands.
+- [x] ~~Content calendar: custom date range view~~ — **Shipped Batch 6 (3 Jul):** Month vs
+  custom From/To range selector, following the CRM Pipeline/Reports pattern.
 - [ ] **Campaigns** (3 Jul, tentative — needs scoping before building) — Sana: "perhaps we can
   plan and start a campaign too?" A lightweight grouping of coordinated content pieces under a
   campaign name/goal. Discuss shape with Sana before building blind.
-- [ ] **CRM: downloadable portfolio PDFs by category** (3 Jul) — let CRM users download
-  portfolio PDFs that Marketing has prepared and uploaded (not auto-generated). Organize by
-  portfolio type — e.g. Education, Data Center, Mixed Use, Communities, Industrial — **and the
-  type list must be extensible** (add a new category without a code change).
-- [ ] **Branding: logo & font library overhaul** (3 Jul) — remove the Arabic logo asset.
-  Logo variants needed: **Symbol, Primary, Vertical**, each in two-plus color versions. Add font
-  assets: the Arabic font and the English font. Add a **quick-guidelines section** (candidate to
-  become Branding's default/main view) covering when to use which logo variant, which font, and
-  which colors. Add two new brand documents: **Brand Guidelines** and a **Platform + Narrative
-  Guide**.
-- [ ] **HR: add "Request business card" to self-service** (3 Jul) — new request type alongside
-  leave/certificate/concern, same request→inbox→fulfil shape.
-- [ ] **CRM: make the name clickable in "Needs Follow-Up"** (3 Jul) — today the contact's name in
-  the Needs Follow-Up dashboard widget isn't a link, so there's no way to get their phone number
-  from it. Make the name clickable, surfacing phone, email, company, and current project (if
-  any) — presumably by opening the existing contact detail modal.
-- [ ] **HR: documents get a real review status (edit + reject)** (3 Jul — decision resolved) —
-  `DocumentChecklist` today is upload/remove only. Add a status per document (pending / verified
-  / rejected) with a rejection reason that prompts re-upload, and let HR edit the record around
-  it — same shape as the existing certificate/leave rejection flow.
-- [ ] **Payroll cutoff on last working day** (3 Jul — decision resolved) — when an employee's
-  last working day is set (offboarding), stop payroll after that date; calculate end-of-service
-  settlement and anything else owed and fold it into **that month's** payroll run.
-- [ ] **Mid-month hire "late pay" catch-up** (3 Jul — decision resolved) — auto-calculate the
-  pro-rated salary percentage for the partial days worked in the joining month, and add that
-  catch-up amount to the **next** month's payroll run (not the joining month itself).
-- [ ] **Leave approval: manager first, then HR** (3 Jul — decision resolved) — two-step chain,
-  same pattern as the line-manager timesheet approval from Batch 5 (`managerId`-derived team
-  view). Supersedes the HR-only interim in `LeaveDashboard`/`HRInbox`.
+- [x] ~~CRM: downloadable portfolio PDFs by category~~ — **Shipped Batch 6 (3 Jul):** Marketing
+  manages "Portfolio packs" (category + file + date) in the Portfolio view; CRM gets a
+  "Portfolio PDFs" entry under Insights, grouped by category (seeded: Education, Data Center,
+  Mixed Use, Communities, Industrial; new categories typable — no code change). Downloads are
+  demo stubs pending Phase 2 storage.
+- [x] ~~Branding: logo & font library overhaul~~ — **Shipped Batch 6 (3 Jul):** Arabic logo
+  removed; Symbol/Primary/Vertical logos in full-colour + reversed; Arabic + English font
+  assets; "Quick guidelines" is now Branding's default view (logo/font/colour usage rules);
+  Brand Guidelines + Platform & Narrative Guide documents added.
+- [x] ~~HR: add "Request business card" to self-service~~ — **Shipped Batch 6 (3 Jul):** form
+  (name/title as on card, mobile, notes) from My HR / My requests, tracked with status chips,
+  HR inbox queue item with a "Mark printed & delivered" fulfil action. Seed: Naseeb Shaheen
+  has one pending.
+- [x] ~~CRM: make the name clickable in "Needs Follow-Up"~~ — **Shipped Batch 6 (3 Jul):** the
+  name now opens the existing contact detail modal (phone, email, company, deals, history).
+- [x] ~~HR: documents get a real review status (edit + reject)~~ — **Shipped Batch 6 (3 Jul):**
+  per-document pending / verified / rejected chips in `DocumentChecklist`; HR (same gating as
+  other HR edit rights) verifies or rejects with a reason; employees can re-upload rejected
+  docs from their own profile. Seed: Priya Nair's degree certificate is rejected (illegible
+  attestation) — demo as "Layla Al Mazrouei" (HR review) or "Priya Nair" (re-upload).
+- [x] ~~Payroll cutoff on last working day~~ — **Shipped Batch 6 (3 Jul):** the final month is
+  pro-rated to the last working day and the end-of-service settlement (gratuity estimate as of
+  that day) folds into the same run with a "Final settlement" flag on row + payslip; after
+  that month the employee drops off the run. Demo: August 2026 run, Ahmed El Haddad (LWD 14 Aug).
+- [x] ~~Mid-month hire "late pay" catch-up~~ — **Shipped Batch 6 (3 Jul):** the joining month
+  pays nothing (banner explains the deferral) and the pro-rated partial-month pay lands on the
+  **next** run as a "Late pay catch-up (joining month)" line. Seed: Priya Nair now joins
+  15 Jun 2026 — June run shows the deferral, July run the catch-up.
+- [x] ~~Leave approval: manager first, then HR~~ — **Shipped Batch 6 (3 Jul):** two-step chain
+  (`pending_manager` → `pending_hr` → approved) mirroring Batch 5 timesheet approvals; managers
+  get a "Team leave" view + badge ("Approve → HR"), HR inbox shows only manager-approved or
+  no-manager requests, and My requests shows "Awaiting manager (1/2)" / "Awaiting HR (2/2)".
+  Demo: "Osama Hussain" (manager step for Hassan) then "Layla Al Mazrouei" (HR final).
 
 ## Shipped — Batch 2 (3 Jul 2026, night)
 

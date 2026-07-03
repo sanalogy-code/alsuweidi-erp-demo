@@ -9,7 +9,9 @@ import Projects from './pages/Projects'
 import IT from './pages/IT'
 import Marketing from './pages/Marketing'
 import ComingSoon from './pages/ComingSoon'
+import TimesheetGate from './components/TimesheetGate'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
+import { TIMESHEETS } from './data/timesheetData'
 import { PROJECTS } from './data/projectsData'
 import { INITIAL_DEALS } from './data/crmData'
 import { MARKETING_TASKS } from './data/marketingData'
@@ -30,6 +32,9 @@ export default function App() {
   // created (in Projects or CRM) needs a marketing description; a new employee
   // (added in HR) needs a headshot and a welcome email.
   const [marketingTasks, setMarketingTasks] = useState(MARKETING_TASKS)
+  // Lifted so the timesheet reminder/lockout gate (rendered here, above every
+  // page) clears the moment the week is submitted inside the HR module.
+  const [timesheets, setTimesheets] = useState(TIMESHEETS)
   const navigate = useNavigate()
 
   // Auto-assigned to all of Marketing. Deduped: one open task per type per subject.
@@ -103,18 +108,21 @@ export default function App() {
   }
 
   return (
-    <Routes>
+    <>
+      <TimesheetGate user={user} timesheets={timesheets} />
+      <Routes>
       <Route path="/dev" element={<DevDashboard />} />
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
       <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
-      <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} />} />
+      <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} />} />
       <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/content" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/admin" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="admin" />} />
       <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
-    </Routes>
+      </Routes>
+    </>
   )
 }

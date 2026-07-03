@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Mail, Phone, Bell, MessageSquarePlus, Pencil, Check, X as XIcon, FileText } from 'lucide-react'
 import Modal from './Modal'
 import InteractionHistory from './InteractionHistory'
+import NotesList from './NotesList'
 import { getStatusColor, formatCurrency, daysSince } from '../../data/crmData'
 
 export default function ContactDetailModal({
@@ -136,6 +137,15 @@ export default function ContactDetailModal({
         ) : (
           <p className="text-xs text-gray-400">No deals linked to this contact yet.</p>
         )}
+      </div>
+
+      <div className="mb-6">
+        <NotesList
+          notes={contact.keepInMind || []}
+          onAdd={(note) => onSave(contact.id, { keepInMind: [...(contact.keepInMind || []), note] })}
+          emptyText="Nothing to keep in mind yet."
+          placeholder="e.g. Prefers WhatsApp, never call on Fridays..."
+        />
       </div>
 
       <div>

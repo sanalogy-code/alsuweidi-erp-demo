@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Clock, Plus, X, Send, Save } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, Copy, Plus, X, Send, Save } from 'lucide-react'
 import {
-  DAY_LABELS, GENERAL_CODES,
+  DAY_LABELS, OVERHEAD_CODES,
   weekStartOf, addDays, toLocalISO, fmtWeekRange, timesheetTotal,
 } from '../../data/timesheetData'
 import { workWeekOf } from '../../data/hrData'
@@ -42,11 +42,21 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
       const p = projects.find((x) => x.id === code)
       return p ? `${p.projectNo} — ${p.name}` : `Project #${code}`
     }
-    return GENERAL_CODES.find((g) => g.code === code)?.label || code
+    return OVERHEAD_CODES.find((g) => g.code === code)?.label || code
   }
 
-  // Start editing: copy the stored entries (or one empty row)
-  const startRows = () => current?.entries.map((e) => ({ code: e.code, hours: [...e.hours] })) || [{ code: '', hours: [0, 0, 0, 0, 0, 0, 0] }]
+  // The most recent earlier week — powers "Copy last week" and the usual-rows prefill.
+  const prevTimesheet = [...mine]
+    .filter((t) => t.weekStart < weekStart)
+    .sort((a, b) => b.weekStart.localeCompare(a.weekStart))[0]
+
+  // Start editing: copy the stored entries; a blank week defaults to your usual
+  // project rows (last week's codes, hours empty) so filling is one pass of numbers.
+  const startRows = () => {
+    if (current) return current.entries.map((e) => ({ code: e.code, hours: [...e.hours] }))
+    if (prevTimesheet) return prevTimesheet.entries.map((e) => ({ code: e.code, hours: [0, 0, 0, 0, 0, 0, 0] }))
+    return [{ code: '', hours: [0, 0, 0, 0, 0, 0, 0] }]
+  }
   const editRows = rows ?? (editable ? startRows() : null)
   const ensureEditing = () => { if (!rows) setRows(startRows()) }
 
@@ -56,10 +66,15 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
   }
   const setCode = (ri, value) => {
     ensureEditing()
-    const code = ['general', 'leave', 'training'].includes(value) ? value : Number(value)
+    const code = OVERHEAD_CODES.some((g) => g.code === value) ? value : Number(value)
     setRows((prev) => (prev ?? startRows()).map((r, i) => (i === ri ? { ...r, code: value === '' ? '' : code } : r)))
   }
   const addRow = () => { ensureEditing(); setRows((prev) => [...(prev ?? startRows()), { code: '', hours: [0, 0, 0, 0, 0, 0, 0] }]) }
+  // Faster entry: pre-fill this week's rows and hours from the previous week.
+  const copyLastWeek = () => {
+    if (!prevTimesheet) return
+    setRows(prevTimesheet.entries.map((e) => ({ code: e.code, hours: [...e.hours] })))
+  }
   const removeRow = (ri) => { ensureEditing(); setRows((prev) => (prev ?? startRows()).filter((_, i) => i !== ri)) }
 
   const cleanEntries = (rs) => rs.filter((r) => r.code !== '' && r.hours.some((h) => h > 0))
@@ -101,7 +116,8 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
               {status && <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${status.chip}`}>{status.label}</span>}
             </h2>
             <p className="text-xs text-gray-500">
-              Log hours against project codes. Submit by the end of your last working day — unsubmitted weeks block payroll.
+              Log hours against a project — or an overhead code (Admin, IT, Marketing…) for non-project time.
+              Submit by the end of your last working day — unsubmitted weeks block payroll.
               Your work week: <span className="font-medium text-gray-600">{workWeek.label}</span>.
             </p>
             {current?.status === 'rejected' && current.rejectReason && (
@@ -121,7 +137,10 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left px-4 py-2 font-semibold text-gray-700 min-w-[220px]">Project / code</th>
+                <th className="text-left px-4 py-2 font-semibold text-gray-700 min-w-[220px]">
+                  Project / overhead
+                  <span className="block text-[10px] font-normal text-gray-400">the project you worked on, or an internal bucket</span>
+                </th>
                 {DAY_LABELS.map((d, i) => (
                   <th key={d} className={`px-2 py-2 font-semibold text-center w-16 ${weekendDays.includes(i) ? 'text-gray-400 bg-gray-50' : 'text-gray-700'}`}>{d}</th>
                 ))}
@@ -135,11 +154,11 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
                   <td className="px-4 py-2">
                     {editable ? (
                       <select value={String(r.code)} onChange={(e) => setCode(ri, e.target.value)} className="w-full border border-gray-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand">
-                        <option value="">Select project…</option>
+                        <option value="">Select project or overhead…</option>
                         {projects.filter((p) => p.generalStatus !== 'Completed' || p.id === r.code).map((p) => (
                           <option key={p.id} value={p.id} disabled={usedProjects.has(p.id) && r.code !== p.id}>{p.projectNo} — {p.name}</option>
                         ))}
-                        {GENERAL_CODES.map((g) => (
+                        {OVERHEAD_CODES.map((g) => (
                           <option key={g.code} value={g.code} disabled={usedProjects.has(g.code) && r.code !== g.code}>{g.label}</option>
                         ))}
                       </select>
@@ -184,9 +203,16 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
 
         {editable && (
           <div className="p-4 border-t border-gray-200 flex items-center justify-between flex-wrap gap-2">
-            <button onClick={addRow} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline">
-              <Plus size={13} /> Add project row
-            </button>
+            <div className="flex items-center gap-4">
+              <button onClick={addRow} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline">
+                <Plus size={13} /> Add row
+              </button>
+              {prevTimesheet && (
+                <button onClick={copyLastWeek} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline" title={`Pre-fill from ${fmtWeekRange(prevTimesheet.weekStart)}`}>
+                  <Copy size={13} /> Copy last week
+                </button>
+              )}
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => save(false)}

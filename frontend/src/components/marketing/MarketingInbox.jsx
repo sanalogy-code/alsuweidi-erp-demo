@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Inbox, Camera, Mail, PenLine, Check } from 'lucide-react'
+import { Inbox, Camera, Mail, PenLine, Check, ChevronRight } from 'lucide-react'
 import Modal from '../crm/Modal'
-import { MARKETING_TASK_TYPES } from '../../data/marketingData'
+import { MARKETING_TASK_TYPES, PHOTO_WORKFLOW_STEPS } from '../../data/marketingData'
 import { daysAgo } from '../../utils/date'
 
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
@@ -32,6 +32,8 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
   const [descText, setDescText] = useState('')
   const [emailTask, setEmailTask] = useState(null)
   const [emailText, setEmailText] = useState('')
+  const [photographerTask, setPhotographerTask] = useState(null)
+  const [photographerForm, setPhotographerForm] = useState({ kind: 'External', name: '' })
 
   const open = tasks.filter((t) => t.status === 'pending').sort((a, b) => a.createdDate.localeCompare(b.createdDate))
   const done = tasks.filter((t) => t.status === 'done')
@@ -53,12 +55,45 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
     setDescTask(null)
   }
 
-  const approvePhotos = (task) => {
+  // --- Photography workflow: arrange → coordinate with Supervision → shoot →
+  // review/approve/upload. Progress lives on the project (photoWorkflow.step =
+  // index of the step currently in progress); only the last step closes the task.
+  const photoStep = (task) => projectFor(task)?.photoWorkflow?.step ?? 0
+
+  const advancePhotoStep = (task) => {
     const project = projectFor(task)
-    if (project) {
-      onUpdateProject({ ...project, photosApproved: true, photosApprovedDate: new Date().toISOString().slice(0, 10) })
+    if (!project) return
+    const step = photoStep(task)
+    if (step === 0) {
+      // Arranging needs a who — small form instead of a blind advance.
+      setPhotographerForm({ kind: 'External', name: '' })
+      setPhotographerTask(task)
+      return
     }
-    onCompleteTask(task.id, 'Professional photography approved.')
+    if (step >= PHOTO_WORKFLOW_STEPS.length - 1) {
+      // Final step — approve & upload. This is the completion gate.
+      onUpdateProject({
+        ...project,
+        photoWorkflow: { ...project.photoWorkflow, step: PHOTO_WORKFLOW_STEPS.length },
+        photosApproved: true,
+        photosApprovedDate: new Date().toISOString().slice(0, 10),
+      })
+      onCompleteTask(task.id, 'Photos reviewed, approved, and uploaded to the project record.')
+      return
+    }
+    onUpdateProject({ ...project, photoWorkflow: { ...project.photoWorkflow, step: step + 1 } })
+  }
+
+  const savePhotographer = (e) => {
+    e.preventDefault()
+    const project = projectFor(photographerTask)
+    if (project && photographerForm.name.trim()) {
+      onUpdateProject({
+        ...project,
+        photoWorkflow: { ...(project.photoWorkflow || {}), step: 1, photographer: `${photographerForm.kind} — ${photographerForm.name.trim()}` },
+      })
+    }
+    setPhotographerTask(null)
   }
 
   const openEmailEditor = (task) => {
@@ -77,11 +112,15 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
         <PenLine size={12} /> Write description
       </button>
     )
-    if (task.type === 'project_photos') return (
-      <button onClick={() => approvePhotos(task)} className="text-xs font-medium text-green-700 hover:underline flex items-center gap-1">
-        <Camera size={12} /> Approve photos
-      </button>
-    )
+    if (task.type === 'project_photos') {
+      const step = Math.min(photoStep(task), PHOTO_WORKFLOW_STEPS.length - 1)
+      const isFinal = photoStep(task) >= PHOTO_WORKFLOW_STEPS.length - 1
+      return (
+        <button onClick={() => advancePhotoStep(task)} className={`text-xs font-medium hover:underline flex items-center gap-1 ${isFinal ? 'text-green-700' : 'text-brand'}`}>
+          <Camera size={12} /> {PHOTO_WORKFLOW_STEPS[step].action}
+        </button>
+      )
+    }
     if (task.type === 'welcome_email') return (
       <button onClick={() => openEmailEditor(task)} className="text-xs font-medium text-brand hover:underline flex items-center gap-1">
         <Mail size={12} /> Design email
@@ -120,12 +159,29 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-gray-800 truncate">{task.relatedName}</div>
                     <div className="text-xs text-gray-500 truncate">{task.notes || meta.hint}</div>
+                    {task.type === 'project_photos' && (() => {
+                      const step = photoStep(task)
+                      const wf = projectFor(task)?.photoWorkflow
+                      return (
+                        <div className="text-xs mt-0.5 flex items-center gap-1 flex-wrap">
+                          {PHOTO_WORKFLOW_STEPS.map((s, i) => (
+                            <span key={s.key} className="flex items-center gap-1">
+                              {i > 0 && <ChevronRight size={10} className="text-gray-300" />}
+                              <span className={i < step ? 'text-green-700' : i === step ? 'text-brand font-medium' : 'text-gray-400'}>
+                                {i < step ? '✓ ' : ''}{s.label}
+                              </span>
+                            </span>
+                          ))}
+                          {wf?.photographer && <span className="text-gray-400 ml-1">• {wf.photographer}</span>}
+                        </div>
+                      )
+                    })()}
                   </div>
                   <div className="w-20 shrink-0 text-right">
                     {task.dueDate && <div className="text-xs text-amber-600 whitespace-nowrap">due {fmt(task.dueDate)}</div>}
                     <div className="text-xs text-gray-400 whitespace-nowrap">{daysAgo(task.createdDate)}</div>
                   </div>
-                  <div className="w-36 shrink-0 flex items-center justify-end gap-2">{actionsFor(task)}</div>
+                  <div className="w-44 shrink-0 flex items-center justify-end gap-2 text-right">{actionsFor(task)}</div>
                 </div>
               )
             })}
@@ -177,6 +233,43 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
           >
             Save to project & complete task
           </button>
+        </Modal>
+      )}
+
+      {photographerTask && (
+        <Modal title={`Arrange photographer — ${photographerTask.relatedName}`} onClose={() => setPhotographerTask(null)}>
+          <p className="text-xs text-gray-500 mb-3">
+            Step 1 of 4 — book an external photographer or assign someone in-house. Next: coordinate the shoot date
+            with the Supervision team so it happens before handover.
+          </p>
+          <form onSubmit={savePhotographer} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Photographer</label>
+                <select
+                  value={photographerForm.kind}
+                  onChange={(e) => setPhotographerForm({ ...photographerForm, kind: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                >
+                  <option>External</option>
+                  <option>In-house</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Who *</label>
+                <input
+                  required
+                  value={photographerForm.name}
+                  onChange={(e) => setPhotographerForm({ ...photographerForm, name: e.target.value })}
+                  placeholder={photographerForm.kind === 'External' ? 'Studio / photographer name' : 'Marketing team member'}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                />
+              </div>
+            </div>
+            <button type="submit" className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark">
+              Photographer arranged — next: coordinate with Supervision
+            </button>
+          </form>
         </Modal>
       )}
 

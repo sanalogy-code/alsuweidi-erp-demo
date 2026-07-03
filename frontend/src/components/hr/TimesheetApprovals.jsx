@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ClipboardCheck, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
-import { GENERAL_CODES, DAY_LABELS, weekStartOf, addDays, toLocalISO, fmtWeekRange, timesheetTotal } from '../../data/timesheetData'
+import { OVERHEAD_CODES, DAY_LABELS, weekStartOf, addDays, toLocalISO, fmtWeekRange, timesheetTotal } from '../../data/timesheetData'
 import { workWeekOf } from '../../data/hrData'
 
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
@@ -32,7 +32,7 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
       const p = projects.find((x) => x.id === code)
       return p ? `${p.projectNo} — ${p.name}` : `Project #${code}`
     }
-    return GENERAL_CODES.find((g) => g.code === code)?.label || code
+    return OVERHEAD_CODES.find((g) => g.code === code)?.label || code
   }
 
   // Who a submitted week is waiting on: the employee's line manager, or HR if none.
@@ -124,7 +124,7 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="text-gray-400">
-                          <th className="text-left py-1 font-medium min-w-[180px]">Code</th>
+                          <th className="text-left py-1 font-medium min-w-[180px]">Project / overhead</th>
                           {DAY_LABELS.map((d, i) => (
                             <th key={d} className={`py-1 font-medium text-center w-12 ${weekendDays.includes(i) ? 'text-gray-300' : ''}`}>{d}</th>
                           ))}

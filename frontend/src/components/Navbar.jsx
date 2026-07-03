@@ -6,8 +6,12 @@ const ROLE_LABELS = {
   sales: 'Sales / Business Dev',
   pm: 'Project Manager',
   marketing: 'Marketing',
+  hr: 'HR',
+  it: 'IT',
+  adminstaff: 'Admin Staff',
   management: 'Management',
   admin: 'Admin',
+  pro: 'PRO / Government Services',
 }
 
 export default function Navbar({ user, onLogout, title, showBack }) {

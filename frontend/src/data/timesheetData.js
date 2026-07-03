@@ -12,12 +12,24 @@
 
 export const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-// Non-project codes selectable alongside real projects.
-export const GENERAL_CODES = [
-  { code: 'general', label: 'General / non-project' },
+// Overhead (non-project) codes selectable alongside real projects — hours
+// aren't always project-linked, so each internal bucket gets a real category
+// instead of one catch-all "general".
+export const OVERHEAD_CODES = [
+  { code: 'admin', label: 'Overhead — Admin / office' },
+  { code: 'it', label: 'Overhead — IT / systems' },
+  { code: 'marketing', label: 'Overhead — Marketing' },
+  { code: 'general', label: 'Overhead — General' },
   { code: 'leave', label: 'Leave / public holiday' },
   { code: 'training', label: 'Training & development' },
 ]
+
+// Last working day of the Sun..Sat grid for a work-week pattern (the timesheet
+// reminder fires on this day). E.g. Mon–Fri → Fri (5), Sun–Thu → Thu (4).
+export const lastWorkingDayIndex = (workWeek) => {
+  for (let i = 6; i >= 0; i--) if (!workWeek.weekend.includes(i)) return i
+  return 6
+}
 
 const pad = (n) => String(n).padStart(2, '0')
 export const toLocalISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -46,7 +58,7 @@ export const fmtWeekRange = (weekStartISO) => {
 
 export const timesheetTotal = (ts) => ts.entries.reduce((s, e) => s + e.hours.reduce((a, b) => a + (Number(b) || 0), 0), 0)
 
-// entries[].code: a PROJECTS id (number) or a GENERAL_CODES code (string).
+// entries[].code: a PROJECTS id (number) or an OVERHEAD_CODES code (string).
 // hours: 7 numbers, Sun..Sat. status: draft | submitted | approved | rejected.
 export const TIMESHEETS = [
   {

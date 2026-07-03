@@ -6,7 +6,7 @@ function daysSinceNumber(date) {
   return Math.floor((new Date() - new Date(date)) / (1000 * 60 * 60 * 24))
 }
 
-export default function OverviewView({ companies, contacts, deals, tasks, onLogInteraction, onToggleTask, onJumpToCompany, setTab }) {
+export default function OverviewView({ companies, contacts, deals, tasks, onLogInteraction, onToggleTask, onJumpToCompany, setTab, onViewContact }) {
   const openDeals = deals.filter((d) => d.stage !== 'Won' && d.stage !== 'Lost')
   const openValue = openDeals.reduce((s, d) => s + d.value, 0)
   const weightedValue = openDeals.reduce((s, d) => s + d.value * (d.probability / 100), 0)
@@ -77,7 +77,9 @@ export default function OverviewView({ companies, contacts, deals, tasks, onLogI
               return (
                 <div key={c.id} className="px-5 py-3 flex justify-between items-center">
                   <div>
-                    <div className="text-sm font-semibold text-gray-800">{c.name}</div>
+                    <button onClick={() => onViewContact(c.id)} className="block text-sm font-semibold text-gray-800 hover:text-brand hover:underline text-left">
+                      {c.name}
+                    </button>
                     <button onClick={() => onJumpToCompany(c.companyId)} className="text-xs text-gray-500 hover:text-brand hover:underline">
                       {company?.name}
                     </button>

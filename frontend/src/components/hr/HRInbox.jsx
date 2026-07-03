@@ -5,28 +5,36 @@ import { daysAgo } from '../../utils/date'
 const KIND_CHIP = {
   leave: 'bg-amber-100 text-amber-700',
   certificate: 'bg-blue-100 text-blue-700',
+  card: 'bg-teal-100 text-teal-700',
   concern: 'bg-red-100 text-red-700',
   candidate: 'bg-green-100 text-green-700',
   joiner: 'bg-purple-100 text-purple-700',
 }
 
-const KIND_LABEL = { leave: 'Leave', certificate: 'Certificate', concern: 'Concern', candidate: 'Candidate', joiner: 'New joiner' }
+const KIND_LABEL = { leave: 'Leave', certificate: 'Certificate', card: 'Business card', concern: 'Concern', candidate: 'Candidate', joiner: 'New joiner' }
 
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 const certLabel = (v) => CERTIFICATE_TYPES.find((t) => t.value === v)?.label || v
 
 // One queue of everything waiting on HR, oldest first — replaces per-type badge chasing.
-export function buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }) {
+// Leave shows only once the line manager has approved (status 'pending_hr'; legacy
+// 'pending' counts too) — 'pending_manager' weeks sit with the manager, not HR.
+export function buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates, businessCardRequests = [] }) {
   return [
-    ...leaveRequests.filter((r) => r.status === 'pending').map((r) => ({
+    ...leaveRequests.filter((r) => r.status === 'pending' || r.status === 'pending_hr').map((r) => ({
       key: `l${r.id}`, kind: 'leave', date: r.requestedDate || r.startDate, ref: r,
       text: `${r.employeeName} — ${r.type} ${fmt(r.startDate)}–${fmt(r.endDate)} (${r.days}d)`,
-      sub: r.reason || '',
+      sub: r.managerApprovedBy ? `Manager approved (${r.managerApprovedBy}) — HR final approval${r.reason ? ` • ${r.reason}` : ''}` : `No line manager — HR approves directly${r.reason ? ` • ${r.reason}` : ''}`,
     })),
     ...certificateRequests.filter((r) => r.status === 'pending').map((r) => ({
       key: `c${r.id}`, kind: 'certificate', date: r.requestedDate, ref: r,
       text: `${r.employeeName} — ${certLabel(r.type)} for ${r.addressedTo}`,
       sub: r.nocObject || r.purpose || '',
+    })),
+    ...businessCardRequests.filter((r) => r.status === 'pending').map((r) => ({
+      key: `b${r.id}`, kind: 'card', date: r.requestedDate, ref: r,
+      text: `${r.employeeName} — business card: ${r.nameOnCard}, ${r.titleOnCard}`,
+      sub: [r.mobile, r.notes].filter(Boolean).join(' • '),
     })),
     ...complaints.filter((c) => c.status === 'submitted' || c.status === 'under_review').map((c) => ({
       key: `x${c.id}`, kind: 'concern', date: c.submittedDate, ref: c,
@@ -41,13 +49,13 @@ export function buildInboxItems({ leaveRequests, certificateRequests, complaints
   ].sort((a, b) => a.date.localeCompare(b.date))
 }
 
-export default function HRInbox({ leaveRequests, certificateRequests, complaints, candidates, newJoiners = [], onLeaveAction, onPrepareCert, onRejectCert, onAdvanceComplaint, onAdvanceCandidate, onReviewJoiner }) {
+export default function HRInbox({ leaveRequests, certificateRequests, complaints, candidates, businessCardRequests = [], newJoiners = [], onLeaveAction, onPrepareCert, onRejectCert, onAdvanceComplaint, onAdvanceCandidate, onFulfilCard, onReviewJoiner }) {
   const joinerItems = newJoiners.map((j) => ({
     key: `j${j.id}`, kind: 'joiner', date: j.submittedDate, ref: j,
     text: `${j.personal.firstName} ${j.personal.lastName}${j.positionTitle ? ` — ${j.positionTitle}` : ''} (profile submitted)`,
     sub: `${j.documents.length} documents uploaded — verify and complete the employment record`,
   }))
-  const items = [...buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }), ...joinerItems]
+  const items = [...buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates, businessCardRequests }), ...joinerItems]
     .sort((a, b) => a.date.localeCompare(b.date))
   const issuedLetters = certificateRequests
     .filter((r) => r.status === 'issued' && r.letterText)
@@ -66,6 +74,9 @@ export default function HRInbox({ leaveRequests, certificateRequests, complaints
         <button onClick={() => onPrepareCert(item.ref)} className="text-xs font-medium text-brand hover:underline">Prepare Letter</button>
         <button onClick={() => onRejectCert(item.ref.id)} className="text-xs font-medium text-red-600 hover:underline">Reject</button>
       </>
+    )
+    if (item.kind === 'card') return (
+      <button onClick={() => onFulfilCard(item.ref.id)} className="text-xs font-medium text-green-700 hover:underline">Mark printed &amp; delivered</button>
     )
     if (item.kind === 'concern') return item.ref.status === 'submitted' ? (
       <button onClick={() => onAdvanceComplaint(item.ref.id, 'under_review')} className="text-xs font-medium text-brand hover:underline">Start Review</button>
@@ -91,7 +102,7 @@ export default function HRInbox({ leaveRequests, certificateRequests, complaints
           <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
             <Inbox size={15} className="text-brand" /> Inbox ({items.length})
           </h2>
-          <p className="text-xs text-gray-500">Everything waiting on HR — leave, certificates, concerns, and candidates — oldest first.</p>
+          <p className="text-xs text-gray-500">Everything waiting on HR — leave, certificates, business cards, concerns, and candidates — oldest first.</p>
         </div>
 
         {items.length === 0 ? (

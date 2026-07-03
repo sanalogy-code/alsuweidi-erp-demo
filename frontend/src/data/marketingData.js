@@ -1,6 +1,6 @@
 // Dummy Marketing data for the proof-of-concept. Local state only, same as CRM/HR.
 //
-// The Marketing workspace (inbox, content calendar, portfolio, proposals, analytics)
+// The Marketing workspace (inbox, content calendar, portfolio, analytics)
 // is visible to marketing + top management only — see MARKETING_VIEW_ROLES in
 // dashboardData.js. Branding materials are the exception: visible to everyone.
 
@@ -23,7 +23,7 @@ export const MARKETING_TASK_TYPES = {
   project_photos: {
     label: 'Project photos',
     chip: 'bg-purple-100 text-purple-700',
-    hint: 'Arrange and approve professional project photography — blocks project completion.',
+    hint: 'Run the photography workflow — arrange, coordinate, shoot, approve. Blocks project completion.',
   },
   employee_headshot: {
     label: 'Headshot',
@@ -67,12 +67,43 @@ export const MARKETING_TASKS = [
 ]
 
 // ---------------------------------------------------------------------------
+// Project photography workflow — the project_photos task is a small state
+// machine, not one click. Progress lives on the PROJECT record
+// (`photoWorkflow: { step, photographer, notes }`) so the completion gate and
+// the inbox read the same state. Final step sets `photosApproved`.
+// ---------------------------------------------------------------------------
+
+export const PHOTO_WORKFLOW_STEPS = [
+  {
+    key: 'arrange', label: 'Arrange photographer',
+    hint: 'Book an external photographer or assign an in-house Marketing person.',
+    action: 'Photographer arranged',
+  },
+  {
+    key: 'coordinate', label: 'Coordinate with Supervision',
+    hint: 'Agree the shoot date with the Supervision team — it must happen before handover.',
+    action: 'Shoot scheduled with Supervision',
+  },
+  {
+    key: 'shoot', label: 'Photos taken',
+    hint: 'The shoot has happened; raw photos received from the photographer.',
+    action: 'Photos received',
+  },
+  {
+    key: 'review', label: 'Review & approve',
+    hint: 'Review the set, approve the selects, and upload to the project record — this closes the task.',
+    action: 'Approve & upload',
+  },
+]
+
+// ---------------------------------------------------------------------------
 // Content calendar
 // ---------------------------------------------------------------------------
 
 export const CONTENT_TYPES = ['LinkedIn post', 'Project spotlight', 'News article', 'Newsletter', 'Campaign', 'Event']
 
-export const CONTENT_CHANNELS = ['LinkedIn', 'Website', 'Email', 'Instagram', 'Print', 'Event']
+// Fixed channel set (Sana, 3 Jul): the company publishes on exactly these three.
+export const CONTENT_CHANNELS = ['Website', 'LinkedIn', 'Email']
 
 // idea → draft → pending_approval → approved → published
 export const CONTENT_STATUSES = {
@@ -84,34 +115,79 @@ export const CONTENT_STATUSES = {
 }
 
 // relatedProjectId is nullable — links a post to a portfolio project.
+// The content itself is the `copy` (text) and `media` (file-name-only until
+// Phase 2 storage); `title` is an optional internal reference label.
 export const CONTENT_ITEMS = [
-  { id: 1, title: 'Saadiyat Villas Cluster 4 — construction milestone', type: 'Project spotlight', channel: 'LinkedIn', date: '2026-07-06', owner: 'Marketing', status: 'approved', relatedProjectId: 5, notes: 'Drone footage approved by client — tag Emaar.' },
-  { id: 2, title: 'Meet our engineers — Fatima Al Mansouri', type: 'LinkedIn post', channel: 'LinkedIn', date: '2026-07-09', owner: 'Marketing', status: 'draft', relatedProjectId: null, notes: 'People-of-ALSUWEIDI series, part 3.' },
-  { id: 3, title: 'Q3 company newsletter', type: 'Newsletter', channel: 'Email', date: '2026-07-15', owner: 'Marketing', status: 'pending_approval', relatedProjectId: null, notes: 'Includes Q3 planning meeting recap and new-joiner welcomes.' },
-  { id: 4, title: 'Healthcare design capabilities campaign', type: 'Campaign', channel: 'LinkedIn', date: '2026-07-20', owner: 'Marketing', status: 'idea', relatedProjectId: 1, notes: 'Anchor on Harbour Point Medical Centre once photos are in.' },
-  { id: 5, title: 'Eid Al Adha greeting', type: 'LinkedIn post', channel: 'LinkedIn', date: '2026-07-01', owner: 'Marketing', status: 'published', relatedProjectId: null, notes: '' },
-  { id: 6, title: 'Corniche Tower retrofit — case study page', type: 'News article', channel: 'Website', date: '2026-07-28', owner: 'Marketing', status: 'draft', relatedProjectId: 12, notes: 'Completed project — full case study with before/after.' },
-  { id: 7, title: 'Big 5 exhibition stand planning', type: 'Event', channel: 'Event', date: '2026-08-12', owner: 'Marketing', status: 'idea', relatedProjectId: null, notes: 'Book stand by end of July.' },
+  { id: 1, title: 'Saadiyat Villas Cluster 4 — construction milestone', type: 'Project spotlight', channel: 'LinkedIn', date: '2026-07-06', owner: 'Marketing', status: 'approved', relatedProjectId: 5, copy: 'Cluster 4 at Saadiyat Villas has reached a major construction milestone — all 38 villa structures are now topped out. Proud to deliver full design and supervision for @Emaar Properties on this landmark community. #engineering #abudhabi', media: 'saadiyat-c4-drone-milestone.mp4', notes: 'Drone footage approved by client — tag Emaar.' },
+  { id: 2, title: 'Meet our engineers — Fatima Al Mansouri', type: 'LinkedIn post', channel: 'LinkedIn', date: '2026-07-09', owner: 'Marketing', status: 'draft', relatedProjectId: null, copy: 'People of ALSUWEIDI, part 3: meet Fatima Al Mansouri, the structural engineer behind some of our most ambitious facades. "The best structure is the one nobody notices — it just works."', media: 'people-fatima-al-mansouri.jpg', notes: 'People-of-ALSUWEIDI series, part 3.' },
+  { id: 3, title: 'Q3 company newsletter', type: 'Newsletter', channel: 'Email', date: '2026-07-15', owner: 'Marketing', status: 'pending_approval', relatedProjectId: null, copy: 'Q3 kickoff edition: planning meeting recap, three project milestones, and a warm welcome to our new joiners. Full draft in the attached layout.', media: 'newsletter-2026-q3-draft.pdf', notes: 'Includes Q3 planning meeting recap and new-joiner welcomes.' },
+  { id: 4, title: 'Healthcare design capabilities campaign', type: 'Campaign', channel: 'LinkedIn', date: '2026-07-20', owner: 'Marketing', status: 'idea', relatedProjectId: 1, copy: '', media: '', notes: 'Anchor on Harbour Point Medical Centre once photos are in.' },
+  { id: 5, title: 'Eid Al Adha greeting', type: 'LinkedIn post', channel: 'LinkedIn', date: '2026-07-01', owner: 'Marketing', status: 'published', relatedProjectId: null, copy: 'Eid Mubarak from all of us at ALSUWEIDI Engineering Consultants. Wishing you and your families a blessed Eid Al Adha.', media: 'eid-al-adha-2026-card.png', notes: '' },
+  { id: 6, title: 'Corniche Tower retrofit — case study page', type: 'News article', channel: 'Website', date: '2026-07-28', owner: 'Marketing', status: 'draft', relatedProjectId: 12, copy: 'How do you re-skin a 24-storey office tower without decanting a single tenant? Our facade team\'s condition assessment and retrofit design for Corniche Tower — full case study with before/after imagery.', media: 'corniche-retrofit-case-study.zip', notes: 'Completed project — full case study with before/after.' },
+  { id: 7, title: 'Big 5 exhibition — save the date', type: 'Event', channel: 'Email', date: '2026-08-12', owner: 'Marketing', status: 'idea', relatedProjectId: null, copy: '', media: '', notes: 'Announce our Big 5 stand to the client mailing list — book stand by end of July.' },
+]
+
+// ---------------------------------------------------------------------------
+// Portfolio packs — category PDFs Marketing prepares/uploads for CRM to hand
+// to clients. NOT auto-generated; file-name-only until Phase 2 storage.
+// Categories derive from the data — Marketing types a new one to extend the list.
+// ---------------------------------------------------------------------------
+
+export const PORTFOLIO_PACKS = [
+  { id: 1, category: 'Education', fileName: 'ALSUWEIDI-Portfolio-Education-2026.pdf', uploadedDate: '2026-05-12' },
+  { id: 2, category: 'Data Center', fileName: 'ALSUWEIDI-Portfolio-DataCenter-2026.pdf', uploadedDate: '2026-06-02' },
+  { id: 3, category: 'Mixed Use', fileName: 'ALSUWEIDI-Portfolio-MixedUse-2026.pdf', uploadedDate: '2026-04-20' },
+  { id: 4, category: 'Communities', fileName: 'ALSUWEIDI-Portfolio-Communities-2026.pdf', uploadedDate: '2026-06-18' },
+  { id: 5, category: 'Industrial', fileName: 'ALSUWEIDI-Portfolio-Industrial-2025.pdf', uploadedDate: '2025-11-30' },
 ]
 
 // ---------------------------------------------------------------------------
 // Branding materials — visible to EVERYONE (files are name-only until Phase 2 storage)
 // ---------------------------------------------------------------------------
 
-export const BRAND_ASSET_CATEGORIES = ['Logos', 'Templates', 'Guidelines', 'Stationery', 'Photography']
+export const BRAND_ASSET_CATEGORIES = ['Logos', 'Fonts', 'Templates', 'Guidelines', 'Stationery', 'Photography']
 
+// Logo library: three variants (Symbol, Primary, Vertical), each in at least
+// two colour versions. Fonts: one Arabic + one English family.
 export const BRAND_ASSETS = [
-  { id: 1, name: 'Primary logo — full colour', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Main logo for light backgrounds. Never stretch or recolour.' },
-  { id: 2, name: 'Logo — white / reversed', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'For dark backgrounds and photography overlays.' },
-  { id: 3, name: 'Logo — Arabic lockup', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Bilingual lockup for government submissions.' },
-  { id: 4, name: 'PowerPoint template', category: 'Templates', format: 'PPTX', sizeLabel: '8 MB', updatedDate: '2026-03-02', description: 'Client presentations — includes cover, divider, and project-sheet layouts.' },
-  { id: 5, name: 'Word report template', category: 'Templates', format: 'DOCX', sizeLabel: '1 MB', updatedDate: '2026-03-02', description: 'Technical reports and design statements.' },
-  { id: 6, name: 'Proposal cover pages', category: 'Templates', format: 'INDD + PDF', sizeLabel: '14 MB', updatedDate: '2026-05-18', description: 'Fee proposal and EOI covers, English and Arabic.' },
-  { id: 7, name: 'Brand guidelines v3', category: 'Guidelines', format: 'PDF', sizeLabel: '6 MB', updatedDate: '2026-02-14', description: 'Colours, typography, logo clear-space, photography style.' },
-  { id: 8, name: 'Email signature kit', category: 'Stationery', format: 'HTML', sizeLabel: '0.1 MB', updatedDate: '2026-04-01', description: 'Standard signature — fill in name, title, and mobile only.' },
-  { id: 9, name: 'Letterhead', category: 'Stationery', format: 'DOCX + PDF', sizeLabel: '1 MB', updatedDate: '2026-01-22', description: 'Official letterhead — used by HR certificate letters.' },
-  { id: 10, name: 'Approved project photography set', category: 'Photography', format: 'JPG', sizeLabel: '240 MB', updatedDate: '2026-06-05', description: 'Marketing-approved hero shots of completed projects.' },
+  { id: 1, name: 'Symbol — full colour', category: 'Logos', format: 'SVG + PNG', sizeLabel: '1 MB', updatedDate: '2026-01-10', description: 'The standalone mark — avatars, favicons, and stamps where space is tight.' },
+  { id: 2, name: 'Symbol — white / reversed', category: 'Logos', format: 'SVG + PNG', sizeLabel: '1 MB', updatedDate: '2026-01-10', description: 'Symbol for dark backgrounds and photography overlays.' },
+  { id: 3, name: 'Primary logo — full colour', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Horizontal lockup — the default logo on light backgrounds. Never stretch or recolour.' },
+  { id: 4, name: 'Primary logo — white / reversed', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Horizontal lockup for dark backgrounds and report covers.' },
+  { id: 5, name: 'Vertical logo — full colour', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Stacked lockup for narrow/portrait formats — hoarding panels, roll-ups, pull-up banners.' },
+  { id: 6, name: 'Vertical logo — white / reversed', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Stacked lockup for dark portrait formats.' },
+  { id: 7, name: 'English typeface — Archivo family', category: 'Fonts', format: 'OTF + WOFF2', sizeLabel: '3 MB', updatedDate: '2026-02-14', description: 'All English-language material: headings in Archivo SemiBold, body in Archivo Regular.' },
+  { id: 8, name: 'Arabic typeface — GE SS Two family', category: 'Fonts', format: 'OTF', sizeLabel: '2 MB', updatedDate: '2026-02-14', description: 'All Arabic-language material — pairs with Archivo in bilingual layouts.' },
+  { id: 9, name: 'PowerPoint template', category: 'Templates', format: 'PPTX', sizeLabel: '8 MB', updatedDate: '2026-03-02', description: 'Client presentations — includes cover, divider, and project-sheet layouts.' },
+  { id: 10, name: 'Word report template', category: 'Templates', format: 'DOCX', sizeLabel: '1 MB', updatedDate: '2026-03-02', description: 'Technical reports and design statements.' },
+  { id: 11, name: 'Proposal cover pages', category: 'Templates', format: 'INDD + PDF', sizeLabel: '14 MB', updatedDate: '2026-05-18', description: 'Fee proposal and EOI covers, English and Arabic.' },
+  { id: 12, name: 'Brand Guidelines', category: 'Guidelines', format: 'PDF', sizeLabel: '6 MB', updatedDate: '2026-06-30', description: 'The full rulebook: colours, typography, logo clear-space, photography style.' },
+  { id: 13, name: 'Platform + Narrative Guide', category: 'Guidelines', format: 'PDF', sizeLabel: '3 MB', updatedDate: '2026-06-30', description: 'What we say and where — tone of voice, key messages, and per-channel positioning.' },
+  { id: 14, name: 'Email signature kit', category: 'Stationery', format: 'HTML', sizeLabel: '0.1 MB', updatedDate: '2026-04-01', description: 'Standard signature — fill in name, title, and mobile only.' },
+  { id: 15, name: 'Letterhead', category: 'Stationery', format: 'DOCX + PDF', sizeLabel: '1 MB', updatedDate: '2026-01-22', description: 'Official letterhead — used by HR certificate letters.' },
+  { id: 16, name: 'Approved project photography set', category: 'Photography', format: 'JPG', sizeLabel: '240 MB', updatedDate: '2026-06-05', description: 'Marketing-approved hero shots of completed projects.' },
 ]
+
+// Quick guidelines — the Branding page's default view. The 30-second version
+// of the Brand Guidelines PDF: which logo, which font, which colour, when.
+export const BRAND_QUICK_GUIDELINES = {
+  logos: [
+    { variant: 'Primary (horizontal)', when: 'The default. Letterheads, reports, presentations, website header — anywhere with normal horizontal space.' },
+    { variant: 'Vertical (stacked)', when: 'Narrow or portrait formats only: site hoardings, roll-up banners, social story formats.' },
+    { variant: 'Symbol (mark only)', when: 'Tiny spaces where the wordmark would be illegible: avatars, favicons, app icons, document stamps. Never as the main logo on client-facing documents.' },
+    { variant: 'Colour rule', when: 'Full colour on white/light backgrounds; white/reversed on dark backgrounds and photos. Never place the full-colour logo on a busy photo without a scrim.' },
+  ],
+  fonts: [
+    { name: 'Archivo (English)', when: 'All English material. SemiBold for headings, Regular for body. Arial is the fallback in plain Office documents.' },
+    { name: 'GE SS Two (Arabic)', when: 'All Arabic material, and the Arabic half of bilingual layouts. Match visual weight to the paired Archivo, not the point size.' },
+  ],
+  colors: [
+    { name: 'Engineering Navy', hex: '#1B3A5C', when: 'Primary brand colour — headings, covers, the logo itself.' },
+    { name: 'Structure Grey', hex: '#5B6770', when: 'Body text and secondary elements.' },
+    { name: 'Site Amber', hex: '#E8A33D', when: 'Accent only — highlights, callouts, charts. Never for large surfaces.' },
+    { name: 'Blueprint White', hex: '#F7F9FA', when: 'Backgrounds and negative space — keep layouts light.' },
+  ],
+}
 
 // ---------------------------------------------------------------------------
 // Analytics (mock feeds — real numbers need Phase 2 integrations)

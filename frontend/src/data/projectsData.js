@@ -24,6 +24,14 @@ export const scopeOf = (p) => {
   return 'Supervision only'
 }
 
+// Marketing needs "year started / year completed" on the record — derive from
+// the design/supervision sub-records unless stored explicitly (new projects may
+// set yearStarted/yearCompleted directly via the edit form).
+export const yearStartedOf = (p) =>
+  p.yearStarted ?? p.design?.startYear ?? p.supervision?.startYear ?? null
+export const yearCompletedOf = (p) =>
+  p.yearCompleted ?? p.supervision?.completionYear ?? p.design?.completionYear ?? null
+
 export const CONTRACT_TYPES = ['Conventional', 'Design & Build', 'Call-off / Framework Agreement']
 
 export const FUND_SOURCES = ['Government', 'Private', 'Bank-ADCB', 'Bank-Other']
@@ -84,12 +92,19 @@ export const PAY_STATUS = ['Not Due', 'Invoices Paid', 'Unsettled', 'Completed',
 // `confidential` (bool — hide from portfolio / proposals; the PM decides at project
 // start. `undefined` = predates the field / not decided — blocks stage advance until
 // the PM picks. Two seeds below are left undecided on purpose to demo that gate).
+// Richer portfolio fields (3 Jul, replacing the Proposal Builder): `images`
+// (file-name-only list, Phase 2 storage placeholder), `specialFeatures`
+// (free-form strings — varies wildly by project type, so no fixed schema),
+// and `photoWorkflow` ({ step: 0-3 index into PHOTO_WORKFLOW_STEPS, photographer,
+// notes } — progress of the photography state machine; done = photosApproved).
 export const PROJECTS = [
   {
     id: 1, projectNo: 'P-2701', name: 'Harbour Point Medical Centre', employer: 'Al Reem Development Co', companyId: null, owner: 'Al Reem Development Co',
     type: 'Buildings', mainFunction: 'Healthcare', location: 'Abu Dhabi', sector: 'Al Reem Island', plot: 'RM-114', builtupArea: 28500,
     description: 'Four-storey outpatient medical centre with day-surgery unit and rooftop MEP plant.',
     marketingDescription: 'A 28,500 sqm healthcare destination on Al Reem Island: day-surgery suites, imaging, and outpatient clinics designed around daylight-filled waiting courtyards, delivered in BIM from concept through supervision.',
+    images: ['harbour-point-hero-courtyard.jpg', 'harbour-point-entrance-dusk.jpg', 'harbour-point-surgery-suite.jpg'],
+    specialFeatures: ['4 day-surgery theatres', '62 outpatient clinics', '3 daylight waiting courtyards', 'LEED Gold target'],
     confidential: false,
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 4200000, constructionCost: 165000000, contractorName: 'Emirates BuildCo LLC',
@@ -138,11 +153,17 @@ export const PROJECTS = [
     type: 'Buildings', mainFunction: 'Residential Communities', location: 'Abu Dhabi', sector: 'Saadiyat Island', plot: 'SD-C4', builtupArea: 41200,
     description: '38 villas across three prototypes with community landscaping and entry pavilion.',
     marketingDescription: 'Thirty-eight villas across three prototypes on Saadiyat Island, unified by native-planting landscaping and a sculptural entry pavilion — full design and supervision scope for Emaar Properties.',
+    images: ['saadiyat-c4-aerial.jpg', 'saadiyat-c4-prototype-a.jpg', 'saadiyat-c4-entry-pavilion.jpg', 'saadiyat-c4-landscape.jpg'],
+    specialFeatures: ['38 villas across 3 prototypes', 'Native-planting landscape masterplan', 'Sculptural entry pavilion', 'Community pool + gym block'],
     confidential: false,
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 5100000, constructionCost: 210000000, contractorName: 'Coastline Contracting',
     dpmId: 7, cpmId: 10,
     stagesInvolved: ['Concept', 'Schematic', 'Detailed', 'Tender Docs', 'IFC', 'Tendering', 'Construction', 'D&L'], currentStage: 'Construction',
+    lessons: [
+      { id: 1, text: 'Prototype villa mockup review with the client early saved weeks of detailed-design rework — repeat on every residential community job.', date: '2024-09-12', author: 'Layla Hassan' },
+      { id: 2, text: 'Landscaping tender should have been split from the main package; combining it delayed award by six weeks.', date: '2025-03-04', author: 'Khalid Mansour' },
+    ],
     design: { sow: ['Architecture', 'Interior Design', 'Structural Engineering', 'Mechanical Engineering', 'Electrical Engineering', 'Hardscape Design', 'Softscape Design'], status: 'Completed', outputFormat: 'BIM', startYear: 2023, completionYear: 2024, financialStatus: 'Closed - No Dispute - All design fees paid', payStatus: 'Completed' },
     supervision: { coverage: 'Full', status: 'In Progress', payStatus: 'Invoices Paid', contractualCompletion: '2026-12-15', estimatedCompletion: '2026-12-10', approvedPct: 30, actualPct: 31, startYear: 2025, completionYear: 2026 },
   },
@@ -150,6 +171,7 @@ export const PROJECTS = [
     id: 6, projectNo: 'P-2699', name: 'Substation Access & Landscaping Works', employer: 'DEWA', companyId: 3, owner: 'DEWA',
     type: 'Infrastructure', mainFunction: 'Non-Building', location: 'Dubai', sector: 'Al Qudra', plot: null, builtupArea: 0,
     description: 'Supervision of access roads, boundary works, and landscaping around two new substations.',
+    photoWorkflow: { step: 1, photographer: 'External — LensCraft Studios (Ravi)', notes: 'Booked for the week of 10 Aug, pending Supervision confirmation.' },
     confidential: false,
     generalStatus: 'In Progress', fund: 'Government', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 720000, constructionCost: 18500000, contractorName: 'Desert Line Projects',
@@ -222,11 +244,16 @@ export const PROJECTS = [
     type: 'Buildings', mainFunction: 'Offices Building', location: 'Abu Dhabi', sector: 'Corniche', plot: 'CN-12', builtupArea: 0,
     description: 'Facade condition assessment and retrofit design for a 24-storey office tower.',
     marketingDescription: 'Condition assessment and full retrofit design for a 24-storey Corniche office tower — thermal performance, safety, and a refreshed identity delivered without decanting the building.', photosApproved: true,
+    images: ['corniche-tower-facade-after.jpg', 'corniche-tower-before-after.jpg', 'corniche-tower-detail-panel.jpg'],
+    specialFeatures: ['24 storeys re-skinned without decanting', '32% thermal performance improvement', 'Drone-based condition survey (no scaffolding)'],
     confidential: false,
     generalStatus: 'Completed', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 510000, constructionCost: 12500000, contractorName: 'Skyline Facades',
     dpmId: 2, cpmId: null,
     stagesInvolved: ['Data Collection', 'Concept', 'Detailed', 'Tender Docs'], currentStage: 'Tender Docs',
+    lessons: [
+      { id: 1, text: 'Drone survey of the facade cost a fraction of scaffolding access and the client loved it — make it the default for retrofit assessments.', date: '2024-06-18', author: 'Sana Diab' },
+    ],
     design: { sow: ['Facade Engineering', 'Structural Engineering', 'Feasibility Studies'], status: 'Completed', outputFormat: 'CAD', startYear: 2023, completionYear: 2024, financialStatus: 'Closed - No Dispute - All design fees paid', payStatus: 'Completed' },
     supervision: null,
   },

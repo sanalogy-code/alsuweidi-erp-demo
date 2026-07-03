@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, AlertTriangle, Plane, Clock } from 'lucide-react'
-import { ANNUAL_LEAVE_ENTITLEMENT, WORK_WEEK_PATTERNS, DEFAULT_WORK_WEEK, workWeekOf } from '../../data/hrData'
+import { ANNUAL_LEAVE_ENTITLEMENT, LEAVE_PENDING_STATUSES, WORK_WEEK_PATTERNS, DEFAULT_WORK_WEEK, workWeekOf } from '../../data/hrData'
 import { parseLocalDate, todayLocal } from '../../utils/date'
 
 const MS_DAY = 1000 * 60 * 60 * 24
@@ -55,7 +55,7 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
 
   const today = todayLocal()
   const onLeaveToday = active.filter((r) => r.status === 'approved' && parseLocalDate(r.startDate) <= today && today <= parseLocalDate(r.endDate)).length
-  const pendingCount = requests.filter((r) => r.status === 'pending').length
+  const pendingCount = requests.filter((r) => LEAVE_PENDING_STATUSES.includes(r.status)).length
 
   const fmtShort = (d) => parseLocalDate(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
@@ -71,7 +71,7 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
       .filter((r) => r.employeeId === e.id && r.status === 'approved' && r.type === 'Vacation')
       .reduce((s, r) => s + r.days, 0)
     const scheduled = requests
-      .filter((r) => r.employeeId === e.id && r.status === 'pending' && r.type === 'Vacation')
+      .filter((r) => r.employeeId === e.id && LEAVE_PENDING_STATUSES.includes(r.status) && r.type === 'Vacation')
       .reduce((s, r) => s + r.days, 0)
     return { employee: e, used, scheduled, remaining: ANNUAL_LEAVE_ENTITLEMENT - used }
   }).sort((a, b) => a.remaining - b.remaining)
@@ -101,7 +101,7 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
           <div className="text-xs font-semibold text-red-700 uppercase tracking-wide">Same-team overlaps</div>
           {conflicts.map((c, i) => (
             <div key={i} className="text-sm text-red-800">
-              <span className="font-medium">{c.dept}:</span> {c.a.employeeName} ({fmtShort(c.a.startDate)}–{fmtShort(c.a.endDate)}{c.a.status === 'pending' ? ', pending' : ''}) overlaps {c.b.employeeName} ({fmtShort(c.b.startDate)}–{fmtShort(c.b.endDate)}{c.b.status === 'pending' ? ', pending' : ''})
+              <span className="font-medium">{c.dept}:</span> {c.a.employeeName} ({fmtShort(c.a.startDate)}–{fmtShort(c.a.endDate)}{LEAVE_PENDING_STATUSES.includes(c.a.status) ? ', pending' : ''}) overlaps {c.b.employeeName} ({fmtShort(c.b.startDate)}–{fmtShort(c.b.endDate)}{LEAVE_PENDING_STATUSES.includes(c.b.status) ? ', pending' : ''})
             </div>
           ))}
         </div>

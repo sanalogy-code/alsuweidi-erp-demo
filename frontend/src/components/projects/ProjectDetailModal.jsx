@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { PenTool, HardHat, Banknote, Users as UsersIcon, AlertTriangle, FolderOpen, Pencil, ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react'
+import { PenTool, HardHat, Banknote, Users as UsersIcon, AlertTriangle, FolderOpen, Pencil, ChevronLeft, ChevronRight, Eye, EyeOff, Lightbulb, Image, Sparkles } from 'lucide-react'
 import Modal from '../crm/Modal'
+import NotesList from '../crm/NotesList'
 import StagePipeline from './StagePipeline'
 import EditProjectModal from './EditProjectModal'
 import DocumentChecklist from '../DocumentChecklist'
-import { PROJECT_DOCUMENT_TYPES } from '../../data/projectsData'
+import { PROJECT_DOCUMENT_TYPES, yearStartedOf, yearCompletedOf } from '../../data/projectsData'
 
 const fmtAed = (n) => (n || n === 0 ? `${n.toLocaleString()} AED` : '—')
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-AE') : '—')
@@ -86,9 +87,10 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
     ...(canViewSensitive ? [{ key: 'financials', label: 'Financials' }] : []),
     { key: 'team', label: 'Team' },
     { key: 'documents', label: 'Documents' },
+    { key: 'lessons', label: `Lessons (${(project.lessons || []).length})` },
   ]
 
-  const tabIcon = { design: PenTool, supervision: HardHat, financials: Banknote, team: UsersIcon, documents: FolderOpen }
+  const tabIcon = { design: PenTool, supervision: HardHat, financials: Banknote, team: UsersIcon, documents: FolderOpen, lessons: Lightbulb }
 
   return (
     <Modal title={`${project.projectNo} — ${project.name}`} onClose={onClose} wide>
@@ -205,6 +207,8 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
               <span className={project.loaObtained ? 'text-green-700' : 'text-red-600'}>{project.loaObtained ? 'Obtained' : 'Not Obtained'}</span>
             </Field>
             <Field label="Contractor">{project.contractorName}</Field>
+            <Field label="Year Started">{yearStartedOf(project)}</Field>
+            <Field label="Year Completed">{yearCompletedOf(project) || (yearStartedOf(project) ? 'ongoing' : null)}</Field>
             <Field label="Confidentiality">
               {project.confidential === undefined ? (
                 <span className="text-amber-600">Not decided — blocks stage advance</span>
@@ -215,6 +219,32 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
               )}
             </Field>
           </div>
+
+          {/* Portfolio material — images (file names until Phase 2 storage) and special features */}
+          {(project.images?.length > 0 || project.specialFeatures?.length > 0) && (
+            <div className="grid grid-cols-2 gap-4">
+              {project.images?.length > 0 && (
+                <div>
+                  <div className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-2 flex items-center gap-1"><Image size={12} /> Images ({project.images.length})</div>
+                  <div className="space-y-1">
+                    {project.images.map((img) => (
+                      <div key={img} className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded px-2 py-1 font-mono truncate">{img}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {project.specialFeatures?.length > 0 && (
+                <div>
+                  <div className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-2 flex items-center gap-1"><Sparkles size={12} /> Special Features</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {project.specialFeatures.map((f) => (
+                      <span key={f} className="px-2 py-1 rounded bg-purple-50 border border-purple-200 text-purple-800 text-xs">{f}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -338,6 +368,16 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
             readOnly={!onUpdateProject}
           />
         </div>
+      )}
+
+      {tab === 'lessons' && (
+        <NotesList
+          title="Lessons Learned"
+          notes={project.lessons || []}
+          onAdd={canEdit ? (note) => onUpdateProject({ ...project, lessons: [...(project.lessons || []), note] }) : undefined}
+          emptyText="No lessons recorded for this project yet."
+          placeholder="What would we do differently next time?"
+        />
       )}
 
       {tab === 'team' && (
