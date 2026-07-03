@@ -23,9 +23,9 @@ If not, use `%USERPROFILE%\Projects\alsuweidi-erp-demo` as the conventional loca
 2. `git fetch origin`, then check if `origin/master` is ahead of local `master`.
 3. If ahead and the working tree is clean, `git pull` to catch this device up. If dirty, don't pull — surface the conflict instead of guessing what to do with it.
 
-## Step 3: Read SPEC.md and STATUS.md
+## Step 3: Read SPEC.md, STATUS.md, and BACKLOG.md
 
-Both live in the repo root now (moved off Google Drive intentionally — see STATUS.md's "Documentation & source of truth" section for why). SPEC.md is the detailed technical spec (architecture, full data model with ER diagram, feature map, known gaps); STATUS.md is the fast-skim companion with the same facts.
+All live in the repo root now (moved off Google Drive intentionally — see STATUS.md's "Documentation & source of truth" section for why). SPEC.md is the detailed technical spec (architecture, full data model with ER diagram, feature map, known gaps); STATUS.md is the fast-skim companion with the same facts. BACKLOG.md is the agreed to-do list — Sana batches work from it rather than making one-off changes, so include its "Next batch" items and any decisions-pending in the briefing.
 
 ## Step 4: Try WN Obsidian
 

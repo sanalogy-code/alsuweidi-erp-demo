@@ -20,7 +20,7 @@ The original plan (FastAPI + React + Supabase, backend on Railway) hit repeated 
 
 ## Documentation & source of truth
 
-Everything about this project lives in **this GitHub repo** — no Google Drive dependency, no per-device sync setup needed. Clone it, open Claude Code there, and you have everything: code, SPEC.md, STATUS.md, STATS.md (build stats for management), and the `/erp` and `/update-erp` skills (in `.claude/skills/`).
+Everything about this project lives in **this GitHub repo** — no Google Drive dependency, no per-device sync setup needed. Clone it, open Claude Code there, and you have everything: code, SPEC.md, STATUS.md, STATS.md (build stats for management), **[BACKLOG.md](BACKLOG.md) (the agreed to-do list — we work it in batches, not one-off changes)**, and the `/erp` and `/update-erp` skills (in `.claude/skills/`).
 
 The one thing that can't live in the repo: **WN (the ALSUWEIDI Knowledge Base Obsidian vault)**. That's a local desktop app tied to a specific work computer — reachable only when a session runs on that machine with Obsidian open and the vault active. Both skills try it and skip gracefully if it's not reachable.
 
