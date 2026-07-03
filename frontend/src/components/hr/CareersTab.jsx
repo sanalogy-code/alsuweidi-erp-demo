@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Briefcase, UserPlus, Send } from 'lucide-react'
+import { Briefcase, UserPlus, Send, Gift } from 'lucide-react'
 import Modal from '../crm/Modal'
+import { REFERRAL_BONUS_AED } from '../../data/hrData'
 
 const CAND_STATUS = {
   new: { label: 'New', color: 'bg-yellow-100 text-yellow-700' },
@@ -35,9 +36,9 @@ function CandidateModal({ kind, position, user, onClose, onSubmit }) {
   return (
     <Modal title={kind === 'referral' ? `Refer someone — ${position.title}` : `Apply internally — ${position.title}`} onClose={onClose}>
       <div className="space-y-4">
-        {kind === 'referral' && position.referralBonus > 0 && (
+        {kind === 'referral' && (
           <div className="bg-green-50 border border-green-200 rounded-md p-3 text-xs text-green-800">
-            Referral bonus of AED {position.referralBonus.toLocaleString()} if your candidate is hired and passes probation.
+            AED {REFERRAL_BONUS_AED} gift for you if your candidate is hired — paid with the next payroll run.
           </div>
         )}
         <div>
@@ -67,7 +68,7 @@ function CandidateModal({ kind, position, user, onClose, onSubmit }) {
   )
 }
 
-export default function CareersTab({ positions, candidates, user, isHrStaff, onSubmitCandidate, onAdvanceCandidate }) {
+export default function CareersTab({ positions, candidates, user, isHrStaff, onSubmitCandidate, onAdvanceCandidate, referralBonuses = [] }) {
   const [modal, setModal] = useState(null) // { kind, position }
 
   const mine = candidates.filter((c) => c.referredBy === user?.username || (c.kind === 'internal' && c.candidateName === user?.username))
@@ -88,11 +89,9 @@ export default function CareersTab({ positions, candidates, user, isHrStaff, onS
                 <div>
                   <div className="text-sm font-semibold text-gray-800">{p.title}</div>
                   <div className="text-xs text-gray-500 mt-0.5">{p.dept} • {p.location} • {p.type} • Posted {new Date(p.postedDate).toLocaleDateString('en-AE')}</div>
-                  {p.referralBonus > 0 && (
-                    <span className="inline-block mt-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-medium">
-                      Referral bonus: AED {p.referralBonus.toLocaleString()}
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-medium">
+                    <Gift size={11} /> AED {REFERRAL_BONUS_AED} referral gift
+                  </span>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <button
@@ -125,6 +124,11 @@ export default function CareersTab({ positions, candidates, user, isHrStaff, onS
                           {c.note && <div className="text-xs text-gray-500 truncate">{c.note}</div>}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          {c.status === 'hired' && c.referredBy && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-green-50 border border-green-200 text-green-700 text-xs font-medium">
+                              <Gift size={11} /> AED {REFERRAL_BONUS_AED} to {c.referredBy}
+                            </span>
+                          )}
                           <span className={`px-2 py-0.5 rounded text-xs font-medium ${meta.color}`}>{meta.label}</span>
                           {c.status === 'new' && (
                             <button onClick={() => onAdvanceCandidate(c.id, 'interviewing')} className="text-xs font-medium text-brand hover:underline">Interview</button>
@@ -156,7 +160,12 @@ export default function CareersTab({ positions, candidates, user, isHrStaff, onS
               return (
                 <div key={c.id} className="flex justify-between items-center text-sm">
                   <span className="text-gray-700">{c.kind === 'referral' ? `${c.candidateName} → ` : 'Internal application → '}{pos?.title}</span>
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${meta.color}`}>{meta.label}</span>
+                  <span className="flex items-center gap-2">
+                    {c.status === 'hired' && c.kind === 'referral' && (
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700"><Gift size={11} /> AED {REFERRAL_BONUS_AED} on its way</span>
+                    )}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${meta.color}`}>{meta.label}</span>
+                  </span>
                 </div>
               )
             })}

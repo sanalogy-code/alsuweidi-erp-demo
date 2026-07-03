@@ -3,6 +3,7 @@ import {
   ArrowRight, Users, Building2, UserPlus, List, Network, Award, AlertTriangle,
   Home, ClipboardList, Briefcase, GraduationCap, Inbox, CalendarRange,
   CalendarClock, Fingerprint, Banknote, CalendarDays, Plane, FileText, ShieldAlert,
+  UserMinus, Landmark, LineChart, TrendingUp,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
@@ -23,11 +24,19 @@ import PayrollTab from '../components/hr/PayrollTab'
 import HolidaysTab from '../components/hr/HolidaysTab'
 import CareersTab from '../components/hr/CareersTab'
 import AttendanceTab from '../components/hr/AttendanceTab'
-import { HR_STATS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS, COMPLAINTS, OPEN_POSITIONS, CANDIDATES, ANNUAL_LEAVE_ENTITLEMENT } from '../data/hrData'
+import NewJoinerWizard from '../components/hr/NewJoinerWizard'
+import NewJoinerReviewModal from '../components/hr/NewJoinerReviewModal'
+import OffboardingTab from '../components/hr/OffboardingTab'
+import ProTasksView from '../components/hr/ProTasksView'
+import StaffPlanningTab from '../components/hr/StaffPlanningTab'
+import {
+  HR_STATS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS, COMPLAINTS, OPEN_POSITIONS, CANDIDATES,
+  ANNUAL_LEAVE_ENTITLEMENT, NEW_JOINERS, OFFBOARDINGS, PRO_TASKS, STAFF_PLANS, REFERRAL_BONUS_AED,
+} from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 import { parseLocalDate, todayLocal } from '../utils/date'
 
-export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) {
+export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [] }) {
   const [view, setView] = useState('myhr')
   const [peopleView, setPeopleView] = useState('list')
   const [plannerView, setPlannerView] = useState('calendar')
@@ -37,6 +46,12 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
   const [certificateRequests, setCertificateRequests] = useState(CERTIFICATE_REQUESTS)
   const [complaints, setComplaints] = useState(COMPLAINTS)
   const [candidates, setCandidates] = useState(CANDIDATES)
+  const [newJoiners, setNewJoiners] = useState(NEW_JOINERS)
+  const [offboardings, setOffboardings] = useState(OFFBOARDINGS)
+  const [proTasks, setProTasks] = useState(PRO_TASKS)
+  const [staffPlans, setStaffPlans] = useState(STAFF_PLANS)
+  const [referralBonuses, setReferralBonuses] = useState([])
+  const [reviewJoiner, setReviewJoiner] = useState(null)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [showCertModal, setShowCertModal] = useState(false)
   const [showConcernModal, setShowConcernModal] = useState(false)
@@ -45,11 +60,20 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
   const isHrStaff = HR_STAFF_ROLES.includes(user?.role)
   const canViewSensitive = SENSITIVE_VIEW_ROLES.includes(user?.role)
   const isNewHire = !!user?.isNewHire
+  const isPro = user?.role === 'pro'
 
   const matchedEmployee = employees.find((e) => e.name.toLowerCase() === (user?.username || '').toLowerCase())
   const myName = (matchedEmployee?.name || user?.username || '').toLowerCase()
 
-  const inboxCount = isHrStaff ? buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }).length : 0
+  const pendingJoiners = newJoiners.filter((j) => j.status === 'submitted')
+  const inboxCount = isHrStaff ? buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }).length + pendingJoiners.length : 0
+
+  // Probation endings within 60 days (guaranteed increments must not be missed)
+  const probationDue = canViewSensitive
+    ? employees.filter((e) => e.probation && !e.probation.guaranteedIncrement?.applied &&
+        parseLocalDate(e.probation.endDate) >= todayLocal() &&
+        (parseLocalDate(e.probation.endDate) - todayLocal()) / (1000 * 60 * 60 * 24) <= 60)
+    : []
   const renewalItems = canViewSensitive ? buildRenewalItems(employees) : []
   const overdueCount = renewalItems.filter((i) => i.days < 0).length
 
@@ -70,7 +94,10 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
     { key: 'people', label: 'People', icon: Users },
     { key: 'requests', label: 'My requests', icon: ClipboardList, badge: myPendingCount },
     { key: 'careers', label: 'Careers', icon: Briefcase },
-    ...(isNewHire ? [{ key: 'onboarding', label: 'Onboarding', icon: GraduationCap }] : []),
+    ...(isNewHire ? [
+      { key: 'profile', label: 'My profile setup', icon: UserPlus },
+      { key: 'onboarding', label: 'Onboarding', icon: GraduationCap },
+    ] : []),
   ]
 
   const NAV_HR = [
@@ -80,8 +107,13 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
       { key: 'renewals', label: 'Renewals', icon: CalendarClock, badge: overdueCount },
       { key: 'attendance', label: 'Attendance', icon: Fingerprint },
       { key: 'payroll', label: 'Payroll', icon: Banknote },
+      { key: 'staffplan', label: 'Staff planning', icon: LineChart },
     ] : []),
-    ...(isHrStaff ? [{ key: 'holidays', label: 'Holidays', icon: CalendarDays }] : []),
+    ...(isHrStaff ? [
+      { key: 'offboarding', label: 'Offboarding', icon: UserMinus, badge: offboardings.filter((o) => o.status === 'in_progress').length },
+      { key: 'protasks', label: 'PRO tasks', icon: Landmark, badge: proTasks.filter((t) => t.status !== 'done').length },
+      { key: 'holidays', label: 'Holidays', icon: CalendarDays },
+    ] : []),
   ]
 
   const handleAddDependent = (employeeId, dependent) => {
@@ -94,10 +126,37 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
     setSelectedEmployee((prev) => (prev && prev.id === employeeId ? { ...prev, accomplishments: [...prev.accomplishments, acc] } : prev))
   }
 
+  const handleUpdateDocuments = (employeeId, documents) => {
+    setEmployees(employees.map((e) => (e.id === employeeId ? { ...e, documents } : e)))
+    setSelectedEmployee((prev) => (prev && prev.id === employeeId ? { ...prev, documents } : prev))
+  }
+
   const handleVerifyAccomplishment = (employeeId, idx) => {
     const verify = (accs) => accs.map((a, i) => (i === idx ? { ...a, verified: true } : a))
     setEmployees(employees.map((e) => (e.id === employeeId ? { ...e, accomplishments: verify(e.accomplishments) } : e)))
     setSelectedEmployee((prev) => (prev && prev.id === employeeId ? { ...prev, accomplishments: verify(prev.accomplishments) } : prev))
+  }
+
+  // One place candidates advance from (Careers + Inbox): a hired referral
+  // automatically awards the flat AED 500 referral gift to the referrer.
+  const advanceCandidate = (id, next) => {
+    const candidate = candidates.find((c) => c.id === id)
+    setCandidates(candidates.map((c) => (c.id === id ? { ...c, status: next } : c)))
+    if (next === 'hired' && candidate?.referredBy) {
+      setReferralBonuses([...referralBonuses, {
+        id: referralBonuses.length + 1,
+        referrer: candidate.referredBy,
+        candidate: candidate.candidateName,
+        amount: REFERRAL_BONUS_AED,
+        awardedDate: new Date().toISOString().slice(0, 10),
+        status: 'pending_payroll',
+      }])
+    }
+  }
+
+  const handleApproveJoiner = (joinerId, employeeRecord) => {
+    setEmployees([...employees, { ...employeeRecord, id: Math.max(...employees.map((e) => e.id), 0) + 1 }])
+    setNewJoiners(newJoiners.map((j) => (j.id === joinerId ? { ...j, status: 'approved' } : j)))
   }
 
   const handleLeaveAction = (id, status) => {
@@ -131,6 +190,22 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
           </span>
         )}
       </button>
+    )
+  }
+
+  // The PRO company sees only its task queue — no employee data, no HR workspace.
+  if (isPro) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar user={user} onLogout={onLogout} title="PRO Tasks" showBack />
+        <div className="max-w-4xl mx-auto px-6 py-6">
+          <ProTasksView
+            tasks={proTasks}
+            isPro
+            onUpdate={(t) => setProTasks(proTasks.map((x) => (x.id === t.id ? t : x)))}
+          />
+        </div>
+      </div>
     )
   }
 
@@ -204,6 +279,40 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
                         {overdueCount > 0 && `${overdueCount} overdue, `}{renewalItems.length - overdueCount} renewal{renewalItems.length - overdueCount === 1 ? '' : 's'} due within 90 days
                       </div>
                       <div className="text-xs text-gray-500">Visas, passports, contracts, and insurance — employees and their dependents.</div>
+                    </div>
+                  </div>
+                  <ArrowRight size={18} className="text-gray-400 shrink-0" />
+                </button>
+              )}
+
+              {probationDue.length > 0 && (
+                <div className="bg-white border border-emerald-200 rounded-lg shadow-sm p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <TrendingUp size={20} className="text-emerald-600" />
+                    <div className="text-sm font-semibold text-gray-800">Probation ending soon</div>
+                  </div>
+                  {probationDue.map((e) => (
+                    <div key={e.id} className="flex justify-between items-center text-sm py-1">
+                      <button onClick={() => setSelectedEmployee(e)} className="text-brand hover:underline font-medium">{e.name}</button>
+                      <span className="text-xs text-gray-500">
+                        Ends {parseLocalDate(e.probation.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        {e.probation.guaranteedIncrement && ` — guaranteed increment AED ${e.probation.guaranteedIncrement.amount.toLocaleString()} due`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {isNewHire && (
+                <button
+                  onClick={() => setView('profile')}
+                  className="w-full bg-white border border-brand/30 rounded-lg shadow-sm p-4 text-left hover:border-brand transition flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <UserPlus size={20} className="text-brand" />
+                    <div>
+                      <div className="text-sm font-semibold text-gray-800">Complete your employee profile</div>
+                      <div className="text-xs text-gray-500">Personal details, qualifications, documents & bank — four short steps, then HR takes over.</div>
                     </div>
                   </div>
                   <ArrowRight size={18} className="text-gray-400 shrink-0" />
@@ -317,11 +426,47 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
               user={user}
               isHrStaff={isHrStaff}
               onSubmitCandidate={(c) => setCandidates([...candidates, { ...c, id: Math.max(...candidates.map((x) => x.id), 0) + 1 }])}
-              onAdvanceCandidate={(id, next) => setCandidates(candidates.map((c) => (c.id === id ? { ...c, status: next } : c)))}
+              onAdvanceCandidate={advanceCandidate}
+              referralBonuses={referralBonuses}
             />
           )}
 
           {view === 'onboarding' && isNewHire && <OnboardingChecklist userName={user?.username} />}
+
+          {view === 'profile' && isNewHire && (
+            <NewJoinerWizard
+              user={user}
+              onSubmit={(j) => setNewJoiners([...newJoiners, { ...j, id: Math.max(...newJoiners.map((x) => x.id), 0) + 1 }])}
+            />
+          )}
+
+          {view === 'offboarding' && isHrStaff && (
+            <OffboardingTab
+              employees={employees}
+              offboardings={offboardings}
+              onStart={(o) => setOffboardings([...offboardings, { ...o, id: Math.max(...offboardings.map((x) => x.id), 0) + 1 }])}
+              onUpdate={(o) => setOffboardings(offboardings.map((x) => (x.id === o.id ? o : x)))}
+            />
+          )}
+
+          {view === 'protasks' && isHrStaff && (
+            <ProTasksView
+              tasks={proTasks}
+              employees={employees}
+              onUpdate={(t) => setProTasks(proTasks.map((x) => (x.id === t.id ? t : x)))}
+              onCreate={(t) => setProTasks([...proTasks, { ...t, id: Math.max(...proTasks.map((x) => x.id), 0) + 1 }])}
+            />
+          )}
+
+          {view === 'staffplan' && canViewSensitive && (
+            <StaffPlanningTab
+              plans={staffPlans}
+              projects={projects}
+              onAdd={(p) => setStaffPlans([...staffPlans, { ...p, id: Math.max(...staffPlans.map((x) => x.id), 0) + 1 }])}
+              onUpdate={(p) => setStaffPlans(staffPlans.map((x) => (x.id === p.id ? p : x)))}
+              onRemove={(id) => setStaffPlans(staffPlans.filter((x) => x.id !== id))}
+            />
+          )}
 
           {view === 'inbox' && isHrStaff && (
             <HRInbox
@@ -333,7 +478,9 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
               onPrepareCert={(req) => setLetterRequest(req)}
               onRejectCert={handleRejectCert}
               onAdvanceComplaint={(id, next) => setComplaints(complaints.map((c) => (c.id === id ? { ...c, status: next } : c)))}
-              onAdvanceCandidate={(id, next) => setCandidates(candidates.map((c) => (c.id === id ? { ...c, status: next } : c)))}
+              onAdvanceCandidate={advanceCandidate}
+              newJoiners={pendingJoiners}
+              onReviewJoiner={setReviewJoiner}
             />
           )}
 
@@ -372,7 +519,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
 
           {view === 'attendance' && canViewSensitive && <AttendanceTab employees={employees} />}
 
-          {view === 'payroll' && canViewSensitive && <PayrollTab employees={employees} />}
+          {view === 'payroll' && canViewSensitive && <PayrollTab employees={employees} referralBonuses={referralBonuses} />}
 
           {view === 'holidays' && isHrStaff && <HolidaysTab holidays={holidays} onUpdateHolidays={onUpdateHolidays} />}
         </main>
@@ -389,6 +536,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
           onAddDependent={handleAddDependent}
           onAddAccomplishment={handleAddAccomplishment}
           onVerifyAccomplishment={handleVerifyAccomplishment}
+          onUpdateDocuments={isHrStaff ? handleUpdateDocuments : undefined}
           canViewSensitive={canViewSensitive}
         />
       )}
@@ -419,6 +567,15 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
           user={user}
           onClose={() => setShowConcernModal(false)}
           onSubmit={(c) => setComplaints([...complaints, { ...c, id: Math.max(...complaints.map((x) => x.id), 0) + 1 }])}
+        />
+      )}
+
+      {reviewJoiner && (
+        <NewJoinerReviewModal
+          joiner={reviewJoiner}
+          employees={employees}
+          onClose={() => setReviewJoiner(null)}
+          onApprove={handleApproveJoiner}
         />
       )}
 

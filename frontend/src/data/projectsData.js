@@ -22,6 +22,16 @@ export const PROJECT_LOCATIONS = ['Abu Dhabi', 'Al Ain', 'Western Region', 'Duba
 
 export const GENERAL_STATUS = ['In Progress', 'On Hold', 'Completed']
 
+// Typed project documents — LOA is required before a project record can be created.
+export const PROJECT_DOCUMENT_TYPES = [
+  { key: 'loa', label: 'Letter of Award (LOA)', requiredWhen: 'always' },
+  { key: 'contract', label: 'Signed contract', requiredWhen: null },
+  { key: 'proposal', label: 'Fee proposal', requiredWhen: null },
+  { key: 'noc', label: 'Authority NOCs', requiredWhen: null },
+  { key: 'drawings', label: 'Drawings / design package', requiredWhen: null },
+  { key: 'other', label: 'Other', requiredWhen: null },
+]
+
 // The nine-stage delivery pipeline the current ERP stores as a comma-joined string.
 // Projects mark which stages their scope covers and where they currently are.
 export const PROJECT_STAGES = [

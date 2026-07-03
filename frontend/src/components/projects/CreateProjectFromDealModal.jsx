@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { CheckCircle, ArrowRight, FolderKanban } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { CheckCircle, ArrowRight, FolderKanban, FileCheck, Upload } from 'lucide-react'
 import Modal from '../crm/Modal'
 import { PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_SCOPES, PROJECT_LOCATIONS, PROJECT_STAGES } from '../../data/projectsData'
 
@@ -22,6 +22,9 @@ export default function CreateProjectFromDealModal({ deal, company, employees, e
     cpmId: '',
   })
   const [created, setCreated] = useState(null)
+  // A won deal means the LOA exists — the project record can't be created without it on file.
+  const [loaFile, setLoaFile] = useState(null)
+  const loaRef = useRef(null)
 
   const nextProjectNo = `P-${Math.max(...existingProjects.map((p) => Number(p.projectNo.replace('P-', '')) || 0)) + 1}`
   const hasDesign = form.scope === 'Design + Supervision' || form.scope === 'Design only'
@@ -30,6 +33,10 @@ export default function CreateProjectFromDealModal({ deal, company, employees, e
   const handleCreate = (e) => {
     e.preventDefault()
     if (!form.name.trim()) return
+    if (!loaFile) {
+      alert('Attach the Letter of Award — a project record cannot be created without it.')
+      return
+    }
     const stagesInvolved = STAGES_BY_SCOPE[form.scope]
     const project = {
       projectNo: nextProjectNo,
@@ -60,6 +67,7 @@ export default function CreateProjectFromDealModal({ deal, company, employees, e
       cpmId: form.cpmId ? Number(form.cpmId) : null,
       stagesInvolved,
       currentStage: stagesInvolved[0],
+      documents: [{ type: 'loa', fileName: loaFile, uploadedDate: new Date().toISOString().slice(0, 10) }],
       design: hasDesign
         ? { sow: [], status: 'Not Started', outputFormat: null, startYear: new Date().getFullYear(), completionYear: null, financialStatus: 'Open - Managed by DPM', payStatus: 'Not Due' }
         : null,
@@ -161,11 +169,23 @@ export default function CreateProjectFromDealModal({ deal, company, employees, e
           </div>
         </div>
 
-        <div className="text-xs text-gray-500">
-          Starts as In Progress at the {STAGES_BY_SCOPE[form.scope][0]} stage, LOA obtained, contract not yet signed — edit the record in Projects afterwards.
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Letter of Award (LOA) * — required to create the project</label>
+          <input ref={loaRef} type="file" className="hidden" onChange={(e) => setLoaFile(e.target.files?.[0]?.name || null)} />
+          <button
+            type="button"
+            onClick={() => loaRef.current?.click()}
+            className={`w-full flex items-center gap-2 border rounded-md px-3 py-2 text-sm ${loaFile ? 'border-green-300 bg-green-50 text-green-800' : 'border-red-200 bg-red-50/40 text-gray-600'}`}
+          >
+            {loaFile ? <><FileCheck size={14} className="text-green-600" /> {loaFile}</> : <><Upload size={14} className="text-red-400" /> Attach LOA…</>}
+          </button>
         </div>
 
-        <button type="submit" className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark mt-2">
+        <div className="text-xs text-gray-500">
+          Starts as In Progress at the {STAGES_BY_SCOPE[form.scope][0]} stage, contract not yet signed — edit the record in Projects afterwards.
+        </div>
+
+        <button type="submit" disabled={!loaFile} className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark mt-2 disabled:opacity-40">
           Create {nextProjectNo}
         </button>
       </form>

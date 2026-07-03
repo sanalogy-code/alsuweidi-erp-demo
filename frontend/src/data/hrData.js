@@ -144,10 +144,13 @@ export const COMPLAINTS = [
   { id: 2, category: 'Manager Conduct', description: 'Repeated last-minute weekend work requests without notice or overtime recording.', anonymous: true, submittedBy: null, submittedDate: '2026-06-30', status: 'submitted' },
 ]
 
+// Company policy: flat AED 500 gift for any successful referral (paid once the referral is hired).
+export const REFERRAL_BONUS_AED = 500
+
 export const OPEN_POSITIONS = [
-  { id: 1, title: 'Senior Structural Engineer', dept: 'Engineering', location: 'Abu Dhabi HQ', type: 'Full-time', referralBonus: 5000, postedDate: '2026-06-15' },
-  { id: 2, title: 'Document Controller', dept: 'Admin', location: 'Abu Dhabi HQ', type: 'Full-time', referralBonus: 2000, postedDate: '2026-06-22' },
-  { id: 3, title: 'Site Engineer', dept: 'Projects', location: 'Al Ain Branch', type: 'Contract', referralBonus: 3000, postedDate: '2026-07-01' },
+  { id: 1, title: 'Senior Structural Engineer', dept: 'Engineering', location: 'Abu Dhabi HQ', type: 'Full-time', referralBonus: REFERRAL_BONUS_AED, postedDate: '2026-06-15' },
+  { id: 2, title: 'Document Controller', dept: 'Admin', location: 'Abu Dhabi HQ', type: 'Full-time', referralBonus: REFERRAL_BONUS_AED, postedDate: '2026-06-22' },
+  { id: 3, title: 'Site Engineer', dept: 'Projects', location: 'Al Ain Branch', type: 'Contract', referralBonus: REFERRAL_BONUS_AED, postedDate: '2026-07-01' },
 ]
 
 export const CANDIDATES = [
@@ -243,4 +246,154 @@ export const EMPLOYEES = [
   { id: 8, name: 'Hassan Al Shamsi', title: 'Project Coordinator', dept: 'Projects', location: 'Al Ain Branch', employmentType: 'Full-time', email: 'hassan@alsuweidi.com', phone: '+971-3-789-0123', mobilePhone: '+971-50-888-9012', startDate: '2020-05-10', status: 'active', managerId: 1, contractEndDate: '2026-08-15', nationality: 'United Arab Emirates', passport: { number: 'UAE556677', country: 'United Arab Emirates', type: 'Ordinary', issueDate: '2019-08-20', expiryDate: '2029-08-19' }, visa: null, emiratesId: { number: '784-1992-5566772-5', expiryDate: '2029-08-19' }, dependents: [{ name: 'Amira Al Shamsi', relationship: 'Spouse', dob: '1993-01-30', nationality: 'United Arab Emirates', passport: { number: 'UAE667788', country: 'United Arab Emirates', type: 'Ordinary', issueDate: '2021-05-01', expiryDate: '2031-04-30' }, visa: null, emiratesId: { number: '784-1993-6677883-6', expiryDate: '2031-04-30' }, insurance: { provider: 'Daman', policyNumber: 'DM-889900', expiryDate: '2027-01-31' } }], accomplishments: [{ type: 'Safety Induction', issuer: 'ALSUWEIDI', date: '2020-05-15', expiryDate: '2027-05-15' }, { type: 'Site Supervision', issuer: 'ALSUWEIDI', date: '2021-03-10', expiryDate: null }], emergencyContact: { name: 'Amira Al Shamsi', relationship: 'Spouse', phone: '+971-50-888-9999' }, compensation: { basicSalary: 12000, housingAllowance: 3500, transportAllowance: 1200, otherBenefits: 'Health insurance (family)', noticePeriodDays: 30 } },
   { id: 9, name: 'Maryam Al Kaabi', title: 'Compliance Officer', dept: 'Admin', location: 'Abu Dhabi HQ', employmentType: 'Full-time', email: 'maryam@alsuweidi.com', phone: '+971-2-123-4575', mobilePhone: '+971-50-999-0123', startDate: '2019-03-15', status: 'active', managerId: null, contractEndDate: '2027-03-15', nationality: 'United Arab Emirates', passport: { number: 'UAE778899', country: 'United Arab Emirates', type: 'Ordinary', issueDate: '2018-12-15', expiryDate: '2028-12-14' }, visa: null, emiratesId: { number: '784-1990-7788994-7', expiryDate: '2028-12-14' }, dependents: [], accomplishments: [{ type: 'ISO Training', issuer: 'International Standards', date: '2022-06-15', expiryDate: null }], emergencyContact: { name: 'Khalifa Al Kaabi', relationship: 'Father', phone: '+971-50-999-9999' }, compensation: { basicSalary: 16000, housingAllowance: 4500, transportAllowance: 1500, otherBenefits: 'Health insurance (individual)', noticePeriodDays: 30 } },
   { id: 10, name: 'Samir Al Mazrouei', title: 'Site Supervisor', dept: 'Projects', location: 'Site-Based', employmentType: 'Secondment', email: 'samir@alsuweidi.com', phone: '+971-50-123-4567', mobilePhone: '+971-50-123-4567', startDate: '2018-07-20', status: 'active', managerId: 1, contractEndDate: '2026-07-20', nationality: 'United Arab Emirates', passport: { number: 'UAE889900', country: 'United Arab Emirates', type: 'Ordinary', issueDate: '2017-07-01', expiryDate: '2027-06-30' }, visa: null, emiratesId: { number: '784-1989-8899005-8', expiryDate: '2027-06-30' }, dependents: [{ name: 'Hind Al Mazrouei', relationship: 'Spouse', dob: '1992-05-18', nationality: 'United Arab Emirates', passport: { number: 'UAE990011', country: 'United Arab Emirates', type: 'Ordinary', issueDate: '2019-09-10', expiryDate: '2029-09-09' }, visa: null, emiratesId: { number: '784-1992-9900116-9', expiryDate: '2029-09-09' }, insurance: { provider: 'AXA Gulf', policyNumber: 'AX-990112', expiryDate: '2026-07-15' } }, { name: 'Sara Al Mazrouei', relationship: 'Daughter', dob: '2018-09-05', nationality: 'United Arab Emirates', passport: { number: 'UAE001122', country: 'United Arab Emirates', type: 'Ordinary', issueDate: '2023-02-01', expiryDate: '2028-01-31' }, visa: null, emiratesId: { number: '784-2018-0011227-0', expiryDate: '2028-01-31' }, insurance: { provider: 'AXA Gulf', policyNumber: 'AX-990113', expiryDate: '2026-07-15' } }], accomplishments: [{ type: 'Site Supervision', issuer: 'ALSUWEIDI', date: '2018-08-05', expiryDate: null }, { type: 'Safety Induction', issuer: 'ALSUWEIDI', date: '2018-07-25', expiryDate: '2025-07-25' }], emergencyContact: { name: 'Hind Al Mazrouei', relationship: 'Spouse', phone: '+971-50-123-9999' }, compensation: { basicSalary: 13000, housingAllowance: 3500, transportAllowance: 1200, otherBenefits: 'Health insurance (family)', noticePeriodDays: 30 } },
+  { id: 11, name: 'Priya Nair', title: 'Document Controller', dept: 'Admin', location: 'Abu Dhabi HQ', employmentType: 'Full-time', email: 'priya@alsuweidi.com', phone: '+971-50-234-8899', mobilePhone: '+971-50-234-8899', startDate: '2026-02-01', status: 'active', managerId: 9, contractEndDate: '2028-02-01', nationality: 'India', passport: { number: 'Z8812345', country: 'India', type: 'Ordinary', issueDate: '2022-11-20', expiryDate: '2032-11-19' }, visa: { number: '201/2026/1/889123', type: 'Employment Residence Visa', status: 'Valid', issueDate: '2026-02-05', expiryDate: '2028-02-04', sponsor: 'ALSUWEIDI' }, emiratesId: { number: '784-1996-8891230-1', expiryDate: '2028-02-04' }, dependents: [], accomplishments: [{ type: 'ISO Training', issuer: 'International Standards', date: '2024-03-12', expiryDate: null }], emergencyContact: { name: 'Arun Nair', relationship: 'Spouse', phone: '+971-50-234-7777' }, compensation: { basicSalary: 9000, housingAllowance: 3000, transportAllowance: 1000, otherBenefits: 'Health insurance (individual)', noticePeriodDays: 30 }, probation: { months: 6, endDate: '2026-08-01', guaranteedIncrement: { amount: 1500, note: 'Agreed at offer — applies to basic salary', applied: false } }, documents: [{ type: 'passport', fileName: 'nair_passport.pdf', uploadedDate: '2026-01-20' }, { type: 'photo', fileName: 'nair_photo.jpg', uploadedDate: '2026-01-20' }, { type: 'degree', fileName: 'bcom_attested.pdf', uploadedDate: '2026-01-20' }, { type: 'visa', fileName: 'nair_visa.pdf', uploadedDate: '2026-02-06' }] },
 ]
+
+// ---------------------------------------------------------------------------
+// New-joiner self-registration (replaces the old 8-tab "Register New Employee")
+// ---------------------------------------------------------------------------
+// The old system asked ~70 fields in one HR-facing form, with four overlapping
+// job-title fields and cryptic codes ("Working Time: Type 17 D9.0 W44.5 H2").
+// Redesign: the employee fills what only they know (4 short steps), HR completes
+// the employment terms — most of which auto-fill from policy defaults below.
+
+export const DEPARTMENTS = ['Engineering', 'Projects', 'HR', 'Finance', 'Admin', 'IT/BIM']
+
+// One designation instead of Specialty + Main Designation + Other Designation +
+// Profession-in-work-permit. Picking a designation auto-fills dept and seniority;
+// the work-permit title defaults to the same text and is only edited when MOHRE
+// requires a different wording.
+export const DESIGNATIONS = [
+  { title: 'Site Engineer', dept: 'Projects', seniority: 'Mid-level' },
+  { title: 'Project Coordinator', dept: 'Projects', seniority: 'Mid-level' },
+  { title: 'Senior Project Manager', dept: 'Projects', seniority: 'Senior' },
+  { title: 'Structural Engineer', dept: 'Engineering', seniority: 'Mid-level' },
+  { title: 'Senior Structural Engineer', dept: 'Engineering', seniority: 'Senior' },
+  { title: 'Architect', dept: 'Engineering', seniority: 'Mid-level' },
+  { title: 'MEP Engineer', dept: 'Engineering', seniority: 'Mid-level' },
+  { title: 'BIM Coordinator', dept: 'IT/BIM', seniority: 'Mid-level' },
+  { title: 'Document Controller', dept: 'Admin', seniority: 'Junior' },
+  { title: 'HR Officer', dept: 'HR', seniority: 'Mid-level' },
+  { title: 'Accountant', dept: 'Finance', seniority: 'Mid-level' },
+  { title: 'Site Supervisor', dept: 'Projects', seniority: 'Mid-level' },
+]
+
+// Choosing an employment type pre-fills every policy field the old form asked
+// one by one (severance pay type, leave calculation type, leave paid type,
+// timesheet required, probation, notice) — HR only overrides exceptions.
+export const EMPLOYMENT_TYPE_DEFAULTS = {
+  'Full-time':  { probationMonths: 6, noticePeriodDays: 30, timesheetRequired: true,  severancePay: 'Applicable',     leaveBasis: 'Calendar days, full monthly salary' },
+  'Part-time':  { probationMonths: 3, noticePeriodDays: 30, timesheetRequired: true,  severancePay: 'Pro-rated',      leaveBasis: 'Working days, pro-rated salary' },
+  'Contract':   { probationMonths: 3, noticePeriodDays: 30, timesheetRequired: true,  severancePay: 'Per contract',   leaveBasis: 'Calendar days, full monthly salary' },
+  'Secondment': { probationMonths: 0, noticePeriodDays: 30, timesheetRequired: true,  severancePay: 'Per agreement',  leaveBasis: 'Per client agreement' },
+  'Intern':     { probationMonths: 0, noticePeriodDays: 7,  timesheetRequired: false, severancePay: 'Not applicable', leaveBasis: 'Not applicable' },
+}
+
+// Plain-English schedule presets replacing "Type 17 Full day D9.0 W44.5 H2 Start From Monday"
+export const SCHEDULE_PRESETS = [
+  'Office — Mon-Fri, 8:30-17:30 (1h break)',
+  'Office — flexible start 8:00-9:30, 8.5h/day',
+  'Site — 6 days/week, per project schedule',
+  'Part-time — mornings, Mon-Fri',
+]
+
+export const UAE_BANKS = ['Emirates NBD', 'FAB (First Abu Dhabi Bank)', 'ADCB', 'ADIB', 'Mashreq', 'RAKBANK', 'Dubai Islamic Bank', 'Wio Bank', 'Other']
+
+export const NATIONALITIES = ['United Arab Emirates', 'Egypt', 'Jordan', 'Lebanon', 'Iraq', 'Syria', 'Palestine', 'India', 'Pakistan', 'Philippines', 'United Kingdom', 'Other']
+
+export const PAYROLL_CATEGORIES = ['Staff (WPS)', 'Management (WPS)', 'Intern stipend', 'Secondment (client-billed)']
+
+// ---------------------------------------------------------------------------
+// Typed documents — every upload declares what it is; required ones block submit.
+// requiredWhen: 'always' | 'nonUaeNational' | null (optional)
+// ---------------------------------------------------------------------------
+export const EMPLOYEE_DOCUMENT_TYPES = [
+  { key: 'passport',   label: 'Passport copy',              requiredWhen: 'always' },
+  { key: 'photo',      label: 'Passport-size photo',        requiredWhen: 'always' },
+  { key: 'degree',     label: 'Highest degree certificate (attested)', requiredWhen: 'always' },
+  { key: 'visa',       label: 'Current UAE visa page',      requiredWhen: 'nonUaeNational' },
+  { key: 'emiratesId', label: 'Emirates ID (both sides)',   requiredWhen: null },
+  { key: 'license',    label: 'Engineering license',        requiredWhen: null },
+  { key: 'experience', label: 'Experience certificates',    requiredWhen: null },
+  { key: 'other',      label: 'Other',                      requiredWhen: null },
+]
+
+// One pending new joiner so HR sees the review flow immediately.
+export const NEW_JOINERS = [
+  {
+    id: 1,
+    status: 'submitted', // draft -> submitted -> approved
+    submittedDate: '2026-07-02',
+    personal: {
+      firstName: 'Daniel', lastName: 'Okoye', gender: 'Male', dob: '1991-04-18',
+      nationality: 'Other', maritalStatus: 'Married', personalEmail: 'daniel.okoye@gmail.com',
+      phone: '+971-52-334-5566', residentialEmirate: 'Abu Dhabi', inUae: true,
+      emergencyContact: { name: 'Grace Okoye', relationship: 'Spouse', phone: '+971-52-334-7788' },
+    },
+    qualifications: [{ certificate: "Bachelor's", program: 'Civil Engineering', year: '2013' }],
+    engineerLicense: { held: true, organization: 'Society of Engineers UAE', level: 'Professional', expiryDate: '2027-03-01' },
+    documents: [
+      { type: 'passport', fileName: 'okoye_passport.pdf', uploadedDate: '2026-07-02' },
+      { type: 'photo', fileName: 'okoye_photo.jpg', uploadedDate: '2026-07-02' },
+      { type: 'degree', fileName: 'bsc_civil_attested.pdf', uploadedDate: '2026-07-02' },
+      { type: 'visa', fileName: 'current_visa_page.pdf', uploadedDate: '2026-07-02' },
+    ],
+    bank: { bankName: 'Emirates NBD', iban: 'AE07 0331 2345 6789 0123 456' },
+    dependents: [{ name: 'Grace Okoye', relationship: 'Spouse', dob: '1993-08-21' }],
+    positionTitle: 'Site Engineer',
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Offboarding
+// ---------------------------------------------------------------------------
+export const OFFBOARDING_REASONS = ['Resignation', 'End of contract', 'Termination', 'Retirement']
+
+export const OFFBOARDING_CHECKLIST_TEMPLATE = [
+  { key: 'notice', label: 'Notice period confirmed & last working day agreed' },
+  { key: 'handover', label: 'Project handover completed (sign-off by manager)' },
+  { key: 'exit_interview', label: 'Exit interview conducted' },
+  { key: 'it_assets', label: 'Laptop, access cards & site equipment returned' },
+  { key: 'access', label: 'System accounts & building access revoked' },
+  { key: 'visa_cancel', label: 'Visa & work permit cancellation filed (PRO)' },
+  { key: 'settlement', label: 'Final settlement paid (salary, leave encashment, gratuity)' },
+  { key: 'experience_cert', label: 'Experience certificate issued' },
+]
+
+export const OFFBOARDINGS = [
+  {
+    id: 1, employeeId: 4, employeeName: 'Ahmed El Haddad', reason: 'Resignation',
+    startedDate: '2026-06-20', lastWorkingDay: '2026-08-14',
+    exitInterviewDate: '2026-08-10', exitInterviewNotes: '',
+    checklist: { notice: true, handover: false, exit_interview: false, it_assets: false, access: false, visa_cancel: false, settlement: false, experience_cert: false },
+    status: 'in_progress', // in_progress -> completed
+  },
+]
+
+// ---------------------------------------------------------------------------
+// PRO (government-services) task queue — the PRO company logs in with the
+// 'PRO / Government services' role and works these directly in the system.
+// ---------------------------------------------------------------------------
+export const PRO_TASK_TYPES = ['New work permit', 'Visa stamping', 'Visa renewal', 'Visa cancellation', 'Emirates ID application', 'Labour card renewal', 'Document attestation']
+
+export const PRO_TASKS = [
+  { id: 1, employeeName: 'Ahmed El Haddad', taskType: 'Visa renewal', details: 'Employment residence visa expired 2025-09-10 — renew urgently.', dueDate: '2026-07-20', status: 'in_progress', createdDate: '2026-06-25', documents: [{ type: 'passport', fileName: 'haddad_passport.pdf', uploadedDate: '2026-06-25' }], notes: 'Medical + biometrics booked 8 July.' },
+  { id: 2, employeeName: 'Daniel Okoye', taskType: 'New work permit', details: 'New joiner — work permit application, joining ~1 Aug.', dueDate: '2026-07-25', status: 'open', createdDate: '2026-07-02', documents: [], notes: '' },
+  { id: 3, employeeName: 'Mohammad Kubba', taskType: 'Visa renewal', details: 'Residence visa expires 2026-09-20 — start renewal within 60 days.', dueDate: '2026-08-20', status: 'open', createdDate: '2026-07-01', documents: [], notes: '' },
+]
+
+// ---------------------------------------------------------------------------
+// Staff planning — hires needed for upcoming/known projects.
+// ---------------------------------------------------------------------------
+export const STAFF_PLANS = [
+  { id: 1, projectRef: 'P-2601 — Khalifa City Villas (Design + Supervision)', role: 'Site Engineer', count: 2, neededBy: '2026-08-01', status: 'position_open', notes: 'One covered by Daniel Okoye (joining) — one more needed.' },
+  { id: 2, projectRef: 'P-2601 — Khalifa City Villas (Design + Supervision)', role: 'Document Controller', count: 1, neededBy: '2026-08-15', status: 'planned', notes: '' },
+  { id: 3, projectRef: 'Pipeline: Smart Grid Upgrade - DEWA (Negotiation)', role: 'MEP Engineer', count: 2, neededBy: '2026-10-01', status: 'planned', notes: 'Only if deal closes — watch CRM stage.' },
+]
+
+export const STAFF_PLAN_STATUS = {
+  planned: { label: 'Planned', color: 'bg-gray-100 text-gray-600' },
+  position_open: { label: 'Position open', color: 'bg-blue-100 text-blue-700' },
+  interviewing: { label: 'Interviewing', color: 'bg-yellow-100 text-yellow-700' },
+  hired: { label: 'Hired', color: 'bg-green-100 text-green-700' },
+}

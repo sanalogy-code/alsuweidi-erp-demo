@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banknote, Users, FileDown, CheckCircle, Clock } from 'lucide-react'
+import { Banknote, Users, FileDown, CheckCircle, Clock, Gift } from 'lucide-react'
 import Modal from '../crm/Modal'
 import { PAYROLL_MONTHS, PAYROLL_ADJUSTMENTS } from '../../data/hrData'
 
@@ -97,7 +97,7 @@ function PayslipModal({ row, month, onClose }) {
   )
 }
 
-export default function PayrollTab({ employees }) {
+export default function PayrollTab({ employees, referralBonuses = [] }) {
   const [month, setMonth] = useState(PAYROLL_MONTHS[0].value)
   const [statusByMonth, setStatusByMonth] = useState(
     Object.fromEntries(PAYROLL_MONTHS.map((m) => [m.value, m.status]))
@@ -165,6 +165,20 @@ export default function PayrollTab({ employees }) {
           <span className={`px-2 py-1 rounded text-xs font-medium ${statusMeta.color}`}>{statusMeta.label}</span>
         </div>
       </div>
+
+      {referralBonuses.filter((b) => b.status === 'pending_payroll').length > 0 && (
+        <div className="bg-white border border-green-200 rounded-lg shadow-sm p-4">
+          <div className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-2">
+            <Gift size={15} className="text-green-600" /> Referral gifts to add to this run
+          </div>
+          {referralBonuses.filter((b) => b.status === 'pending_payroll').map((b) => (
+            <div key={b.id} className="flex justify-between items-center text-sm py-1">
+              <span className="text-gray-700">{b.referrer} — referred {b.candidate} (hired {b.awardedDate})</span>
+              <span className="font-semibold text-green-700">+AED {b.amount.toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
         <table className="w-full text-sm">

@@ -30,6 +30,10 @@ export default function App() {
     return created
   }
 
+  const updateProject = (project) => {
+    setProjects(projects.map((p) => (p.id === project.id ? project : p)))
+  }
+
   const handleLogin = (data) => {
     setUser(data)
     localStorage.setItem('erp_demo_user', JSON.stringify(data))
@@ -51,8 +55,8 @@ export default function App() {
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
-      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} />} />
-      <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} />} />
+      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} />} />
+      <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} />} />
       <Route path="/marketing" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="marketing" />} />
       <Route path="/content" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="content" />} />
       <Route path="/admin" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="admin" />} />

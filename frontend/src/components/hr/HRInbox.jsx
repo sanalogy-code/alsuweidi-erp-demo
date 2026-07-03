@@ -6,9 +6,10 @@ const KIND_CHIP = {
   certificate: 'bg-blue-100 text-blue-700',
   concern: 'bg-red-100 text-red-700',
   candidate: 'bg-green-100 text-green-700',
+  joiner: 'bg-purple-100 text-purple-700',
 }
 
-const KIND_LABEL = { leave: 'Leave', certificate: 'Certificate', concern: 'Concern', candidate: 'Candidate' }
+const KIND_LABEL = { leave: 'Leave', certificate: 'Certificate', concern: 'Concern', candidate: 'Candidate', joiner: 'New joiner' }
 
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 const certLabel = (v) => CERTIFICATE_TYPES.find((t) => t.value === v)?.label || v
@@ -44,8 +45,14 @@ export function buildInboxItems({ leaveRequests, certificateRequests, complaints
   ].sort((a, b) => a.date.localeCompare(b.date))
 }
 
-export default function HRInbox({ leaveRequests, certificateRequests, complaints, candidates, onLeaveAction, onPrepareCert, onRejectCert, onAdvanceComplaint, onAdvanceCandidate }) {
-  const items = buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates })
+export default function HRInbox({ leaveRequests, certificateRequests, complaints, candidates, newJoiners = [], onLeaveAction, onPrepareCert, onRejectCert, onAdvanceComplaint, onAdvanceCandidate, onReviewJoiner }) {
+  const joinerItems = newJoiners.map((j) => ({
+    key: `j${j.id}`, kind: 'joiner', date: j.submittedDate, ref: j,
+    text: `${j.personal.firstName} ${j.personal.lastName}${j.positionTitle ? ` — ${j.positionTitle}` : ''} (profile submitted)`,
+    sub: `${j.documents.length} documents uploaded — verify and complete the employment record`,
+  }))
+  const items = [...buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }), ...joinerItems]
+    .sort((a, b) => a.date.localeCompare(b.date))
   const issuedLetters = certificateRequests
     .filter((r) => r.status === 'issued' && r.letterText)
     .sort((a, b) => (b.resolvedDate || '').localeCompare(a.resolvedDate || ''))
@@ -74,6 +81,9 @@ export default function HRInbox({ leaveRequests, certificateRequests, complaints
         <button onClick={() => onAdvanceCandidate(item.ref.id, 'interviewing')} className="text-xs font-medium text-brand hover:underline">Interview</button>
         <button onClick={() => onAdvanceCandidate(item.ref.id, 'rejected')} className="text-xs font-medium text-red-600 hover:underline">Reject</button>
       </>
+    )
+    if (item.kind === 'joiner') return (
+      <button onClick={() => onReviewJoiner(item.ref)} className="text-xs font-medium text-brand hover:underline">Review & complete</button>
     )
     return null
   }

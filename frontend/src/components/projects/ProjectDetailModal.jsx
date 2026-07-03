@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { PenTool, HardHat, Banknote, Users as UsersIcon, AlertTriangle } from 'lucide-react'
+import { PenTool, HardHat, Banknote, Users as UsersIcon, AlertTriangle, FolderOpen } from 'lucide-react'
 import Modal from '../crm/Modal'
 import StagePipeline from './StagePipeline'
+import DocumentChecklist from '../DocumentChecklist'
+import { PROJECT_DOCUMENT_TYPES } from '../../data/projectsData'
 
 const fmtAed = (n) => (n || n === 0 ? `${n.toLocaleString()} AED` : '—')
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-AE') : '—')
@@ -23,7 +25,7 @@ function Field({ label, children }) {
   )
 }
 
-export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee }) {
+export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee, onUpdateProject }) {
   const [tab, setTab] = useState('overview')
 
   if (!project) return null
@@ -39,9 +41,10 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
     ...(project.supervision ? [{ key: 'supervision', label: 'Supervision' }] : []),
     ...(canViewSensitive ? [{ key: 'financials', label: 'Financials' }] : []),
     { key: 'team', label: 'Team' },
+    { key: 'documents', label: 'Documents' },
   ]
 
-  const tabIcon = { design: PenTool, supervision: HardHat, financials: Banknote, team: UsersIcon }
+  const tabIcon = { design: PenTool, supervision: HardHat, financials: Banknote, team: UsersIcon, documents: FolderOpen }
 
   return (
     <Modal title={`${project.projectNo} — ${project.name}`} onClose={onClose} wide>
@@ -168,6 +171,20 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {tab === 'documents' && (
+        <div className="space-y-3">
+          <p className="text-xs text-gray-500">
+            Typed project documents — the LOA is required on every project. Files are name-only until Phase 2 storage.
+          </p>
+          <DocumentChecklist
+            docTypes={PROJECT_DOCUMENT_TYPES}
+            documents={project.documents || []}
+            onChange={(docs) => onUpdateProject?.({ ...project, documents: docs })}
+            readOnly={!onUpdateProject}
+          />
         </div>
       )}
 

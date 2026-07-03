@@ -69,6 +69,7 @@ export const ROLES = [
   { value: 'hr', label: 'HR' },
   { value: 'management', label: 'Management' },
   { value: 'admin', label: 'Admin' },
+  { value: 'pro', label: 'PRO / Government Services (external)' },
 ]
 
 // HR staff who process requests (issue certificates, run payroll actions)

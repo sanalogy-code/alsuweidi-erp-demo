@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { X, FileText, Award, DollarSign, Plus } from 'lucide-react'
 import Modal from '../crm/Modal'
-import { RELATIONSHIP_TYPES, ACCOMPLISHMENT_TYPES } from '../../data/hrData'
+import DocumentChecklist from '../DocumentChecklist'
+import { RELATIONSHIP_TYPES, ACCOMPLISHMENT_TYPES, EMPLOYEE_DOCUMENT_TYPES } from '../../data/hrData'
 
 const visaStatusColor = {
   Valid: 'bg-green-100 text-green-700',
@@ -74,7 +75,7 @@ function IdentityBlock({ title, passport, visa, emiratesId, nationality }) {
 
 // readOnly: rendered from a context that can't persist employee edits (e.g. the Projects
 // team panel) — hide the add/verify actions instead of silently discarding input.
-export default function EmployeeDetailModal({ employee, employees = [], user, isHrStaff = false, onClose, onViewEmployee, onAddDependent, onAddAccomplishment, onVerifyAccomplishment, canViewSensitive = false, readOnly = false }) {
+export default function EmployeeDetailModal({ employee, employees = [], user, isHrStaff = false, onClose, onViewEmployee, onAddDependent, onAddAccomplishment, onVerifyAccomplishment, onUpdateDocuments, canViewSensitive = false, readOnly = false }) {
   const [detailTab, setDetailTab] = useState('info')
   const [addingDependent, setAddingDependent] = useState(false)
   const [depForm, setDepForm] = useState(EMPTY_DEPENDENT_FORM)
@@ -514,16 +515,37 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
             <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">Notice Period</h3>
             <div className="text-sm text-gray-700">{employee.compensation.noticePeriodDays} days</div>
           </div>
+
+          {employee.probation && (
+            <div>
+              <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">Probation</h3>
+              <div className="text-sm text-gray-700">
+                {employee.probation.months} months — ends {new Date(employee.probation.endDate).toLocaleDateString('en-AE')}
+              </div>
+              {employee.probation.guaranteedIncrement && (
+                <div className={`mt-2 rounded-md p-3 text-sm border ${employee.probation.guaranteedIncrement.applied ? 'bg-gray-50 border-gray-200 text-gray-600' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+                  Guaranteed increment: <span className="font-semibold">AED {employee.probation.guaranteedIncrement.amount.toLocaleString()}/month</span>
+                  {employee.probation.guaranteedIncrement.applied ? ' — applied' : ` — due from ${new Date(employee.probation.endDate).toLocaleDateString('en-AE')}`}
+                  {employee.probation.guaranteedIncrement.note && <div className="text-xs mt-0.5 opacity-80">{employee.probation.guaranteedIncrement.note}</div>}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {detailTab === 'documents' && canViewSensitive && (
-        <div className="space-y-3 text-sm text-gray-600">
-          <div className="bg-gray-50 rounded p-4 text-center">
-            <FileText size={32} className="mx-auto mb-2 text-gray-400" />
-            <div className="font-medium text-gray-700 mb-1">Document Storage</div>
-            <div className="text-xs text-gray-500">Passport, Visa, Certificates, CV — Phase 2 with file upload</div>
-          </div>
+        <div className="space-y-3">
+          <p className="text-xs text-gray-500">
+            Every document is typed, and required ones are flagged when missing. Files are name-only until Phase 2 storage.
+          </p>
+          <DocumentChecklist
+            docTypes={EMPLOYEE_DOCUMENT_TYPES}
+            documents={employee.documents || []}
+            onChange={(docs) => onUpdateDocuments?.(employee.id, docs)}
+            readOnly={readOnly || !onUpdateDocuments}
+            ctx={{ nonUaeNational: employee.nationality !== 'United Arab Emirates' }}
+          />
         </div>
       )}
     </Modal>
