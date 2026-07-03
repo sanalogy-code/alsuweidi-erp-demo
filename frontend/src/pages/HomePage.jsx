@@ -98,8 +98,7 @@ export default function HomePage({ user, onLogout, holidays = [] }) {
         <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-start gap-3">
           <GitCommit size={16} className="text-gray-400 mt-0.5 shrink-0" />
           <div className="text-xs">
-            <span className="font-semibold text-gray-700">Build #{__BUILD_NUMBER__}</span>
-            <span className="text-gray-400"> · {__BUILD_HASH__} · {buildDateLabel}</span>
+            <span className="font-semibold text-gray-700">{buildDateLabel}</span>
             {__BUILD_MESSAGE__ && <div className="text-gray-600 mt-0.5">Latest: {__BUILD_MESSAGE__}</div>}
           </div>
         </div>
