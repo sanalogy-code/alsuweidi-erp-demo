@@ -190,12 +190,22 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
 
 **HR Workspace (role-gated):**
 
-6. **Inbox** (`HRInbox`) — the HR work queue: pending leave, pending certificates, open concerns, and new candidates in one list, oldest first, actioned inline (approve/deny, prepare letter, start review/resolve, interview/reject). Recently issued letters listed below. Badge = queue size.
+6. **Inbox** (`HRInbox`) — the HR work queue: pending leave, pending certificates, open concerns, new candidates, **and pending new-joiner profile submissions** in one list, oldest first, actioned inline (approve/deny, prepare letter, start review/resolve, interview/reject, **review & complete joiner**). Recently issued letters listed below. Badge = queue size.
 7. **Leave planner** — toggle between `LeaveDashboard` (month timeline of who's off, same-team overlap warnings, holiday/weekend shading, annual balances at 30 days) and `LeaveRequestsList` (full history + approve/deny).
 8. **Renewals** (`RenewalsReport`) — everything expiring within 90 days or overdue: visas, passports, contracts (`contractEndDate`), dependent insurance — employees and dependents both. Also surfaced as a My HR callout.
 9. **Attendance** (`AttendanceTab`) — today's snapshot (in office / on site / on leave / absent), check-ins, weekly hours, late/absence counts. Fingerprint feed is Phase 2; data is illustrative.
-10. **Payroll** (`PayrollTab`) — monthly WPS run: basic + allowances + overtime − deductions per employee, month selector, run status (Draft → Generate WPS SIF → Submitted → Paid), payslip modal per employee incl. estimated end-of-service gratuity (21 days basic/yr first 5 years, 30 after).
+10. **Payroll** (`PayrollTab`) — monthly WPS run: basic + allowances + overtime − deductions per employee, month selector, run status (Draft → Generate WPS SIF → Submitted → Paid), payslip modal per employee incl. estimated end-of-service gratuity (21 days basic/yr first 5 years, 30 after). **Day 3 addition:** card showing pending referral gifts queued for the current payroll run.
 11. **Holidays** (`HolidaysTab`, HR staff only) — approve/edit/add public holidays; approved ones feed the Home dashboard tile and the leave calendar shading.
+12. **Offboarding** (`OffboardingTab`, HR staff only) — reason, last working day, exit interview date/notes, 8-item leaver checklist (notice/handover/exit-interview/IT-assets/access-revocation/visa-cancellation/settlement/experience-cert). Checklist auto-completes the offboarding record.
+13. **Staff planning** (`StaffPlanningTab`, management only) — hires needed per upcoming project (live or pipeline), role, headcount, needed-by date, status tracking. Urgency warnings for roles needed within 45 days.
+14. **PRO tasks** (`ProTasksView`, HR staff only) — queue for the PRO company: new work-permit, visa stamping/renewal/cancellation, EID tasks. Status progression (Open → In Progress → Done), progress notes per task, document uploads (mocked file names, real storage Phase 2). PRO company sees only this queue when logged in (no employee data, no HR workspace access).
+
+**New-employee registration** (Day 3 feature):
+- **Self-service wizard** (`NewJoinerWizard`) — 4-step form (Personal/Qualifications/Documents/Bank & family) only new hires see. Step-by-step validation: required fields, required documents (visa page auto-hidden for UAE nationals), no submission until all met.
+- **HR review & completion** (`NewJoinerReviewModal`) — opened from Inbox when a joiner submission arrives. Left side: everything the employee submitted (documents, qualifications, bank details). Right side: HR completes the employment record. **Auto-fill policy defaults:** selecting a designation auto-fills department, seniority, and work-permit title; selecting employment type auto-fills probation, notice period, severance policy, leave basis from a policy-defaults table — HR only overrides exceptions. Approval creates the employee record in People.
+- **Probation increments** (`EmployeeDetailModal`, Compensation tab) — guaranteed salary increment shown at hire, applied after probation (surfaced on My HR as "Probation ending soon" card if < 60 days away).
+- **Referral gifts** (`CareersTab`, `PayrollTab`) — flat AED 500 gift auto-awarded when a referred candidate is hired, queued on the payroll run with the referrer's name.
+- **Typed documents** (`DocumentChecklist` component, shared across new-joiner wizard + employee records + project records) — every document declares its type; required documents (passport/photo/degree for joiners, LOA for projects) block submission/creation. Passport scans are name-only for now; real Phase 2 storage pending.
 
 **Certificate letters** (`CertificateLetterModal` + `data/certificateTemplates.js`): six UAE letter types (salary, employment, salary transfer, NOC, embassy, experience) with suggested wording auto-filled from the employee record in English/Arabic/bilingual; HR edits freely, prints to PDF on letterhead (hidden-iframe print), Zoho Sign step is a mocked workflow preview pending the Phase 2 backend.
 
@@ -208,7 +218,9 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
    - **Supervision** — only if supervised; coverage, contractual vs estimated completion (late dates in red), approved-vs-actual progress bars with a "N pts behind plan" flag
    - **Financials** — `SENSITIVE_VIEW_ROLES` only; contract value, construction cost, design fee financial status (disputes highlighted), payment statuses
    - **Team** — DPM/CPM open the full HR `EmployeeDetailModal` (cross-module); employers matching CRM companies get a "CRM client" tag
-3. Not yet built: portfolio dashboard, won-deal → project creation (see §5).
+   - **Documents** — typed project documents (LOA required, contract/proposal/NOCs/drawings/other optional). Files are name-only; real storage Phase 2.
+3. **Won deal → project creation** (`CreateProjectFromDealModal`) — when a CRM deal reaches `Won`, the Overview card shows "Create project"; the modal lets you pick scope (Design only / Supervision only / Design + Supervision), stages involved, and **requires attaching the LOA before creation** (enforced via required-document gating). Created project inherits the deal's employer as companyId.
+4. Not yet built: portfolio dashboard, full project creation/edit outside CRM handoff (add/edit buttons in Projects module).
 
 ---
 
@@ -225,16 +237,20 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
 
 This is the honest risk list, not just a TODO.
 
-- **RBAC is prototyped, not enforced.** The UI now genuinely gates by role (`HR_STAFF_ROLES` / `SENSITIVE_VIEW_ROLES` hide sensitive views, and the two-lens HR design answers the "what should each role see" question) — but it's all client-side against a password-less login where anyone can pick "HR" from a dropdown. The gating is the *spec* for Phase 2, not security. Real enforcement (auth + API-level filtering) is the first backend job.
+- **RBAC is prototyped, not enforced.** The UI now genuinely gates by role (`HR_STAFF_ROLES` / `SENSITIVE_VIEW_ROLES` hide sensitive views, PRO role isolation limits access to task queue only, and multi-lens designs answer "what should each role see") — but it's all client-side against a password-less login where anyone can pick any role from a dropdown. The gating is the *spec* for Phase 2, not security. Real enforcement (auth + API-level filtering) is the first backend job.
 - **No persistence.** Every add/edit/delete is `setState` on in-memory arrays. Refreshing resets to seed data — visibly so, now that there are inbox queues and badges. Fine for Phase 1 demo; Phase 2 backend will fix this.
 - **Leave approval is single-step.** HR can approve/deny from the Inbox and the planner flags same-team overlaps — but there's no manager-first approval chain, no notifications, and nothing *prevents* approving a conflicting request. Multi-level chains are Phase 2.
+- **Offboarding & payroll linkage undefined.** The offboarding checklist exists; when marked complete, it doesn't auto-stop the employee's payroll deductions or trigger final settlement. Needs clarification: is that a separate Finance step, or should offboarding completion trigger it? (Pending management decision.)
+- **Mid-month hire / late-pay handling not specified.** ALSUWEIDI has a "late pay" concept; the system doesn't yet handle pro-rated salary, payroll cutoffs, or holdbacks for mid-month joins. (Pending management decision on the late-pay model.)
 - **Attendance is a mock dashboard.** The layout exists for sign-off; the actual fingerprint/card-reader feed and timesheet validation need the Phase 2 backend. Project-linked weekly timesheets (modeled on the current external system) are specced-by-screenshot but not built.
 - **Zoho Sign is mocked.** The certificate-letter flow ends at print-to-PDF; the e-signature step is a workflow preview because API credentials can't live in a frontend-only app. Needs a small serverless function in Phase 2.
-- **No document storage.** CVs, passport scans, signed letters — the Documents tab and candidate CV upload are placeholders pending Phase 2 file storage.
+- **Document storage is name-only.** Typed documents enforce requirements (new joiner wizard and project LOA must be attached to proceed), but files are stored as names only — real Phase 2 file storage pending. Also: HR document review workflow (can HR edit/delete/request re-upload if a document is wrong?) is still undefined (pending management decision).
+- **PRO company dashboarding not yet built.** PRO sees only its task queue; it lacks visibility into task velocity, overdue counts, project/client breakdowns. (Pending: is PRO a separate tenant/org, or just a role within ALSUWEIDI?)
+- **Project creation limited.** Won deals can become projects via the CRM handoff, but there's no "New project" button in the Projects module for direct award or tender scenarios. (Backlog item, not deprioritized.)
 - **Appraisals not started** — waiting on a specification (cycle, reviewers, rating model).
-- **Won deals don't become Projects yet.** The Projects module now exists (portfolio + full record), but a deal that reaches `Won` in CRM still just sits there — the "create project from won deal" handoff is the next planned link, no longer deprioritized.
+- **Project Management module not built.** Tasks, dates, assignments, late flags, and workflows within projects are specced-by-requirement but not implemented. (Backlog → Phase 2 scope decision pending.)
 - **No email sending / notifications.** Structurally can't be done client-side — needs serverless function + provider (Resend recommended). Increasingly relevant now that there are approval flows people would expect to be notified about.
-- **Leaked credential in git history.** Supabase `service_role` key in `backend/populate_db.py` (commit `6985c30`). Needs rotating in Supabase dashboard — the key is still live until rotated. Not confirmed done as of this writing.
+- **Leaked credential in git history — RESOLVED.** Supabase `service_role` key in `backend/populate_db.py` (commit `6985c30`) was neutralized: the entire Supabase project was deleted on 3 July 2026. The key still appears in git history but is now inert (points to deleted project).
 - **No global search**, no charts beyond Overview's bar breakdowns.
 
 ---
