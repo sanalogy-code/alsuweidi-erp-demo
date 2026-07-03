@@ -38,6 +38,15 @@ IT workspace → Assets → Add asset.)
   payroll banner flags unsubmitted employees ("blocks WPS" per policy — real enforcement Phase 2).
   Home quick actions now deep-link (Fill Timesheet, Request Leave/Certificate, Hardware Request).
   PM/manager approval chain still a pending decision — HR approves for now.
+- [ ] **IT: add license** (3 Jul) — the license registry is read-only; assets already have "Add
+  asset" but licenses need the same (name, vendor, seats, yearly cost, renewal date) so IT can
+  register new subscriptions without a code change.
+- [ ] **Work-week patterns on timesheets** (3 Jul) — work usually starts Monday (5 days,
+  Mon–Fri), but Jordan-based staff work Sun–Thu, and some people have other arrangements.
+  Model a work-week pattern (working days + weekend) on the employee record, defaulted
+  automatically from employment type / location when HR picks it on the employment form, and
+  have the timesheet grid + weekend shading + leave calendar follow the employee's own pattern
+  instead of a single company-wide week.
 - [ ] **PRO dashboard & visibility** — right now PRO sees only its task queue. Add a dashboard
   showing task velocity (open/done per week), overdue tasks, and maybe client/project breakdowns
   so the PRO company can run itself. (Depends on decision: is PRO a separate tenant / org or just

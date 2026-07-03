@@ -2,15 +2,17 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-03 (night — Batch 2 shipped: HR direct entry, project create/edit/advance, self-service identity docs, IT & Assets module)
+**Last updated:** 2026-07-03 (late night — Batches 3 & 4 shipped: Marketing module + Timesheets)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed.
 
-**Phase 1 Status:** Four modules live — CRM, full HR suite, Projects (dashboard + portfolio + record), and IT & Assets. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md) — headline: **~3 working days total, 100+ commits, AED 0 infrastructure**.
+**Phase 1 Status:** Five modules live — CRM, full HR suite (now incl. timesheets), Projects (dashboard + portfolio + record), IT & Assets, and Marketing. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest batch (Batch 2, 3 Jul 2026 night):** worked from BACKLOG.md in one deploy: HR "Add employee" direct entry (same employment form as the new-joiner review, required documents enforced), Projects create/edit/advance (New project with LOA gate, edit modal, stage advance, supervision % updates), employees can now see their *own* visa/passport/dependents and documents (compensation stays gated), and a new **IT & Assets module** — request queue, asset registry, license renewal radar. Management confirmed IT hardware was not an intentional gap, so it moved straight into this batch.
+**Latest (Batches 3 & 4, 3 Jul 2026 late night):**
+- **Batch 3 — Marketing module** (marketing + top management only; Branding library visible to all): task inbox auto-fed by other modules (new project → description task; final stage / blocked completion → photos task; new employee → headshot + welcome-email tasks — email designed by Marketing, checked & *sent by HR*), content calendar with approval workflow (content lives inside Marketing — separate tile removed), portfolio readiness view, proposal builder (confidential projects excluded), shared CV search (also in HR People), analytics (win rate live from CRM). **Completion gate:** projects can't be marked Completed without a marketing description + approved professional photos. Media storage deliberately left out.
+- **Batch 4 — Timesheets** (the long-missing piece): weekly Sun–Sat project-coded grid with draft/submit, HR approval queue with per-day breakdown and reject-with-reason, missing-last-week list, payroll banner flagging unsubmitted employees ("blocks WPS" per policy — display-only until Phase 2). Home quick actions now deep-link (Fill Timesheet etc.).
 
-**Earlier same day (Batch 1):** 7 HR features: new-employee self-service wizard + HR review with auto-fill policy defaults, AED 500 referral gift (automatic on hire), guaranteed post-probation increments, offboarding with checklist, PRO company role + government-services task queue, typed documents with required enforcement, staff planning view with 45-day urgency flags. Still collecting management decisions on document review workflows, offboarding payroll linkage, mid-month hire handling, and PRO dashboard scope.
+**Earlier same day:** Batch 1 (7 HR features: self-service joiner wizard + HR review with policy defaults, referral gifts, probation increments, offboarding, PRO role + task queue, typed documents, staff planning) and Batch 2 (HR direct entry, project create/edit/advance, self-service identity docs, IT & Assets module). Still collecting management decisions on document review workflows, offboarding payroll linkage, mid-month hires, PRO dashboard scope, timesheet approver (HR vs PM), and per-employee work weeks (Mon–Fri default vs Sun–Thu Jordan staff).
 
 ---
 
@@ -52,6 +54,7 @@ Redesigned from 11 flat tabs into a **grouped sidebar with two lenses** — empl
 **Everyone:**
 - **My HR** — personal hub: leave balance, request-certificate / raise-a-concern cards, next approved public holiday, pending-request count. HR/management also see org stats and callout cards (inbox count, renewals due).
 - **People** — directory (HR staff also get an **Add employee** button — direct entry for walk-ins/transfers, same employment form as the new-joiner review, required documents enforced) with three views: searchable **List**, clickable **Org Chart** (built from manager links), **Accomplishments** search ("who has a PE license?"). Profile modal: Info + Accomplishments for everyone; **Visa & Dependents, Compensation, and Documents only for HR/Admin/Management**. Full passport/visa/Emirates ID per person and per dependent, dependent insurance, add-dependent form. Employees can add their own certificates/courses — flagged "Pending HR verification" until HR verifies.
+- **My timesheet (new in Batch 4)** — weekly Sun–Sat grid, hours per project code per day (+ General/Leave/Training), save draft / submit, rejected weeks reopen with the reason. Home's "Fill Timesheet" quick action deep-links here.
 - **My requests** — the employee's own leave + certificates + concerns in one filterable, status-chipped list.
 - **Own identity docs (new in Batch 2)** — everyone sees their *own* Visa & Dependents and Documents tabs on their profile ("when does my visa expire?"). Other people's stay HR/admin/management-only, and Compensation remains fully gated.
 - **Careers** — open positions with referral bonuses; refer a candidate or apply internally.
@@ -61,8 +64,9 @@ Redesigned from 11 flat tabs into a **grouped sidebar with two lenses** — empl
 - **Inbox** — one queue of everything waiting on HR (pending leave, certificate requests, open concerns, new candidates), oldest first, actioned inline. Recently issued letters below.
 - **Leave planner** — month calendar of who's off with **same-team overlap warnings**, holiday/weekend shading, annual balances (30-day entitlement); plus full request history with approve/deny.
 - **Renewals** — visas, passports, contracts, and dependent insurance expiring within 90 days or overdue — employees *and* dependents.
+- **Timesheets (new in Batch 4)** — approval queue (per-day breakdown, approve / reject with reason) + missing-last-week list; drafts count as missing.
 - **Attendance** — today's snapshot dashboard (office/site/leave/absent, check-ins, weekly hours). Fingerprint feed is Phase 2; layout is for sign-off.
-- **Payroll** — monthly WPS run (basic + allowances + overtime − deductions), Draft → Generate SIF → Submitted → Paid workflow, payslip modal with estimated end-of-service gratuity.
+- **Payroll** — monthly WPS run (basic + allowances + overtime − deductions), Draft → Generate SIF → Submitted → Paid workflow, payslip modal with estimated end-of-service gratuity. Now flags employees with unsubmitted timesheets ("blocks WPS" per policy — display-only for now).
 - **Holidays** — HR approves/edits/adds public holidays (Islamic dates pending until moon sighting); approved ones appear automatically on every employee's home dashboard.
 
 **Certificate letters:** six UAE letter types (salary, employment, salary transfer, NOC, embassy, experience) auto-drafted from the employee record in English/Arabic/bilingual — HR edits, prints to PDF on letterhead, letter saved on the request. Zoho Sign step is mocked pending Phase 2.
@@ -74,11 +78,26 @@ workspace (HR/admin/management, same gating as HR's sensitive views) gets:
 
 - **Request queue** — approve → procure → fulfil, or reject with a reason; resolution notes on the record
 - **Asset registry** — tagged assets (IT-0031…) with type, model, serial, purchase date, book value, status (in use / in stock / repair / retired), and inline assignment to employees. Offboarding's equipment-return checklist item checks this list.
-- **Licenses** — software subscriptions with seats used/total, yearly cost, and renewal radar (60-day amber, overdue red — lapsed AutoCAD stops the drawing office)
+- **Licenses** — software subscriptions with seats used/total, yearly cost, and renewal radar (60-day amber, overdue red — lapsed AutoCAD stops the drawing office). Read-only for now — "add license" is backlogged.
+
+### ✅ Marketing module — LIVE (new in Batch 3)
+
+Marketing + top management only, except **Branding** (brand asset library — logos, templates, guidelines) which every employee can see. Content lives *inside* Marketing; the separate Content tile is gone.
+
+- **Inbox** — auto-fed task queue: new project → *write marketing description*; project hits final stage or someone tries to complete it → *approve professional photos*; new employee → *headshot* + *welcome email* (Marketing designs it, HR checks and sends). All actioned inline.
+- **Completion gate** — a project **cannot be marked Completed** without a marketing description and approved photos (site-engineer snaps don't count). Blocked attempts auto-queue the missing tasks.
+- **Content calendar** — month grid + list, idea → draft → pending approval → approved → published.
+- **Portfolio** — readiness per project (description + photos + not confidential), description editing, confidentiality flag (hardening backlogged — should be a PM decision at project start).
+- **Proposal builder** — pick reference projects (confidential ones never appear) + team CVs → printable pack preview.
+- **CV search** — shared with HR (People → CV search): keyword / department / accomplishment filters, headshot-on-file flag.
+- **Analytics** — proposal win rate live from CRM deals; LinkedIn/website panels are labelled mock feeds.
+- Deliberately out of scope: media/photo storage (Sana's call — likely unnecessary).
 
 ### ✅ Projects module — LIVE (dashboard + portfolio + record)
 
 **New in Batch 2:** "New project" button for direct awards/tenders (LOA attachment still required — same rule as the won-deal path), an Edit modal on the record (financial fields visible only to sensitive roles), stage back/advance controls under the pipeline strip, and inline supervision approved/actual % updates.
+
+**New in Batch 3:** Marketing sign-off panel on every record (description + photos status), and the completion gate — Completed is blocked until Marketing signs off, with the missing tasks auto-queued.
 
 Modeled on the structure of the company's existing ERP export (140 projects × 40 unreadable flat columns) but normalized — a project is one core record plus optional design and supervision sub-records, so the N/A noise is structurally gone. All 12 seed projects are invented.
 
@@ -90,7 +109,7 @@ Modeled on the structure of the company's existing ERP export (140 projects × 4
 ### 📋 Not yet built (known gaps, roughly in priority order)
 - **RBAC is prototyped, not enforced** — the UI genuinely gates by role now (sensitive tabs, HR workspace), which doubles as the Phase 2 access-control spec, but it's client-side against a password-less login. Real enforcement (auth + API filtering) is the first backend job — see SPEC.md §5.
 - **Leave approval is single-step** — approve/deny + overlap warnings exist; manager-first chains, notifications, and hard conflict blocking are Phase 2.
-- **Attendance device feed + project timesheets** — dashboard is mocked; fingerprint/biometric integration and the weekly project-linked timesheet module (modeled on the current external system) need the backend.
+- **Attendance device feed** — dashboard is mocked; fingerprint/biometric integration needs the backend. Timesheets are now built (Batch 4) but the payroll block is display-only, the work week is company-wide Sun–Sat (per-employee patterns backlogged — Mon–Fri default, Sun–Thu Jordan staff, auto-set from employment type), and the approver (HR vs project PM) is an open decision.
 - **Zoho Sign integration** (mocked), **document/CV storage** (placeholders), **appraisals** (awaiting spec — cycle, reviewers, rating model).
 - Email sending / notifications (structurally can't be done client-side; needs serverless function + provider)
 - Global search
