@@ -26,6 +26,7 @@ import CareersTab from '../components/hr/CareersTab'
 import AttendanceTab from '../components/hr/AttendanceTab'
 import NewJoinerWizard from '../components/hr/NewJoinerWizard'
 import NewJoinerReviewModal from '../components/hr/NewJoinerReviewModal'
+import AddEmployeeModal from '../components/hr/AddEmployeeModal'
 import OffboardingTab from '../components/hr/OffboardingTab'
 import ProTasksView from '../components/hr/ProTasksView'
 import StaffPlanningTab from '../components/hr/StaffPlanningTab'
@@ -52,6 +53,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
   const [staffPlans, setStaffPlans] = useState(STAFF_PLANS)
   const [referralBonuses, setReferralBonuses] = useState([])
   const [reviewJoiner, setReviewJoiner] = useState(null)
+  const [showAddEmployee, setShowAddEmployee] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [showCertModal, setShowCertModal] = useState(false)
   const [showConcernModal, setShowConcernModal] = useState(false)
@@ -378,7 +380,15 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
 
           {view === 'people' && (
             <div className="space-y-3">
-              <div className="flex justify-end">
+              <div className="flex justify-end items-center gap-2">
+                {isHrStaff && (
+                  <button
+                    onClick={() => setShowAddEmployee(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white hover:bg-brand-dark transition"
+                  >
+                    <UserPlus size={13} /> Add employee
+                  </button>
+                )}
                 <div className="inline-flex bg-gray-100 rounded-md p-1 gap-1">
                   <button
                     onClick={() => setPeopleView('list')}
@@ -567,6 +577,14 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
           user={user}
           onClose={() => setShowConcernModal(false)}
           onSubmit={(c) => setComplaints([...complaints, { ...c, id: Math.max(...complaints.map((x) => x.id), 0) + 1 }])}
+        />
+      )}
+
+      {showAddEmployee && (
+        <AddEmployeeModal
+          employees={employees}
+          onClose={() => setShowAddEmployee(false)}
+          onAdd={(record) => setEmployees([...employees, { ...record, id: Math.max(...employees.map((e) => e.id), 0) + 1 }])}
         />
       )}
 

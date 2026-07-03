@@ -1,15 +1,7 @@
 import { useRef, useState } from 'react'
 import { CheckCircle, ArrowRight, FolderKanban, FileCheck, Upload } from 'lucide-react'
 import Modal from '../crm/Modal'
-import { PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_SCOPES, PROJECT_LOCATIONS, PROJECT_STAGES } from '../../data/projectsData'
-
-// Which pipeline stages each scope covers, and where a fresh project starts.
-const STAGES_BY_SCOPE = {
-  'Design + Supervision': PROJECT_STAGES,
-  'Design only': ['Data Collection', 'Concept', 'Schematic', 'Detailed', 'Tender Docs', 'IFC'],
-  'Supervision only': ['Tendering', 'Construction', 'D&L'],
-  'Secondment Services': ['Construction'],
-}
+import { PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_SCOPES, PROJECT_LOCATIONS, STAGES_BY_SCOPE } from '../../data/projectsData'
 
 export default function CreateProjectFromDealModal({ deal, company, employees, existingProjects, onClose, onCreate, onGoToProject }) {
   const [form, setForm] = useState({

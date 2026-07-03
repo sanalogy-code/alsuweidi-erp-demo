@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { PenTool, HardHat, Banknote, Users as UsersIcon, AlertTriangle, FolderOpen } from 'lucide-react'
+import { PenTool, HardHat, Banknote, Users as UsersIcon, AlertTriangle, FolderOpen, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
 import Modal from '../crm/Modal'
 import StagePipeline from './StagePipeline'
+import EditProjectModal from './EditProjectModal'
 import DocumentChecklist from '../DocumentChecklist'
 import { PROJECT_DOCUMENT_TYPES } from '../../data/projectsData'
 
@@ -27,13 +28,30 @@ function Field({ label, children }) {
 
 export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee, onUpdateProject }) {
   const [tab, setTab] = useState('overview')
+  const [editing, setEditing] = useState(false)
+  const [editingProgress, setEditingProgress] = useState(false)
+  const [progressForm, setProgressForm] = useState({ approvedPct: '', actualPct: '' })
 
   if (!project) return null
 
+  const canEdit = !!onUpdateProject
   const dpm = employees.find((e) => e.id === project.dpmId)
   const cpm = employees.find((e) => e.id === project.cpmId)
   const sup = project.supervision
   const behind = sup && sup.approvedPct > 0 && sup.actualPct < sup.approvedPct
+
+  // Stage moves are constrained to the stages this project's scope covers
+  const stageIdx = project.stagesInvolved.indexOf(project.currentStage)
+  const moveStage = (delta) => {
+    const next = project.stagesInvolved[stageIdx + delta]
+    if (next) onUpdateProject({ ...project, currentStage: next })
+  }
+
+  const saveProgress = () => {
+    const clamp = (v) => Math.min(100, Math.max(0, Number(v) || 0))
+    onUpdateProject({ ...project, supervision: { ...sup, approvedPct: clamp(progressForm.approvedPct), actualPct: clamp(progressForm.actualPct) } })
+    setEditingProgress(false)
+  }
 
   const TABS = [
     { key: 'overview', label: 'Overview' },
@@ -50,11 +68,40 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
     <Modal title={`${project.projectNo} — ${project.name}`} onClose={onClose} wide>
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="text-xs text-gray-500">{project.employer} • {project.type} • {project.location}</div>
-        <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${STATUS_CHIP[project.generalStatus]}`}>{project.generalStatus}</span>
+        <div className="flex items-center gap-2 shrink-0">
+          {canEdit && (
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-brand border border-brand/30 hover:bg-brand/5 transition"
+            >
+              <Pencil size={11} /> Edit
+            </button>
+          )}
+          <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_CHIP[project.generalStatus]}`}>{project.generalStatus}</span>
+        </div>
       </div>
 
       <div className="mb-5 bg-gray-50 rounded-lg p-3">
         <StagePipeline stagesInvolved={project.stagesInvolved} currentStage={project.currentStage} />
+        {canEdit && (
+          <div className="mt-2 flex items-center justify-between">
+            <button
+              onClick={() => moveStage(-1)}
+              disabled={stageIdx <= 0}
+              className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 disabled:opacity-30"
+            >
+              <ChevronLeft size={13} /> {project.stagesInvolved[stageIdx - 1] || 'Back'}
+            </button>
+            <span className="text-[10px] text-gray-400">Move the project through its pipeline</span>
+            <button
+              onClick={() => moveStage(1)}
+              disabled={stageIdx >= project.stagesInvolved.length - 1}
+              className="flex items-center gap-1 text-xs font-medium text-brand hover:text-brand-dark disabled:opacity-30"
+            >
+              {project.stagesInvolved[stageIdx + 1] || 'Done'} <ChevronRight size={13} />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mb-4 flex gap-2 border-b border-gray-200">
@@ -129,11 +176,39 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
           </div>
           <div>
             <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>Progress — approved plan vs actual</span>
+              <span>
+                Progress — approved plan vs actual
+                {canEdit && !editingProgress && (
+                  <button
+                    onClick={() => { setProgressForm({ approvedPct: sup.approvedPct, actualPct: sup.actualPct }); setEditingProgress(true) }}
+                    className="ml-2 text-brand font-medium hover:underline"
+                  >
+                    Update
+                  </button>
+                )}
+              </span>
               {behind && (
                 <span className="text-red-600 font-medium flex items-center gap-1"><AlertTriangle size={11} /> {sup.approvedPct - sup.actualPct} pts behind plan</span>
               )}
             </div>
+            {editingProgress && (
+              <div className="mb-3 bg-blue-50 border border-blue-200 rounded-md p-3 flex items-end gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Approved %</label>
+                  <input type="number" min="0" max="100" value={progressForm.approvedPct}
+                    onChange={(e) => setProgressForm({ ...progressForm, approvedPct: e.target.value })}
+                    className="w-24 border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Actual %</label>
+                  <input type="number" min="0" max="100" value={progressForm.actualPct}
+                    onChange={(e) => setProgressForm({ ...progressForm, actualPct: e.target.value })}
+                    className="w-24 border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
+                </div>
+                <button onClick={saveProgress} className="px-3 py-1.5 bg-brand text-white rounded-md text-xs font-medium hover:bg-brand-dark">Save</button>
+                <button onClick={() => setEditingProgress(false)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200">Cancel</button>
+              </div>
+            )}
             <div className="space-y-2">
               <div>
                 <div className="flex justify-between text-xs mb-0.5"><span className="text-gray-600">Approved</span><span className="font-medium">{sup.approvedPct}%</span></div>
@@ -212,6 +287,16 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
             </div>
           </div>
         </div>
+      )}
+
+      {editing && (
+        <EditProjectModal
+          project={project}
+          employees={employees}
+          canViewSensitive={canViewSensitive}
+          onClose={() => setEditing(false)}
+          onSave={onUpdateProject}
+        />
       )}
     </Modal>
   )

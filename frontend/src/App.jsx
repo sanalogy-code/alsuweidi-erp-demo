@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage'
 import CRM from './pages/CRM'
 import HR from './pages/HR'
 import Projects from './pages/Projects'
+import IT from './pages/IT'
 import ComingSoon from './pages/ComingSoon'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
 import { PROJECTS } from './data/projectsData'
@@ -55,8 +56,9 @@ export default function App() {
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
-      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} />} />
+      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} onAddProject={addProject} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} />} />
+      <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="marketing" />} />
       <Route path="/content" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="content" />} />
       <Route path="/admin" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="admin" />} />

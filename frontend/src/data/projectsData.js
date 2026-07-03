@@ -38,6 +38,14 @@ export const PROJECT_STAGES = [
   'Data Collection', 'Concept', 'Schematic', 'Detailed', 'Tender Docs', 'IFC', 'Tendering', 'Construction', 'D&L',
 ]
 
+// Which pipeline stages each scope covers, and where a fresh project starts.
+export const STAGES_BY_SCOPE = {
+  'Design + Supervision': PROJECT_STAGES,
+  'Design only': ['Data Collection', 'Concept', 'Schematic', 'Detailed', 'Tender Docs', 'IFC'],
+  'Supervision only': ['Tendering', 'Construction', 'D&L'],
+  'Secondment Services': ['Construction'],
+}
+
 export const DESIGN_DISCIPLINES = [
   'Architecture', 'Interior Design', 'Structural Engineering', 'Mechanical Engineering',
   'Electrical Engineering', 'Facade Engineering', 'Lighting Design', 'Acoustic Engineering',

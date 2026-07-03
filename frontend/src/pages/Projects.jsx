@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Plus } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import ProjectsDashboard from '../components/projects/ProjectsDashboard'
+import NewProjectModal from '../components/projects/NewProjectModal'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { EMPLOYEES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
@@ -14,7 +15,7 @@ const NAV = [
   { key: 'portfolio', label: 'Portfolio', icon: FolderKanban },
 ]
 
-export default function Projects({ user, onLogout, projects = [], onUpdateProject }) {
+export default function Projects({ user, onLogout, projects = [], onUpdateProject, onAddProject }) {
   const location = useLocation()
   const [view, setView] = useState('dashboard')
   // CRM's "view project" / "open in Projects" hands over a project id via router state
@@ -22,6 +23,7 @@ export default function Projects({ user, onLogout, projects = [], onUpdateProjec
     () => projects.find((p) => p.id === location.state?.openProjectId) || null
   )
   const [selectedEmployee, setSelectedEmployee] = useState(null)
+  const [showNewProject, setShowNewProject] = useState(false)
 
   const canViewSensitive = SENSITIVE_VIEW_ROLES.includes(user?.role)
   const isHrStaff = HR_STAFF_ROLES.includes(user?.role)
@@ -32,6 +34,14 @@ export default function Projects({ user, onLogout, projects = [], onUpdateProjec
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
         <aside className="w-full sm:w-44 shrink-0 sm:sticky sm:top-6">
+          {onAddProject && (
+            <button
+              onClick={() => setShowNewProject(true)}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 mb-2 rounded-md text-sm font-medium bg-brand text-white hover:bg-brand-dark transition"
+            >
+              <Plus size={15} /> New project
+            </button>
+          )}
           <div className="flex sm:flex-col flex-wrap gap-1">
             {NAV.map((item) => {
               const Icon = item.icon
@@ -59,6 +69,15 @@ export default function Projects({ user, onLogout, projects = [], onUpdateProjec
           )}
         </main>
       </div>
+
+      {showNewProject && (
+        <NewProjectModal
+          employees={EMPLOYEES}
+          existingProjects={projects}
+          onClose={() => setShowNewProject(false)}
+          onCreate={(p) => setSelectedProject(onAddProject(p))}
+        />
+      )}
 
       {selectedProject && (
         <ProjectDetailModal

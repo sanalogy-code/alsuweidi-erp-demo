@@ -86,6 +86,9 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
   // stay flagged until HR verifies them. HR can add or verify for anyone.
   const isSelf = !!user?.username && employee?.name?.toLowerCase() === user.username.toLowerCase()
   const canEditAccomplishments = (isSelf || isHrStaff) && !readOnly
+  // Self-service carve-out: everyone can see their own visa/passport/dependents and documents
+  // ("when does my visa expire?"). Compensation stays HR/management-only.
+  const canViewIdentity = canViewSensitive || isSelf
 
   if (!employee) return null
 
@@ -137,7 +140,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
         >
           Info
         </button>
-        {canViewSensitive && (
+        {canViewIdentity && (
           <button
             onClick={() => setDetailTab('visa')}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'visa' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
@@ -161,7 +164,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
             Compensation
           </button>
         )}
-        {canViewSensitive && (
+        {canViewIdentity && (
           <button
             onClick={() => setDetailTab('documents')}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition ${detailTab === 'documents' ? 'text-brand border-brand' : 'text-gray-500 border-transparent'}`}
@@ -257,7 +260,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
         </div>
       )}
 
-      {detailTab === 'visa' && canViewSensitive && (
+      {detailTab === 'visa' && canViewIdentity && (
         <div className="space-y-8">
           <div>
             <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">{employee.name} — Identity Documents</h3>
@@ -534,7 +537,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
         </div>
       )}
 
-      {detailTab === 'documents' && canViewSensitive && (
+      {detailTab === 'documents' && canViewIdentity && (
         <div className="space-y-3">
           <p className="text-xs text-gray-500">
             Every document is typed, and required ones are flagged when missing. Files are name-only until Phase 2 storage.
