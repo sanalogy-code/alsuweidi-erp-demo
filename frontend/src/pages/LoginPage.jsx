@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import logo from '../assets/alsuweidi-logo.svg'
 import { ROLES } from '../data/dashboardData'
 
@@ -47,6 +49,11 @@ export default function LoginPage({ onLogin }) {
           </button>
         </form>
         <p className="text-xs text-gray-400 text-center mt-4">Demo login — no password needed, nothing is stored remotely.</p>
+        <div className="text-center mt-5 pt-4 border-t border-gray-100">
+          <Link to="/dev" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-brand transition-colors">
+            <Sparkles size={12} /> How this was built — Developer Dashboard
+          </Link>
+        </div>
       </div>
     </div>
   )

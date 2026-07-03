@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
+import DevDashboard from './pages/DevDashboard'
 import HomePage from './pages/HomePage'
 import CRM from './pages/CRM'
 import HR from './pages/HR'
@@ -90,12 +91,20 @@ export default function App() {
     navigate('/')
   }
 
+  // The dev dashboard is reachable without logging in (it's the point — a
+  // "behind the curtain" link off the fake login page; nothing sensitive on it).
   if (!user) {
-    return <LoginPage onLogin={handleLogin} />
+    return (
+      <Routes>
+        <Route path="/dev" element={<DevDashboard />} />
+        <Route path="*" element={<LoginPage onLogin={handleLogin} />} />
+      </Routes>
+    )
   }
 
   return (
     <Routes>
+      <Route path="/dev" element={<DevDashboard />} />
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
