@@ -2,18 +2,18 @@
 
 The "how long did this actually take" log — numbers pulled from git history, for sharing with management. Refreshed on each docs sync.
 
-**As of:** 3 July 2026, 11:09 AM
+**As of:** 3 July 2026, 2:15 PM
 
 ## The headline
 
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Phase 1 complete (CRM + HR + Projects)** | 3 July 2026, 11:08 |
-| **Elapsed time** | ~75 hours, across **3 working days** |
-| **Commits** | 98 (30 on day one, 40 on day two, 28 on day three) |
-| **Deploys to the live site** | every push auto-deploys — ~98 |
-| **App code** | ~8,400 lines across 57 components + 6 pages |
+| **Phase 1 complete (CRM + HR + Projects + IT)** | 3 July 2026, 2:13 PM |
+| **Elapsed time** | ~78 hours, across **3 working days** |
+| **Commits** | 102 (30 on day one, 40 on day two, 32 on day three) |
+| **Deploys to the live site** | every push auto-deploys — ~100 |
+| **App code** | ~10,300 lines across 65 components + 7 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 3 days
@@ -27,7 +27,9 @@ The "how long did this actually take" log — numbers pulled from git history, f
   - PRO company role (government-services task queue isolation: visa/work-permit/EID tasks, no employee data access)
   - typed documents with required-document enforcement (new-joiner wizard, project LOA, custom upload types)
   - staff planning view (hires per project with needed-by dates, 45-day urgency flags, status tracking)
-- **Projects module** — the design & supervision portfolio, restructured from the old ERP's 40-column export into a filterable list + full project record with stage pipeline, discipline scope, approved-vs-actual progress, role-gated financials, typed documents (LOA required for project creation)
+- **Projects module** — the design & supervision portfolio, restructured from the old ERP's 40-column export into a dashboard + filterable list + full project record with stage pipeline, discipline scope, approved-vs-actual progress, role-gated financials, typed documents (LOA required for project creation); day-3 Batch 2 added direct project creation, record editing, stage advancement, and supervision % updates
+- **IT & Assets module** (day 3, Batch 2) — employee hardware/software requests with an approve→procure→fulfil queue, tagged asset registry with assignment and book values, software license radar with 60-day renewal flags
+- **HR Batch 2 additions** (day 3) — direct "Add employee" entry for HR (shared form with the new-joiner review), and a self-service carve-out so every employee sees their own visa/passport/dependents and documents
 - **Role-based views** — employees, HR, management, and PRO company each see different navigation and data
 - **Home dashboard** — module launcher, announcements, holidays tile, build-number card; day 3 added probation-ending-soon card
 

@@ -183,7 +183,9 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
 2. **People** — one view, three toggles: **List** (`EmployeeList`), **Org Chart** (`OrgChart`, recursive tree from `managerId`), **Accomplishments** (`AccomplishmentsSearch`, "who has a PE license?"). Click any person → `EmployeeDetailModal`:
    - **Info:** employment details, nationality, "Reports To" (clickable), emergency contact — visible to all
    - **Accomplishments:** visible to all; employees can add their own entries (flagged "Pending HR verification" until HR verifies — HR-added entries are pre-verified)
-   - **Visa & Dependents / Compensation / Documents:** `SENSITIVE_VIEW_ROLES` only. Full passport/visa/EID per person and per dependent, dependent insurance, add-dependent form; salary package + notice period; Documents is a Phase 2 placeholder
+   - **Visa & Dependents / Documents:** `SENSITIVE_VIEW_ROLES` **or the employee's own record** (`isSelf` carve-out, Batch 2 — self-service covers "when does my visa expire?"). Full passport/visa/EID per person and per dependent, dependent insurance, add-dependent form; typed documents via `DocumentChecklist`
+   - **Compensation:** `SENSITIVE_VIEW_ROLES` only — no self exception. Salary package, notice period, probation + guaranteed increment
+   - HR staff also get an **Add employee** button on People (`AddEmployeeModal`, Batch 2) — direct entry for walk-ins/transfers/back-fills: personal side editable by HR, employment side shared with the new-joiner review (`EmploymentRecordFields`), required documents enforced before creation
 3. **My requests** (`MyRequests`) — the employee's own leave + certificate + concern submissions in one filterable list with status chips. Anonymous concerns are deliberately not tracked here.
 4. **Careers** (`CareersTab`) — open positions with referral bonuses; refer a candidate or apply internally; HR sees and advances the per-role pipeline (New → Interviewing → Hired/Rejected).
 5. **Onboarding** (`OnboardingChecklist`) — only when the user checked "I'm a new hire" at login. 7 sections + acknowledgement gate.
@@ -202,7 +204,7 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
 
 **New-employee registration** (Day 3 feature):
 - **Self-service wizard** (`NewJoinerWizard`) — 4-step form (Personal/Qualifications/Documents/Bank & family) only new hires see. Step-by-step validation: required fields, required documents (visa page auto-hidden for UAE nationals), no submission until all met.
-- **HR review & completion** (`NewJoinerReviewModal`) — opened from Inbox when a joiner submission arrives. Left side: everything the employee submitted (documents, qualifications, bank details). Right side: HR completes the employment record. **Auto-fill policy defaults:** selecting a designation auto-fills department, seniority, and work-permit title; selecting employment type auto-fills probation, notice period, severance policy, leave basis from a policy-defaults table — HR only overrides exceptions. Approval creates the employee record in People.
+- **HR review & completion** (`NewJoinerReviewModal`) — opened from Inbox when a joiner submission arrives. Left side: everything the employee submitted (documents, qualifications, bank details). Right side: HR completes the employment record. **Auto-fill policy defaults:** selecting a designation auto-fills department, seniority, and work-permit title; selecting employment type auto-fills probation, notice period, severance policy, leave basis from a policy-defaults table — HR only overrides exceptions. Approval creates the employee record in People. The employment form + record-building live in `EmploymentRecordFields.jsx` (shared with `AddEmployeeModal` since Batch 2).
 - **Probation increments** (`EmployeeDetailModal`, Compensation tab) — guaranteed salary increment shown at hire, applied after probation (surfaced on My HR as "Probation ending soon" card if < 60 days away).
 - **Referral gifts** (`CareersTab`, `PayrollTab`) — flat AED 500 gift auto-awarded when a referred candidate is hired, queued on the payroll run with the referrer's name.
 - **Typed documents** (`DocumentChecklist` component, shared across new-joiner wizard + employee records + project records) — every document declares its type; required documents (passport/photo/degree for joiners, LOA for projects) block submission/creation. Passport scans are name-only for now; real Phase 2 storage pending.
@@ -219,8 +221,22 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
    - **Financials** — `SENSITIVE_VIEW_ROLES` only; contract value, construction cost, design fee financial status (disputes highlighted), payment statuses
    - **Team** — DPM/CPM open the full HR `EmployeeDetailModal` (cross-module); employers matching CRM companies get a "CRM client" tag
    - **Documents** — typed project documents (LOA required, contract/proposal/NOCs/drawings/other optional). Files are name-only; real storage Phase 2.
-3. **Won deal → project creation** (`CreateProjectFromDealModal`) — when a CRM deal reaches `Won`, the Overview card shows "Create project"; the modal lets you pick scope (Design only / Supervision only / Design + Supervision), stages involved, and **requires attaching the LOA before creation** (enforced via required-document gating). Created project inherits the deal's employer as companyId.
-4. Not yet built: portfolio dashboard, full project creation/edit outside CRM handoff (add/edit buttons in Projects module).
+3. **Won deal → project creation** (`CreateProjectFromDealModal`) — when a CRM deal reaches `Won`, the Overview card shows "Create project"; the modal lets you pick scope (Design only / Supervision only / Design + Supervision), stages involved, and **requires attaching the LOA before creation** (enforced via required-document gating). Created project inherits the deal's employer as companyId. The scope→stages mapping (`STAGES_BY_SCOPE`) lives in `projectsData.js`, shared with direct creation.
+4. **Direct creation / edit / advance** (Batch 2):
+   - **New project** (`NewProjectModal`, sidebar button) — for direct awards and tenders that didn't come through CRM. Same LOA requirement; auto-numbers from the highest existing `projectNo`.
+   - **Edit** (`EditProjectModal`, header button on the record) — core fields, status, DPM/CPM, contract-signed flag; contract value and construction cost only render for `SENSITIVE_VIEW_ROLES`. Scope/stage structure is deliberately not editable here.
+   - **Stage advance** — back/forward controls under the pipeline strip, constrained to `stagesInvolved`.
+   - **Supervision progress** — "Update" on the Supervision tab edits approved/actual % inline (clamped 0–100); behind-plan flag recalculates.
+
+### IT & Assets (`pages/IT.jsx`, Batch 2, data in `data/itData.js`)
+
+Home tile + `/it` route. Everyone gets **My requests** (`ItRequestsView` in `mine` mode) — raise hardware / software-license / repair / access requests. `SENSITIVE_VIEW_ROLES` get the **IT Workspace**:
+
+1. **Request queue** (`ItRequestsView` in `queue` mode) — pending-first list of all requests; approve (with note) → mark fulfilled, or reject with a reason. Status enum: pending / approved / fulfilled / rejected.
+2. **Assets** (`AssetRegistry`) — tagged registry (`IT-0031`…): type, model, serial, purchase date, book value, notes; inline assignment dropdown (assign → `in_use`, unassign → `in_stock`) and status dropdown (in use / in stock / repair / retired); add-asset form auto-numbers the tag; header shows active book value. Offboarding's IT-assets checklist item is the manual cross-check against this list.
+3. **Licenses** (`LicensesView`) — software subscriptions with seats used/total (full seats flagged), yearly cost, and renewal radar: within 60 days amber, overdue red, callout card when anything is due.
+
+Data: `IT_ASSETS` (assignedToId FK → HR `EMPLOYEES`), `SOFTWARE_LICENSES`, `IT_REQUESTS`, plus `ASSET_TYPES`, `ASSET_STATUS`, `IT_REQUEST_TYPES`, `IT_REQUEST_STATUS` enums.
 
 ---
 
@@ -246,7 +262,7 @@ This is the honest risk list, not just a TODO.
 - **Zoho Sign is mocked.** The certificate-letter flow ends at print-to-PDF; the e-signature step is a workflow preview because API credentials can't live in a frontend-only app. Needs a small serverless function in Phase 2.
 - **Document storage is name-only.** Typed documents enforce requirements (new joiner wizard and project LOA must be attached to proceed), but files are stored as names only — real Phase 2 file storage pending. Also: HR document review workflow (can HR edit/delete/request re-upload if a document is wrong?) is still undefined (pending management decision).
 - **PRO company dashboarding not yet built.** PRO sees only its task queue; it lacks visibility into task velocity, overdue counts, project/client breakdowns. (Pending: is PRO a separate tenant/org, or just a role within ALSUWEIDI?)
-- **Project creation limited.** Won deals can become projects via the CRM handoff, but there's no "New project" button in the Projects module for direct award or tender scenarios. (Backlog item, not deprioritized.)
+- **IT ↔ HR linkage is manual.** The IT module exists (requests, assets, licenses) but fulfilling a request doesn't auto-create an asset, and offboarding's equipment-return step doesn't auto-list the leaver's assigned assets — both are manual cross-checks today. Natural Phase 2 wiring once state lives in one database.
 - **Appraisals not started** — waiting on a specification (cycle, reviewers, rating model).
 - **Project Management module not built.** Tasks, dates, assignments, late flags, and workflows within projects are specced-by-requirement but not implemented. (Backlog → Phase 2 scope decision pending.)
 - **No email sending / notifications.** Structurally can't be done client-side — needs serverless function + provider (Resend recommended). Increasingly relevant now that there are approval flows people would expect to be notified about.

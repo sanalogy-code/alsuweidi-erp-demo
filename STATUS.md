@@ -2,13 +2,15 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-03 (evening — HR expansion complete: 7 features live, backlog published)
+**Last updated:** 2026-07-03 (night — Batch 2 shipped: HR direct entry, project create/edit/advance, self-service identity docs, IT & Assets module)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed.
 
-**Phase 1 Status:** Three modules live — CRM, full HR suite (+ 7 new features in this session), and Projects (portfolio + record; dashboard next). Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md) — headline: **~3 working days total, 100+ commits, AED 0 infrastructure**. 
+**Phase 1 Status:** Four modules live — CRM, full HR suite, Projects (dashboard + portfolio + record), and IT & Assets. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md) — headline: **~3 working days total, 100+ commits, AED 0 infrastructure**.
 
-**Latest batch (3 Jul 2026):** 7 HR features shipped in one session: new-employee self-service wizard + HR review with auto-fill policy defaults, AED 500 referral gift (automatic on hire), guaranteed post-probation increments, offboarding with checklist, PRO company role + government-services task queue, typed documents with required enforcement (employee wizard, project LOA), and staff planning view with 45-day urgency flags. Verified live; collecting management feedback on document review workflows, offboarding payroll linkage, mid-month hire handling, and PRO dashboard scope.
+**Latest batch (Batch 2, 3 Jul 2026 night):** worked from BACKLOG.md in one deploy: HR "Add employee" direct entry (same employment form as the new-joiner review, required documents enforced), Projects create/edit/advance (New project with LOA gate, edit modal, stage advance, supervision % updates), employees can now see their *own* visa/passport/dependents and documents (compensation stays gated), and a new **IT & Assets module** — request queue, asset registry, license renewal radar. Management confirmed IT hardware was not an intentional gap, so it moved straight into this batch.
+
+**Earlier same day (Batch 1):** 7 HR features: new-employee self-service wizard + HR review with auto-fill policy defaults, AED 500 referral gift (automatic on hire), guaranteed post-probation increments, offboarding with checklist, PRO company role + government-services task queue, typed documents with required enforcement, staff planning view with 45-day urgency flags. Still collecting management decisions on document review workflows, offboarding payroll linkage, mid-month hire handling, and PRO dashboard scope.
 
 ---
 
@@ -49,8 +51,9 @@ Redesigned from 11 flat tabs into a **grouped sidebar with two lenses** — empl
 
 **Everyone:**
 - **My HR** — personal hub: leave balance, request-certificate / raise-a-concern cards, next approved public holiday, pending-request count. HR/management also see org stats and callout cards (inbox count, renewals due).
-- **People** — directory with three views: searchable **List**, clickable **Org Chart** (built from manager links), **Accomplishments** search ("who has a PE license?"). Profile modal: Info + Accomplishments for everyone; **Visa & Dependents, Compensation, and Documents only for HR/Admin/Management**. Full passport/visa/Emirates ID per person and per dependent, dependent insurance, add-dependent form. Employees can add their own certificates/courses — flagged "Pending HR verification" until HR verifies.
+- **People** — directory (HR staff also get an **Add employee** button — direct entry for walk-ins/transfers, same employment form as the new-joiner review, required documents enforced) with three views: searchable **List**, clickable **Org Chart** (built from manager links), **Accomplishments** search ("who has a PE license?"). Profile modal: Info + Accomplishments for everyone; **Visa & Dependents, Compensation, and Documents only for HR/Admin/Management**. Full passport/visa/Emirates ID per person and per dependent, dependent insurance, add-dependent form. Employees can add their own certificates/courses — flagged "Pending HR verification" until HR verifies.
 - **My requests** — the employee's own leave + certificates + concerns in one filterable, status-chipped list.
+- **Own identity docs (new in Batch 2)** — everyone sees their *own* Visa & Dependents and Documents tabs on their profile ("when does my visa expire?"). Other people's stay HR/admin/management-only, and Compensation remains fully gated.
 - **Careers** — open positions with referral bonuses; refer a candidate or apply internally.
 - **Onboarding** — only for logins that check "I'm a new hire". 7 sections + acknowledgement gate.
 
@@ -64,7 +67,18 @@ Redesigned from 11 flat tabs into a **grouped sidebar with two lenses** — empl
 
 **Certificate letters:** six UAE letter types (salary, employment, salary transfer, NOC, embassy, experience) auto-drafted from the employee record in English/Arabic/bilingual — HR edits, prints to PDF on letterhead, letter saved on the request. Zoho Sign step is mocked pending Phase 2.
 
-### ✅ Projects module — LIVE (portfolio + record; dashboard next)
+### ✅ IT & Assets module — LIVE (new in Batch 2)
+
+Every employee can raise hardware/software/repair/access requests from "My requests". The IT
+workspace (HR/admin/management, same gating as HR's sensitive views) gets:
+
+- **Request queue** — approve → procure → fulfil, or reject with a reason; resolution notes on the record
+- **Asset registry** — tagged assets (IT-0031…) with type, model, serial, purchase date, book value, status (in use / in stock / repair / retired), and inline assignment to employees. Offboarding's equipment-return checklist item checks this list.
+- **Licenses** — software subscriptions with seats used/total, yearly cost, and renewal radar (60-day amber, overdue red — lapsed AutoCAD stops the drawing office)
+
+### ✅ Projects module — LIVE (dashboard + portfolio + record)
+
+**New in Batch 2:** "New project" button for direct awards/tenders (LOA attachment still required — same rule as the won-deal path), an Edit modal on the record (financial fields visible only to sensitive roles), stage back/advance controls under the pipeline strip, and inline supervision approved/actual % updates.
 
 Modeled on the structure of the company's existing ERP export (140 projects × 40 unreadable flat columns) but normalized — a project is one core record plus optional design and supervision sub-records, so the N/A noise is structurally gone. All 12 seed projects are invented.
 
@@ -78,7 +92,6 @@ Modeled on the structure of the company's existing ERP export (140 projects × 4
 - **Leave approval is single-step** — approve/deny + overlap warnings exist; manager-first chains, notifications, and hard conflict blocking are Phase 2.
 - **Attendance device feed + project timesheets** — dashboard is mocked; fingerprint/biometric integration and the weekly project-linked timesheet module (modeled on the current external system) need the backend.
 - **Zoho Sign integration** (mocked), **document/CV storage** (placeholders), **appraisals** (awaiting spec — cycle, reviewers, rating model).
-- Won deals → actual Projects (module now exists; the CRM handoff link is next on the list, after the projects dashboard)
 - Email sending / notifications (structurally can't be done client-side; needs serverless function + provider)
 - Global search
 
