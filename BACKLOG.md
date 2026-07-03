@@ -45,6 +45,24 @@ one-off small changes. Add items here as they come up; strike them when they shi
   Decide: keep HR-only for the demo, or give managers a read-only team-leave view now?
 - [ ] **CRM vs Bidding separation** — watch for this request when management reviews Phase 1.
 
+## Future / TBD Scope (awaiting spec or prioritization)
+
+- [ ] **Training & Development module** — employee learning paths, course catalog, training enrollment,
+  completion tracking, certifications. Unclear how this integrates with accomplishments (CE credits?
+  professional development). (Spec pending.)
+- [ ] **Bonus pay** — one-time or recurring performance/referral/project bonuses. Unclear whether this
+  lives in Payroll (monthly adjustment) or separate module (Compensation → Bonuses tab). (Spec pending.)
+- [ ] **Evaluation system** — performance reviews, feedback cycles, review workflows (self → manager →
+  HR review), rating models, competency mapping. Overlaps with Appraisals module. (Spec pending.)
+- [ ] **Content calendar** — marketing/comms planning (posts, campaigns, milestones, publishing schedule,
+  asset ownership, approval workflows). May tie to project timelines and news feed.
+- [ ] **Marketing metrics & analytics** — campaign performance, portfolio engagement (views/downloads),
+  proposal win/loss rates, content ROI tracking.
+- [ ] **IT hardware/software requests** — employee hardware requests (laptop, monitor, peripherals),
+  software licenses (procurement, expiry tracking), asset tracking (serial #, purchase date, value,
+  depreciation), financials (capex vs opex). May link to employee onboarding (new-hire hardware req)
+  and offboarding (equipment return).
+
 ## Phase 2 (needs the real backend — don't attempt client-side)
 
 - [ ] **Project Management module** — full projects with tasks, dates, assignments, late-flag,
@@ -79,4 +97,8 @@ one-off small changes. Add items here as they come up; strike them when they shi
   entire Supabase project.** The key still visible in git history (commit `6985c30`) is now inert —
   it points at a project that no longer exists.
 - [ ] Show Phase 1 to management; collect feedback per module
+- [ ] Clarify scope: was hardware procurement (IT requests/assets/financials) meant as Phase 1 gap or
+  Phase 2 feature? Currently not in Phase 1 release.
 - [ ] IT conversation for the Phase 2 VM (4c/16GB/100GB, firewall, backups, SSH for Sana)
+- [ ] Prioritize TBD scope items (Training & Development, Bonus pay, Evaluation system, Content
+  calendar, IT hardware/software requests) — which are MVP for Phase 2, which are post-MVP?
