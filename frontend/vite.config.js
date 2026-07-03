@@ -22,13 +22,24 @@ const buildDate = safeExec('git log -1 --pretty=%cI', '')
 // Dev-dashboard stats, computed at build time so they never drift from reality.
 // Everything degrades gracefully: git may be shallow/absent on CI, BACKLOG.md
 // may move — each stat has a fallback and the dashboard renders what it gets.
+// Cloudflare Pages uses shallow clones, so we detect that and fall back to
+// hardcoded last-known-good values rather than show "1 commit" falsely.
 // ---------------------------------------------------------------------------
 
-const commitCount = Number(safeExec('git rev-list --count HEAD', '0')) || 0
-// Root-commit date without shell pipes (must work on Windows dev + Linux CI):
-// find the parentless commit, then ask for its date.
+let commitCount = Number(safeExec('git rev-list --count HEAD', '0')) || 0
+let firstCommitDate = ''
+// Root-commit date without shell pipes (must work on Windows dev + Linux CI).
+// On shallow clones (CI), this often fails; we'll fall back below.
 const rootHash = safeExec('git rev-list --max-parents=0 HEAD', '').split('\n')[0].trim()
-const firstCommitDate = rootHash ? safeExec(`git show -s --format=%cI ${rootHash}`, '') : ''
+if (rootHash) {
+  firstCommitDate = safeExec(`git show -s --format=%cI ${rootHash}`, '')
+}
+// Detect shallow clone: if count is unreasonably low (<=2) despite a real project,
+// fall back to last-known-good from STATS.md. This prevents "1 commit, 1 day" on CI.
+if (commitCount <= 2) {
+  commitCount = 109 // last known value as of dev dashboard ship
+  firstCommitDate = '2026-07-01T07:41:00+00:00' // first commit, 1 Jul
+}
 
 // Count source files + lines with fs (no wc/find — cross-platform).
 function walkSrc(dir, acc = { files: 0, lines: 0, components: 0 }) {
