@@ -21,6 +21,7 @@ export default function ProjectList({ projects, employees, user, onViewProject }
   const myName = (user?.username || '').toLowerCase()
 
   const scopeOf = (p) => {
+    if (p.scope) return p.scope
     if (p.type === 'Secondment') return 'Secondment Services'
     if (p.design && p.supervision) return 'Design + Supervision'
     if (p.design) return 'Design only'

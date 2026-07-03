@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, AlertTriangle, Plane, Clock } from 'lucide-react'
 import { ANNUAL_LEAVE_ENTITLEMENT } from '../../data/hrData'
+import { parseLocalDate, todayLocal } from '../../utils/date'
 
 const MS_DAY = 1000 * 60 * 60 * 24
 const overlap = (aStart, aEnd, bStart, bEnd) => aStart <= bEnd && bStart <= aEnd
@@ -16,7 +17,7 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
   const monthLabel = monthDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
   const active = requests.filter((r) => r.status !== 'denied')
-  const inMonth = active.filter((r) => overlap(new Date(r.startDate), new Date(r.endDate), monthStart, monthEnd))
+  const inMonth = active.filter((r) => overlap(parseLocalDate(r.startDate), parseLocalDate(r.endDate), monthStart, monthEnd))
   const byEmployee = [...new Set(inMonth.map((r) => r.employeeName))].map((name) => ({
     name,
     dept: employees.find((e) => e.name === name)?.dept || '',
@@ -25,8 +26,8 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
 
   const approvedHolidayDates = new Set()
   holidays.filter((h) => h.status === 'approved').forEach((h) => {
-    const end = new Date(h.endDate || h.date)
-    for (let d = new Date(h.date); d <= end; d = new Date(d.getTime() + MS_DAY)) {
+    const end = parseLocalDate(h.endDate || h.date)
+    for (let d = parseLocalDate(h.date); d <= end; d = new Date(d.getTime() + MS_DAY)) {
       if (d.getFullYear() === y && d.getMonth() === m) approvedHolidayDates.add(d.getDate())
     }
   })
@@ -40,21 +41,21 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
       const deptA = employees.find((e) => e.id === a.employeeId)?.dept
       const deptB = employees.find((e) => e.id === b.employeeId)?.dept
       if (!deptA || deptA !== deptB) continue
-      if (overlap(new Date(a.startDate), new Date(a.endDate), new Date(b.startDate), new Date(b.endDate))) {
+      if (overlap(parseLocalDate(a.startDate), parseLocalDate(a.endDate), parseLocalDate(b.startDate), parseLocalDate(b.endDate))) {
         conflicts.push({ dept: deptA, a, b })
       }
     }
   }
 
-  const today = new Date()
-  const onLeaveToday = active.filter((r) => r.status === 'approved' && new Date(r.startDate) <= today && today <= new Date(r.endDate)).length
+  const today = todayLocal()
+  const onLeaveToday = active.filter((r) => r.status === 'approved' && parseLocalDate(r.startDate) <= today && today <= parseLocalDate(r.endDate)).length
   const pendingCount = requests.filter((r) => r.status === 'pending').length
 
-  const fmtShort = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  const fmtShort = (d) => parseLocalDate(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
   const cellFor = (emp, day) => {
     const date = new Date(y, m, day)
-    const req = emp.requests.find((r) => new Date(r.startDate) <= date && date <= new Date(r.endDate))
+    const req = emp.requests.find((r) => parseLocalDate(r.startDate) <= date && date <= parseLocalDate(r.endDate))
     if (!req) return null
     return req.status === 'approved' ? 'bg-green-500' : 'bg-yellow-400'
   }

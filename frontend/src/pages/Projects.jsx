@@ -79,9 +79,7 @@ export default function Projects({ user, onLogout, projects = [] }) {
           canViewSensitive={canViewSensitive}
           onClose={() => setSelectedEmployee(null)}
           onViewEmployee={setSelectedEmployee}
-          onAddDependent={() => {}}
-          onAddAccomplishment={() => {}}
-          onVerifyAccomplishment={() => {}}
+          readOnly
         />
       )}
     </div>

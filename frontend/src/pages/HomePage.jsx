@@ -6,6 +6,7 @@ import {
   ANNOUNCEMENTS, COMPANY_UPDATES, RECENT_PROJECTS, TEAM_MEMBERS,
   QUICK_LINKS, QUICK_ACTIONS, MODULES,
 } from '../data/dashboardData'
+import { parseLocalDate, todayLocal } from '../utils/date'
 
 const buildDateLabel = __BUILD_DATE__
   ? new Date(__BUILD_DATE__).toLocaleString('en-AE', { dateStyle: 'medium', timeStyle: 'short' })
@@ -32,14 +33,14 @@ export default function HomePage({ user, onLogout, holidays = [] }) {
 
   // Only HR-approved holidays reach employees; pending ones (awaiting moon sighting) stay hidden
   const upcomingHolidays = holidays
-    .filter((h) => h.status === 'approved' && new Date(h.endDate || h.date) >= new Date())
+    .filter((h) => h.status === 'approved' && parseLocalDate(h.endDate || h.date) >= todayLocal())
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 4)
 
   const fmtHoliday = (h) => {
     const opts = { day: 'numeric', month: 'short' }
-    const start = new Date(h.date).toLocaleDateString('en-GB', opts)
-    return h.endDate ? `${start} – ${new Date(h.endDate).toLocaleDateString('en-GB', opts)}` : start
+    const start = parseLocalDate(h.date).toLocaleDateString('en-GB', opts)
+    return h.endDate ? `${start} – ${parseLocalDate(h.endDate).toLocaleDateString('en-GB', opts)}` : start
   }
 
   useEffect(() => {

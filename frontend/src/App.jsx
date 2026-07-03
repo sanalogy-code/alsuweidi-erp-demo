@@ -8,6 +8,7 @@ import Projects from './pages/Projects'
 import ComingSoon from './pages/ComingSoon'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
 import { PROJECTS } from './data/projectsData'
+import { INITIAL_DEALS } from './data/crmData'
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -18,6 +19,9 @@ export default function App() {
   const [holidays, setHolidays] = useState(PUBLIC_HOLIDAYS)
   // Lifted so a project created from a won CRM deal exists when the Projects page mounts
   const [projects, setProjects] = useState(PROJECTS)
+  // Lifted so deal ids never reset and get reused across CRM remounts — a reused id
+  // would make the won-deal card link to another session's project via dealId
+  const [deals, setDeals] = useState(INITIAL_DEALS)
   const navigate = useNavigate()
 
   const addProject = (project) => {
@@ -46,7 +50,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
-      <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} />} />
+      <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
       <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} />} />
       <Route path="/marketing" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="marketing" />} />

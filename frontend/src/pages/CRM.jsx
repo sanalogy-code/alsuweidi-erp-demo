@@ -15,14 +15,13 @@ import ContactDetailModal from '../components/crm/ContactDetailModal'
 import CompanyEditModal from '../components/crm/CompanyEditModal'
 import DealEditModal from '../components/crm/DealEditModal'
 import ExportContactsModal from '../components/crm/ExportContactsModal'
-import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_DEALS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
+import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
 
-export default function CRM({ user, onLogout, projects = [], onAddProject }) {
+export default function CRM({ user, onLogout, projects = [], onAddProject, deals, setDeals }) {
   const navigate = useNavigate()
   const [projectDeal, setProjectDeal] = useState(null)
   const [companies, setCompanies] = useState(INITIAL_COMPANIES)
   const [contacts, setContacts] = useState(INITIAL_CONTACTS)
-  const [deals, setDeals] = useState(INITIAL_DEALS)
   const [tasks, setTasks] = useState(INITIAL_TASKS)
   const [interactions, setInteractions] = useState(INITIAL_INTERACTIONS)
 

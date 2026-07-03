@@ -9,19 +9,22 @@ export default function LeaveRequestModal({ employee, onClose, onSubmit }) {
   const [reason, setReason] = useState('')
 
   const calculateDays = () => {
-    if (!startDate || !endDate) return 0
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-    const diffTime = Math.abs(end - start)
+    if (!startDate || !endDate || endDate < startDate) return 0
+    const diffTime = new Date(endDate) - new Date(startDate)
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     return diffDays
   }
 
   const days = calculateDays()
+  const invertedRange = startDate && endDate && endDate < startDate
 
   const handleSubmit = () => {
     if (!startDate || !endDate) {
       alert('Please select start and end dates')
+      return
+    }
+    if (endDate < startDate) {
+      alert('End date must be on or after the start date')
       return
     }
     onSubmit({
@@ -71,6 +74,7 @@ export default function LeaveRequestModal({ employee, onClose, onSubmit }) {
             <input
               type="date"
               value={endDate}
+              min={startDate || undefined}
               onChange={(e) => setEndDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-brand"
             />
@@ -80,6 +84,11 @@ export default function LeaveRequestModal({ employee, onClose, onSubmit }) {
         {days > 0 && (
           <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
             <div className="text-sm font-medium text-blue-900">{days} day(s)</div>
+          </div>
+        )}
+        {invertedRange && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3">
+            <div className="text-sm font-medium text-red-700">End date must be on or after the start date</div>
           </div>
         )}
 

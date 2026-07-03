@@ -72,7 +72,9 @@ function IdentityBlock({ title, passport, visa, emiratesId, nationality }) {
   )
 }
 
-export default function EmployeeDetailModal({ employee, employees = [], user, isHrStaff = false, onClose, onViewEmployee, onAddDependent, onAddAccomplishment, onVerifyAccomplishment, canViewSensitive = false }) {
+// readOnly: rendered from a context that can't persist employee edits (e.g. the Projects
+// team panel) — hide the add/verify actions instead of silently discarding input.
+export default function EmployeeDetailModal({ employee, employees = [], user, isHrStaff = false, onClose, onViewEmployee, onAddDependent, onAddAccomplishment, onVerifyAccomplishment, canViewSensitive = false, readOnly = false }) {
   const [detailTab, setDetailTab] = useState('info')
   const [addingDependent, setAddingDependent] = useState(false)
   const [depForm, setDepForm] = useState(EMPTY_DEPENDENT_FORM)
@@ -82,7 +84,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
   // Employees maintain their own accomplishments (courses, certificates) — self-added entries
   // stay flagged until HR verifies them. HR can add or verify for anyone.
   const isSelf = !!user?.username && employee?.name?.toLowerCase() === user.username.toLowerCase()
-  const canEditAccomplishments = isSelf || isHrStaff
+  const canEditAccomplishments = (isSelf || isHrStaff) && !readOnly
 
   if (!employee) return null
 
@@ -121,7 +123,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
         ? { provider: depForm.insuranceProvider, policyNumber: depForm.insurancePolicyNumber || null, expiryDate: depForm.insuranceExpiry || null }
         : null,
     }
-    onAddDependent(employee.id, dependent)
+    onAddDependent?.(employee.id, dependent)
     resetDepForm()
   }
 
@@ -264,7 +266,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500">Dependents ({employee.dependents.length})</h3>
-              {!addingDependent && (
+              {!addingDependent && !readOnly && (
                 <button
                   onClick={() => { setDepForm({ ...EMPTY_DEPENDENT_FORM, nationality: employee.nationality || '', passportCountry: employee.nationality || '' }); setAddingDependent(true) }}
                   className="text-xs font-medium text-brand hover:underline flex items-center gap-1"
@@ -415,7 +417,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
                 })
                 setAddingAcc(false)
               }}
-              className="bg-blue-50 border border-blue-200 rounded-lg p-3 grid grid-cols-4 gap-2 items-end"
+              className="bg-blue-50 border border-blue-200 rounded-lg p-3 grid grid-cols-5 gap-2 items-end"
             >
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
@@ -431,12 +433,16 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
                 <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
                 <input required type="date" value={accForm.date} onChange={(e) => setAccForm({ ...accForm, date: e.target.value })} className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Expiry (optional)</label>
+                <input type="date" value={accForm.expiryDate} min={accForm.date || undefined} onChange={(e) => setAccForm({ ...accForm, expiryDate: e.target.value })} className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
+              </div>
               <div className="flex gap-1">
                 <button type="submit" className="flex-1 bg-brand text-white py-1.5 rounded-md text-xs font-medium hover:bg-brand-dark">Add</button>
                 <button type="button" onClick={() => setAddingAcc(false)} className="flex-1 bg-gray-100 text-gray-700 py-1.5 rounded-md text-xs font-medium hover:bg-gray-200">Cancel</button>
               </div>
               {!isHrStaff && (
-                <div className="col-span-4 text-xs text-gray-500">Self-added entries show as "Pending HR verification" until HR confirms — no approval workflow needed to submit.</div>
+                <div className="col-span-5 text-xs text-gray-500">Self-added entries show as "Pending HR verification" until HR confirms — no approval workflow needed to submit.</div>
               )}
             </form>
           )}
@@ -459,7 +465,7 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
                     Expires: {new Date(acc.expiryDate).toLocaleDateString('en-AE')}
                   </div>
                 )}
-                {acc.verified === false && isHrStaff && (
+                {acc.verified === false && isHrStaff && !readOnly && (
                   <button
                     onClick={() => onVerifyAccomplishment?.(employee.id, idx)}
                     className="mt-2 text-xs font-medium text-green-700 hover:underline"

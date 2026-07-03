@@ -25,6 +25,7 @@ import CareersTab from '../components/hr/CareersTab'
 import AttendanceTab from '../components/hr/AttendanceTab'
 import { HR_STATS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS, COMPLAINTS, OPEN_POSITIONS, CANDIDATES, ANNUAL_LEAVE_ENTITLEMENT } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
+import { parseLocalDate, todayLocal } from '../utils/date'
 
 export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) {
   const [view, setView] = useState('myhr')
@@ -61,7 +62,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
     complaints.filter((c) => !c.anonymous && (c.submittedBy || '').toLowerCase() === myName && c.status !== 'resolved').length
 
   const nextHoliday = holidays
-    .filter((h) => h.status === 'approved' && new Date(h.endDate || h.date) >= new Date())
+    .filter((h) => h.status === 'approved' && parseLocalDate(h.endDate || h.date) >= todayLocal())
     .sort((a, b) => a.date.localeCompare(b.date))[0]
 
   const NAV_MAIN = [
@@ -255,8 +256,8 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays }) 
                     <div>
                       <div className="text-sm font-semibold text-gray-800">Next public holiday: {nextHoliday.name}</div>
                       <div className="text-xs text-gray-500">
-                        {new Date(nextHoliday.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}
-                        {nextHoliday.endDate && ` – ${new Date(nextHoliday.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`}
+                        {parseLocalDate(nextHoliday.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}
+                        {nextHoliday.endDate && ` – ${parseLocalDate(nextHoliday.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}`}
                         {nextHoliday.note && ` • ${nextHoliday.note}`}
                       </div>
                     </div>
