@@ -38,6 +38,25 @@ IT workspace → Assets → Add asset.)
   payroll banner flags unsubmitted employees ("blocks WPS" per policy — real enforcement Phase 2).
   Home quick actions now deep-link (Fill Timesheet, Request Leave/Certificate, Hardware Request).
   PM/manager approval chain still a pending decision — HR approves for now.
+- [ ] **Timesheets: faster entry** (3 Jul) — filling the week is fully manual today. Add
+  faster paths: "copy last week" button, remember my usual projects, and/or a default row set
+  per employee. (Sana: "employee to add manually — or if there is a faster way".)
+- [ ] **Timesheets: line-manager approval** (3 Jul — decision made) — approval moves from HR to
+  the **line manager** (`managerId` already exists on every employee, so the chain is derivable).
+  Manager sees their team's submitted weeks; HR keeps an oversight view. This answers the
+  "who approves" open question — supersedes the HR-only interim.
+- [ ] **Timesheets: overhead codes & clearer labels** (3 Jul) — "Code" is unclear. Hours aren't
+  always project-linked: expand the non-project buckets to real overhead categories (Admin, IT,
+  Marketing, General, Leave, Training…) and label the column so nobody has to ask what a code is.
+- [ ] **Timesheets: reminder + ERP lockout** (3 Jul — decision made) — if the week isn't filled,
+  the employee gets a reminder on the **last working day of the week**, and their **ERP access is
+  blocked** until the timesheet is submitted (demo: a blocking modal on login/navigation; real
+  notification needs Phase 2 email/notifications).
+- [ ] **New roles: IT and Admin staff** (3 Jul) — add an **IT** role (owns the IT & Assets
+  workspace instead of piggybacking on HR/admin/management) and an **Admin staff** role (office
+  administration — distinct from the current `admin` system role). Re-map workspace gating
+  accordingly (`SENSITIVE_VIEW_ROLES` etc. — worth a small role-matrix pass so each workspace
+  has an explicit owner role).
 - [ ] **IT: add license** (3 Jul) — the license registry is read-only; assets already have "Add
   asset" but licenses need the same (name, vendor, seats, yearly cost, renewal date) so IT can
   register new subscriptions without a code change.
