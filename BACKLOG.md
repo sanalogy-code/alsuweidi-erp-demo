@@ -49,8 +49,16 @@ one-off small changes. Add items here as they come up; strike them when they shi
 
 - [ ] **Project Management module** — full projects with tasks, dates, assignments, late-flag,
   workflows. Depends on the PM role and project structure in the real system. (Mentioned 3 Jul.)
+- [ ] **Marketing module** — branding materials library (downloadable), portfolio management (projects
+  with last-updated dates), project picker for proposals (auto-selected + manually curated),
+  confidentiality flagging (mark projects as confidential → hide from portfolio or redact details),
+  staff/org-chart export (CVs + headshots + possibly downloadable as slides). Media storage (photos,
+  perspectives, variations) flagged as "uncertain scope" — can grow large quickly; decision pending.
+- [ ] **Project photo workflows** — projects cannot be marked complete/closed without marketing
+  approval and GOOD project photography (not site-engineer mobile snaps). Links to project closure
+  state machine.
 - [ ] RBAC enforced server-side (the UI gating is the spec)
-- [ ] Real document storage (uploads are file-name-only today)
+- [ ] Real document storage (uploads are file-name-only today); photo/media storage for projects + marketing
 - [ ] Attendance device feed + project-linked weekly timesheets
 - [ ] Email/notifications, Zoho Sign integration, global search
 - [ ] Appraisals module (awaiting spec: cycle, reviewers, rating model)
