@@ -4,11 +4,40 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-03 (night — Batch 2 shipped: HR direct entry, project create/edit/advance,
-self-service IDs, IT & Assets module)
+**Last updated:** 2026-07-03 (late night — Batch 3 shipped: Marketing module. New items captured
+from Sana's review: confidential hardening, inbox layout, portfolio search, company fields,
+subconsultants, lessons learned, timesheets. Note: "IT should add assets" — already exists,
+IT workspace → Assets → Add asset.)
 
 ## Next batch (UI demo work, ready to build)
 
+- [ ] **Confidential flag hardening** (3 Jul) — too easy to toggle from Marketing portfolio today.
+  New workflow: the PM decides confidentiality when the project starts (required field on
+  create/at first stage advance — **cannot advance without deciding**). Marketing sees the flag
+  but changing it after that should be deliberate (confirm dialog at minimum).
+- [ ] **Task/inbox row layout polish, all modules** (3 Jul) — HR inbox, Marketing inbox, IT queue,
+  PRO tasks: nice design but hard to quickly scan type / age / action / description. Align into
+  clearer columns (fixed-width type chip + description, right-aligned age + action) so the eye
+  can run down each column.
+- [ ] **Marketing portfolio search** (3 Jul) — filter/search by project TYPE / industry
+  (mainFunction), size (built-up area bands), completion status, and scope — not just the current
+  type/status dropdowns.
+- [ ] **Company details fields** (3 Jul) — CRM companies get: website, head office location,
+  size (employee band), relationship type (Client / Contractor / Developer / Partner /
+  Subconsultant / Government…). Relationship type also answers the naming question below.
+- [ ] **Subconsultant tracking** (3 Jul) — track subconsultants: what they do (disciplines),
+  contacts/people, last worked with (per project), notes. Likely = CRM company with
+  relationshipType 'Subconsultant' + a per-project link (which project, what scope, how did it
+  go) rather than a separate module.
+- [ ] **Lessons learned & notes** (3 Jul) — lessons learned per project (list on the project
+  record); "keep in mind" notes on companies/clients/people (CRM + subconsultants). Same
+  free-text + date + author shape everywhere.
+- [x] ~~Timesheets~~ — **Shipped Batch 4 (3 Jul night):** My timesheet in HR (Sun–Sat week grid,
+  hours per project code per day, draft/submit, resubmit after rejection), Timesheet approvals in
+  HR workspace (queue with per-day breakdown, approve/reject with reason, missing-last-week list),
+  payroll banner flags unsubmitted employees ("blocks WPS" per policy — real enforcement Phase 2).
+  Home quick actions now deep-link (Fill Timesheet, Request Leave/Certificate, Hardware Request).
+  PM/manager approval chain still a pending decision — HR approves for now.
 - [ ] **PRO dashboard & visibility** — right now PRO sees only its task queue. Add a dashboard
   showing task velocity (open/done per week), overdue tasks, and maybe client/project breakdowns
   so the PRO company can run itself. (Depends on decision: is PRO a separate tenant / org or just
@@ -34,6 +63,12 @@ self-service IDs, IT & Assets module)
   radar (seats, yearly cost, 60-day renewal flags).
 
 ## Needs a decision from Sana / management before building
+
+- [ ] **"Companies" naming** (3 Jul) — clients are rarely individuals, and companies aren't always
+  clients (partners, subconsultants, contractors…). "Clients" doesn't fit either. Options:
+  keep "Companies" + a prominent relationship-type field/filter, or rename to something neutral
+  ("Organizations", "Directory"). Individuals-as-clients: allow a company record flagged
+  `kind: individual`? Decide before the CRM relabel.
 
 - [ ] **HR document review** — new employees upload documents in the self-service wizard; HR sees
   them in the review modal (read-only). But **can HR edit/delete/request re-upload if a document is

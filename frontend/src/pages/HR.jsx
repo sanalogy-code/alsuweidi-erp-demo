@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   ArrowRight, Users, Building2, UserPlus, List, Network, Award, AlertTriangle,
   Home, ClipboardList, Briefcase, GraduationCap, Inbox, CalendarRange,
   CalendarClock, Fingerprint, Banknote, CalendarDays, Plane, FileText, ShieldAlert,
-  UserMinus, Landmark, LineChart, TrendingUp, FileUser,
+  UserMinus, Landmark, LineChart, TrendingUp, FileUser, Clock, ClipboardCheck,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
@@ -31,15 +32,20 @@ import AddEmployeeModal from '../components/hr/AddEmployeeModal'
 import OffboardingTab from '../components/hr/OffboardingTab'
 import ProTasksView from '../components/hr/ProTasksView'
 import StaffPlanningTab from '../components/hr/StaffPlanningTab'
+import MyTimesheet from '../components/hr/MyTimesheet'
+import TimesheetApprovals from '../components/hr/TimesheetApprovals'
 import {
   HR_STATS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS, COMPLAINTS, OPEN_POSITIONS, CANDIDATES,
   ANNUAL_LEAVE_ENTITLEMENT, NEW_JOINERS, OFFBOARDINGS, PRO_TASKS, STAFF_PLANS, REFERRAL_BONUS_AED,
 } from '../data/hrData'
+import { TIMESHEETS, weekStartOf, addDays, toLocalISO } from '../data/timesheetData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 import { parseLocalDate, todayLocal } from '../utils/date'
 
 export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [], onEmployeeAdded }) {
-  const [view, setView] = useState('myhr')
+  const location = useLocation()
+  // Home-page quick actions deep-link straight to a view (e.g. Fill Timesheet)
+  const [view, setView] = useState(location.state?.view || 'myhr')
   const [peopleView, setPeopleView] = useState('list')
   const [plannerView, setPlannerView] = useState('calendar')
   const [employees, setEmployees] = useState(EMPLOYEES)
@@ -52,6 +58,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
   const [offboardings, setOffboardings] = useState(OFFBOARDINGS)
   const [proTasks, setProTasks] = useState(PRO_TASKS)
   const [staffPlans, setStaffPlans] = useState(STAFF_PLANS)
+  const [timesheets, setTimesheets] = useState(TIMESHEETS)
   const [referralBonuses, setReferralBonuses] = useState([])
   const [reviewJoiner, setReviewJoiner] = useState(null)
   const [showAddEmployee, setShowAddEmployee] = useState(false)
@@ -92,9 +99,26 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     .filter((h) => h.status === 'approved' && parseLocalDate(h.endDate || h.date) >= todayLocal())
     .sort((a, b) => a.date.localeCompare(b.date))[0]
 
+  // Timesheets: upsert my week; count submitted weeks for the approvals badge;
+  // count last week's non-submitters for the payroll hold flag.
+  const saveTimesheet = (ts) => {
+    if (ts.id) setTimesheets(timesheets.map((t) => (t.id === ts.id ? ts : t)))
+    else setTimesheets([...timesheets, { ...ts, id: Math.max(...timesheets.map((t) => t.id), 0) + 1 }])
+  }
+  const actionTimesheet = (ts) => {
+    setTimesheets(timesheets.map((t) => (t.id === ts.id ? { ...ts, approvedBy: ts.status === 'approved' ? user?.username : null } : t)))
+  }
+  const submittedTimesheets = timesheets.filter((t) => t.status === 'submitted').length
+  const lastWeekISO = toLocalISO(addDays(weekStartOf(new Date()), -7))
+  const timesheetHold = canViewSensitive
+    ? employees.filter((e) => e.status === 'active' &&
+        !timesheets.some((t) => t.employeeId === e.id && t.weekStart === lastWeekISO && (t.status === 'submitted' || t.status === 'approved'))).length
+    : 0
+
   const NAV_MAIN = [
     { key: 'myhr', label: 'My HR', icon: Home },
     { key: 'people', label: 'People', icon: Users },
+    { key: 'mytimesheet', label: 'My timesheet', icon: Clock },
     { key: 'requests', label: 'My requests', icon: ClipboardList, badge: myPendingCount },
     { key: 'careers', label: 'Careers', icon: Briefcase },
     ...(isNewHire ? [
@@ -108,6 +132,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     ...(canViewSensitive ? [
       { key: 'leaveplanner', label: 'Leave planner', icon: CalendarRange },
       { key: 'renewals', label: 'Renewals', icon: CalendarClock, badge: overdueCount },
+      { key: 'timesheets', label: 'Timesheets', icon: ClipboardCheck, badge: submittedTimesheets },
       { key: 'attendance', label: 'Attendance', icon: Fingerprint },
       { key: 'payroll', label: 'Payroll', icon: Banknote },
       { key: 'staffplan', label: 'Staff planning', icon: LineChart },
@@ -545,9 +570,27 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
 
           {view === 'renewals' && canViewSensitive && <RenewalsReport employees={employees} onViewEmployee={setSelectedEmployee} />}
 
+          {view === 'mytimesheet' && (
+            <MyTimesheet
+              employee={matchedEmployee}
+              projects={projects}
+              timesheets={timesheets}
+              onSave={saveTimesheet}
+            />
+          )}
+
+          {view === 'timesheets' && canViewSensitive && (
+            <TimesheetApprovals
+              timesheets={timesheets}
+              employees={employees}
+              projects={projects}
+              onAction={actionTimesheet}
+            />
+          )}
+
           {view === 'attendance' && canViewSensitive && <AttendanceTab employees={employees} />}
 
-          {view === 'payroll' && canViewSensitive && <PayrollTab employees={employees} referralBonuses={referralBonuses} />}
+          {view === 'payroll' && canViewSensitive && <PayrollTab employees={employees} referralBonuses={referralBonuses} timesheetHold={timesheetHold} onViewTimesheets={() => setView('timesheets')} />}
 
           {view === 'holidays' && isHrStaff && <HolidaysTab holidays={holidays} onUpdateHolidays={onUpdateHolidays} />}
         </main>

@@ -104,19 +104,28 @@ export default function HomePage({ user, onLogout, holidays = [] }) {
           </div>
         </div>
 
-        {/* Quick actions */}
+        {/* Quick actions — deep-link into the right module view */}
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Quick actions</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {QUICK_ACTIONS.map((a) => (
-              <button
-                key={a.label}
-                className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:border-brand hover:shadow-md transition"
-              >
-                <div className="text-2xl mb-2">{a.icon}</div>
-                <div className="text-xs font-medium text-gray-700">{a.label}</div>
-              </button>
-            ))}
+            {QUICK_ACTIONS.map((a) => {
+              const target = {
+                'Fill Timesheet': ['/hr', { view: 'mytimesheet' }],
+                'Request Leave': ['/hr', { view: 'requests' }],
+                'Request Certificate': ['/hr', { view: 'requests' }],
+                'Hardware Request': ['/it', null],
+              }[a.label]
+              return (
+                <button
+                  key={a.label}
+                  onClick={() => target && navigate(target[0], target[1] ? { state: target[1] } : undefined)}
+                  className="bg-white border border-gray-200 rounded-lg p-4 text-center hover:border-brand hover:shadow-md transition"
+                >
+                  <div className="text-2xl mb-2">{a.icon}</div>
+                  <div className="text-xs font-medium text-gray-700">{a.label}</div>
+                </button>
+              )
+            })}
           </div>
         </div>
 
@@ -181,7 +190,10 @@ export default function HomePage({ user, onLogout, holidays = [] }) {
             <div className="bg-gradient-to-br from-brand to-brand-dark rounded-lg shadow-md p-5 text-white">
               <div className="text-xs uppercase tracking-wide text-white/80 mb-1">Current week</div>
               <div className="text-3xl font-bold mb-3">38.5h</div>
-              <button className="w-full bg-white text-brand font-semibold text-sm py-2 rounded-lg hover:scale-[1.02] transition">
+              <button
+                onClick={() => navigate('/hr', { state: { view: 'mytimesheet' } })}
+                className="w-full bg-white text-brand font-semibold text-sm py-2 rounded-lg hover:scale-[1.02] transition"
+              >
                 Fill this week →
               </button>
             </div>

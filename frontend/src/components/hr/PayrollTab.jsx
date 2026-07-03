@@ -97,7 +97,7 @@ function PayslipModal({ row, month, onClose }) {
   )
 }
 
-export default function PayrollTab({ employees, referralBonuses = [] }) {
+export default function PayrollTab({ employees, referralBonuses = [], timesheetHold = 0, onViewTimesheets }) {
   const [month, setMonth] = useState(PAYROLL_MONTHS[0].value)
   const [statusByMonth, setStatusByMonth] = useState(
     Object.fromEntries(PAYROLL_MONTHS.map((m) => [m.value, m.status]))
@@ -118,6 +118,17 @@ export default function PayrollTab({ employees, referralBonuses = [] }) {
 
   return (
     <div className="space-y-6">
+      {timesheetHold > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between gap-3 text-sm">
+          <span className="text-amber-800">
+            <span className="font-semibold">{timesheetHold} employee{timesheetHold > 1 ? 's have' : ' has'} unsubmitted timesheets for last week</span>
+            {' '}— per policy, unsubmitted timesheets block payroll processing for those employees.
+          </span>
+          {onViewTimesheets && (
+            <button onClick={onViewTimesheets} className="text-xs font-medium text-brand hover:underline shrink-0">View timesheets</button>
+          )}
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-sm font-semibold text-gray-800 mb-1">Payroll</h2>
