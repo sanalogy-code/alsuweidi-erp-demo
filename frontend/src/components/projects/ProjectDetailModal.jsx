@@ -26,7 +26,7 @@ function Field({ label, children }) {
   )
 }
 
-export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee, onUpdateProject }) {
+export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee, onUpdateProject, onAddMarketingTask }) {
   const [tab, setTab] = useState('overview')
   const [editing, setEditing] = useState(false)
   const [editingProgress, setEditingProgress] = useState(false)
@@ -44,7 +44,17 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
   const stageIdx = project.stagesInvolved.indexOf(project.currentStage)
   const moveStage = (delta) => {
     const next = project.stagesInvolved[stageIdx + delta]
-    if (next) onUpdateProject({ ...project, currentStage: next })
+    if (!next) return
+    onUpdateProject({ ...project, currentStage: next })
+    // Reaching the final stage puts completion in sight — queue the professional
+    // photography task for Marketing now (it blocks completion later).
+    if (delta > 0 && stageIdx + delta === project.stagesInvolved.length - 1 && !project.photosApproved) {
+      onAddMarketingTask?.({
+        type: 'project_photos', relatedKind: 'project', relatedId: project.id,
+        relatedName: `${project.projectNo} — ${project.name}`,
+        notes: `Reached ${next} — arrange professional photography before completion.`,
+      })
+    }
   }
 
   const saveProgress = () => {
@@ -123,6 +133,26 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
       {tab === 'overview' && (
         <div className="space-y-5">
           {project.description && <p className="text-sm text-gray-700">{project.description}</p>}
+
+          {/* Marketing sign-off — description + professional photos gate completion */}
+          <div className={`rounded-lg p-3 border ${project.marketingDescription && project.photosApproved ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <span className="text-xs uppercase tracking-wide font-semibold text-gray-500">Marketing sign-off</span>
+              <div className="flex items-center gap-3 text-xs">
+                <span className={project.marketingDescription ? 'text-green-700 font-medium' : 'text-amber-700'}>
+                  {project.marketingDescription ? '✓ Description' : '○ Description pending'}
+                </span>
+                <span className={project.photosApproved ? 'text-green-700 font-medium' : 'text-amber-700'}>
+                  {project.photosApproved ? '✓ Photos approved' : '○ Photos pending'}
+                </span>
+              </div>
+            </div>
+            {project.marketingDescription ? (
+              <p className="text-xs text-gray-600">{project.marketingDescription}</p>
+            ) : (
+              <p className="text-xs text-gray-500">Marketing writes the portfolio description and approves professional photography — the project cannot be marked Completed without both.</p>
+            )}
+          </div>
           <div className="grid grid-cols-3 gap-4">
             <Field label="Main Function">{project.mainFunction}</Field>
             <Field label="Contract Type">{project.contractType}</Field>
@@ -296,6 +326,7 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
           canViewSensitive={canViewSensitive}
           onClose={() => setEditing(false)}
           onSave={onUpdateProject}
+          onAddMarketingTask={onAddMarketingTask}
         />
       )}
     </Modal>

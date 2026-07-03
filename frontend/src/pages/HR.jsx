@@ -3,7 +3,7 @@ import {
   ArrowRight, Users, Building2, UserPlus, List, Network, Award, AlertTriangle,
   Home, ClipboardList, Briefcase, GraduationCap, Inbox, CalendarRange,
   CalendarClock, Fingerprint, Banknote, CalendarDays, Plane, FileText, ShieldAlert,
-  UserMinus, Landmark, LineChart, TrendingUp,
+  UserMinus, Landmark, LineChart, TrendingUp, FileUser,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
@@ -13,6 +13,7 @@ import LeaveRequestModal from '../components/hr/LeaveRequestModal'
 import LeaveRequestsList from '../components/hr/LeaveRequestsList'
 import LeaveDashboard from '../components/hr/LeaveDashboard'
 import AccomplishmentsSearch from '../components/hr/AccomplishmentsSearch'
+import CvSearch from '../components/hr/CvSearch'
 import OrgChart from '../components/hr/OrgChart'
 import RenewalsReport, { buildRenewalItems } from '../components/hr/RenewalsReport'
 import CertificateRequestModal from '../components/hr/CertificateRequestModal'
@@ -37,7 +38,7 @@ import {
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 import { parseLocalDate, todayLocal } from '../utils/date'
 
-export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [] }) {
+export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [], onEmployeeAdded }) {
   const [view, setView] = useState('myhr')
   const [peopleView, setPeopleView] = useState('list')
   const [plannerView, setPlannerView] = useState('calendar')
@@ -156,8 +157,16 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     }
   }
 
+  // Both paths that create an employee record notify Marketing (headshot + welcome email tasks).
+  const addEmployeeRecord = (record) => {
+    const created = { ...record, id: Math.max(...employees.map((e) => e.id), 0) + 1 }
+    setEmployees([...employees, created])
+    onEmployeeAdded?.(created)
+    return created
+  }
+
   const handleApproveJoiner = (joinerId, employeeRecord) => {
-    setEmployees([...employees, { ...employeeRecord, id: Math.max(...employees.map((e) => e.id), 0) + 1 }])
+    addEmployeeRecord(employeeRecord)
     setNewJoiners(newJoiners.map((j) => (j.id === joinerId ? { ...j, status: 'approved' } : j)))
   }
 
@@ -408,11 +417,20 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
                   >
                     <Award size={13} /> Accomplishments
                   </button>
+                  {isHrStaff && (
+                    <button
+                      onClick={() => setPeopleView('cvs')}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition ${peopleView === 'cvs' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      <FileUser size={13} /> CV search
+                    </button>
+                  )}
                 </div>
               </div>
               {peopleView === 'list' && <EmployeeList employees={employees} onViewEmployee={setSelectedEmployee} />}
               {peopleView === 'chart' && <OrgChart employees={employees} onViewEmployee={setSelectedEmployee} />}
               {peopleView === 'skills' && <AccomplishmentsSearch employees={employees} />}
+              {peopleView === 'cvs' && isHrStaff && <CvSearch employees={employees} onViewEmployee={setSelectedEmployee} />}
             </div>
           )}
 
@@ -584,7 +602,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
         <AddEmployeeModal
           employees={employees}
           onClose={() => setShowAddEmployee(false)}
-          onAdd={(record) => setEmployees([...employees, { ...record, id: Math.max(...employees.map((e) => e.id), 0) + 1 }])}
+          onAdd={addEmployeeRecord}
         />
       )}
 

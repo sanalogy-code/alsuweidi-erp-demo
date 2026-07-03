@@ -67,11 +67,17 @@ export const DESIGN_FINANCIAL_STATUS = [
 export const PAY_STATUS = ['Not Due', 'Invoices Paid', 'Unsettled', 'Completed', 'N/A']
 
 // dpmId / cpmId reference hrData EMPLOYEES; companyId references crmData INITIAL_COMPANIES (nullable).
+//
+// Marketing fields (absent = default): `marketingDescription` (string|null — written by
+// Marketing, required before a project can be marked Completed), `photosApproved`
+// (bool — professional photography signed off by Marketing, also blocks completion),
+// `confidential` (bool — hide from portfolio / proposals).
 export const PROJECTS = [
   {
     id: 1, projectNo: 'P-2701', name: 'Harbour Point Medical Centre', employer: 'Al Reem Development Co', companyId: null, owner: 'Al Reem Development Co',
     type: 'Buildings', mainFunction: 'Healthcare', location: 'Abu Dhabi', sector: 'Al Reem Island', plot: 'RM-114', builtupArea: 28500,
     description: 'Four-storey outpatient medical centre with day-surgery unit and rooftop MEP plant.',
+    marketingDescription: 'A 28,500 sqm healthcare destination on Al Reem Island: day-surgery suites, imaging, and outpatient clinics designed around daylight-filled waiting courtyards, delivered in BIM from concept through supervision.',
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 4200000, constructionCost: 165000000, contractorName: 'Emirates BuildCo LLC',
     dpmId: 7, cpmId: 10,
@@ -105,6 +111,7 @@ export const PROJECTS = [
     id: 4, projectNo: 'P-2645', name: 'Fabrication Plant Extension', employer: 'Gulf Steel Fabrication', companyId: 6, owner: 'Gulf Steel Fabrication',
     type: 'Buildings', mainFunction: 'Industrial', location: 'Sharjah', sector: 'SAIF Zone', plot: 'SZ-77', builtupArea: 12800,
     description: 'Heavy fabrication bay extension with 40T crane runway and new substation.',
+    confidential: true,
     generalStatus: 'In Progress', fund: 'Bank-Other', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 980000, constructionCost: 34000000, contractorName: null,
     dpmId: 3, cpmId: null,
@@ -116,6 +123,7 @@ export const PROJECTS = [
     id: 5, projectNo: 'P-2670', name: 'Saadiyat Villas — Cluster 4', employer: 'Emaar Properties', companyId: 4, owner: 'Emaar Properties',
     type: 'Buildings', mainFunction: 'Residential Communities', location: 'Abu Dhabi', sector: 'Saadiyat Island', plot: 'SD-C4', builtupArea: 41200,
     description: '38 villas across three prototypes with community landscaping and entry pavilion.',
+    marketingDescription: 'Thirty-eight villas across three prototypes on Saadiyat Island, unified by native-planting landscaping and a sculptural entry pavilion — full design and supervision scope for Emaar Properties.',
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 5100000, constructionCost: 210000000, contractorName: 'Coastline Contracting',
     dpmId: 7, cpmId: 10,
@@ -193,6 +201,7 @@ export const PROJECTS = [
     id: 12, projectNo: 'P-2597', name: 'Corniche Tower Facade Retrofit', employer: 'Emaar Properties', companyId: 4, owner: 'Emaar Properties',
     type: 'Buildings', mainFunction: 'Offices Building', location: 'Abu Dhabi', sector: 'Corniche', plot: 'CN-12', builtupArea: 0,
     description: 'Facade condition assessment and retrofit design for a 24-storey office tower.',
+    marketingDescription: 'Condition assessment and full retrofit design for a 24-storey Corniche office tower — thermal performance, safety, and a refreshed identity delivered without decanting the building.', photosApproved: true,
     generalStatus: 'Completed', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 510000, constructionCost: 12500000, contractorName: 'Skyline Facades',
     dpmId: 2, cpmId: null,

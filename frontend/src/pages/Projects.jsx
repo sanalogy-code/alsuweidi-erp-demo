@@ -15,7 +15,7 @@ const NAV = [
   { key: 'portfolio', label: 'Portfolio', icon: FolderKanban },
 ]
 
-export default function Projects({ user, onLogout, projects = [], onUpdateProject, onAddProject }) {
+export default function Projects({ user, onLogout, projects = [], onUpdateProject, onAddProject, onAddMarketingTask }) {
   const location = useLocation()
   const [view, setView] = useState('dashboard')
   // CRM's "view project" / "open in Projects" hands over a project id via router state
@@ -87,6 +87,7 @@ export default function Projects({ user, onLogout, projects = [], onUpdateProjec
           onClose={() => setSelectedProject(null)}
           onViewEmployee={(emp) => setSelectedEmployee(emp)}
           onUpdateProject={(p) => { onUpdateProject?.(p); setSelectedProject(p) }}
+          onAddMarketingTask={onAddMarketingTask}
         />
       )}
 

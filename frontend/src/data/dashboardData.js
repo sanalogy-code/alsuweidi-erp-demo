@@ -58,8 +58,7 @@ export const MODULES = [
   { key: 'projects', icon: '🏗️', label: 'Projects', description: 'Design & supervision portfolio', path: '/projects', status: 'live' },
   { key: 'hr', icon: '👥', label: 'HR', description: 'Onboarding, policies & more', path: '/hr', status: 'live' },
   { key: 'it', icon: '🖥️', label: 'IT & Assets', description: 'Hardware requests, assets & licenses', path: '/it', status: 'live' },
-  { key: 'marketing', icon: '📈', label: 'Marketing', description: 'LinkedIn, website & analytics', path: '/marketing', status: 'soon' },
-  { key: 'content', icon: '🗓️', label: 'Content', description: 'Content calendar & collaboration', path: '/content', status: 'soon' },
+  { key: 'marketing', icon: '📈', label: 'Marketing', description: 'Content, portfolio, branding & analytics', path: '/marketing', status: 'live' },
   { key: 'admin', icon: '⚙️', label: 'Admin Center', description: 'Users, roles & permissions', path: '/admin', status: 'soon' },
 ]
 
@@ -79,3 +78,7 @@ export const HR_STAFF_ROLES = ['hr', 'admin']
 // Roles allowed to view sensitive employee data: visa/passport, dependents, compensation,
 // renewals, payroll. HR staff plus top management — nobody else.
 export const SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']
+
+// Marketing workspace (inbox, content calendar, portfolio, proposals, analytics):
+// marketing + top management only. Branding materials are visible to everyone.
+export const MARKETING_VIEW_ROLES = ['marketing', 'management', 'admin']

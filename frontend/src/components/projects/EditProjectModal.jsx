@@ -12,7 +12,8 @@ import {
 const inputCls = 'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand'
 const labelCls = 'block text-xs font-medium text-gray-600 mb-1'
 
-export default function EditProjectModal({ project, employees, canViewSensitive, onClose, onSave }) {
+export default function EditProjectModal({ project, employees, canViewSensitive, onClose, onSave, onAddMarketingTask }) {
+  const [completionBlocked, setCompletionBlocked] = useState(false)
   const [form, setForm] = useState({
     name: project.name,
     employer: project.employer,
@@ -36,9 +37,31 @@ export default function EditProjectModal({ project, employees, canViewSensitive,
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value })
 
+  // A project cannot be marked Completed without Marketing's sign-off: a
+  // marketing description AND approved professional photography. Trying to
+  // complete without them queues the missing tasks in Marketing's inbox.
+  const marketingGate = form.generalStatus === 'Completed' && (!project.marketingDescription || !project.photosApproved)
+
   const handleSave = (e) => {
     e.preventDefault()
     if (!form.name.trim() || !form.employer.trim()) return
+    if (marketingGate) {
+      setCompletionBlocked(true)
+      const relatedName = `${project.projectNo} — ${project.name}`
+      if (!project.marketingDescription) {
+        onAddMarketingTask?.({
+          type: 'marketing_description', relatedKind: 'project', relatedId: project.id, relatedName,
+          notes: 'Completion attempted — description needed before the project can close.',
+        })
+      }
+      if (!project.photosApproved) {
+        onAddMarketingTask?.({
+          type: 'project_photos', relatedKind: 'project', relatedId: project.id, relatedName,
+          notes: 'Completion attempted — professional photos needed before the project can close.',
+        })
+      }
+      return
+    }
     onSave({
       ...project,
       name: form.name.trim(),
@@ -174,6 +197,17 @@ export default function EditProjectModal({ project, employees, canViewSensitive,
           <label className={labelCls}>Description</label>
           <textarea rows={2} value={form.description} onChange={set('description')} className={inputCls} />
         </div>
+
+        {completionBlocked && marketingGate && (
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-xs text-amber-800">
+            <span className="font-semibold">Can't mark Completed yet — Marketing sign-off missing:</span>
+            <ul className="list-disc ml-4 mt-1 space-y-0.5">
+              {!project.marketingDescription && <li>Marketing description not written</li>}
+              {!project.photosApproved && <li>Professional project photos not approved (site snaps don't count)</li>}
+            </ul>
+            <div className="mt-1.5">The missing tasks have been added to Marketing's inbox. Set the status back, or wait for Marketing.</div>
+          </div>
+        )}
 
         <button type="submit" className="w-full bg-brand text-white py-2 rounded-md text-sm font-medium hover:bg-brand-dark mt-2">
           Save changes
