@@ -2,11 +2,13 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-02 (late evening — Projects module live: portfolio + full project record)
+**Last updated:** 2026-07-03 (evening — HR expansion complete: 7 features live, backlog published)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed.
 
-**Phase 1 Status:** Three modules live — CRM, full HR suite, and Projects (portfolio + record; dashboard next). Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md) — headline: **2 working days, 90 commits, AED 0 infrastructure**.
+**Phase 1 Status:** Three modules live — CRM, full HR suite (+ 7 new features in this session), and Projects (portfolio + record; dashboard next). Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md) — headline: **~3 working days total, 100+ commits, AED 0 infrastructure**. 
+
+**Latest batch (3 Jul 2026):** 7 HR features shipped in one session: new-employee self-service wizard + HR review with auto-fill policy defaults, AED 500 referral gift (automatic on hire), guaranteed post-probation increments, offboarding with checklist, PRO company role + government-services task queue, typed documents with required enforcement (employee wizard, project LOA), and staff planning view with 45-day urgency flags. Verified live; collecting management feedback on document review workflows, offboarding payroll linkage, mid-month hire handling, and PRO dashboard scope.
 
 ---
 
@@ -92,9 +94,9 @@ See [BACKEND_PLAN.md](BACKEND_PLAN.md) for the roadmap from proof-of-concept to 
 
 ---
 
-## Standing security item (not yet resolved)
+## Standing security item — RESOLVED (3 Jul 2026)
 
-A Supabase **service_role secret key** was committed to `backend/populate_db.py` before the pivot, pushed to the public GitHub repo. Deleted from the working tree but still recoverable from git history (commit `6985c30`). **Needs rotating in the Supabase dashboard** regardless of whether Supabase gets used again — the key still grants live access to the real Supabase project, which holds real ALSUWEIDI client data. Not confirmed done as of this update.
+A Supabase **service_role secret key** was committed to `backend/populate_db.py` before the pivot and pushed to the public GitHub repo (still recoverable from git history, commit `6985c30`). **Resolved: Sana deleted the entire Supabase project on 3 Jul 2026** — the leaked key is now inert since the project it granted access to no longer exists.
 
 ---
 
