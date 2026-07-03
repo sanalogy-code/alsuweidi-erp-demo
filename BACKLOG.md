@@ -4,24 +4,24 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-03 (late night — Batch 3 shipped: Marketing module. New items captured
-from Sana's review: confidential hardening, inbox layout, portfolio search, company fields,
-subconsultants, lessons learned, timesheets. Note: "IT should add assets" — already exists,
-IT workspace → Assets → Add asset.)
+**Last updated:** 2026-07-03 (Batch 5 shipped: confidential-flag hardening, scannable queue
+layouts, marketing portfolio search, line-manager timesheet approval, per-employee work-week
+patterns. Earlier same day: Batches 3 & 4 — Marketing module + Timesheets.)
 
 ## Next batch (UI demo work, ready to build)
 
-- [ ] **Confidential flag hardening** (3 Jul) — too easy to toggle from Marketing portfolio today.
-  New workflow: the PM decides confidentiality when the project starts (required field on
-  create/at first stage advance — **cannot advance without deciding**). Marketing sees the flag
-  but changing it after that should be deliberate (confirm dialog at minimum).
-- [ ] **Task/inbox row layout polish, all modules** (3 Jul) — HR inbox, Marketing inbox, IT queue,
-  PRO tasks: nice design but hard to quickly scan type / age / action / description. Align into
-  clearer columns (fixed-width type chip + description, right-aligned age + action) so the eye
-  can run down each column.
-- [ ] **Marketing portfolio search** (3 Jul) — filter/search by project TYPE / industry
-  (mainFunction), size (built-up area bands), completion status, and scope — not just the current
-  type/status dropdowns.
+- [x] ~~Confidential flag hardening~~ — **Shipped Batch 5 (3 Jul):** required Confidentiality
+  decision on both create paths (direct + won-deal), stage advance blocked while undecided
+  (decide-and-advance panel on the record; two seeds left undecided to demo it), overview shows
+  the decision state, Marketing toggle now confirm-dialog-guarded.
+- [x] ~~Task/inbox row layout polish, all modules~~ — **Shipped Batch 5 (3 Jul):** HR inbox,
+  Marketing inbox, IT queue (mine + workspace), and PRO tasks all use fixed-width columns
+  (type chip / description / right-aligned age / right-aligned actions); shared `daysAgo`
+  helper added to `utils/date.js`.
+- [x] ~~Marketing portfolio search~~ — **Shipped Batch 5 (3 Jul):** free-text search (name,
+  client, description) + industry (mainFunction), built-up-area bands, scope, status, and
+  readiness filters with a live "N of M" counter; scope now derives via shared `scopeOf()`
+  in projectsData (seeds have no scope field).
 - [ ] **Company details fields** (3 Jul) — CRM companies get: website, head office location,
   size (employee band), relationship type (Client / Contractor / Developer / Partner /
   Subconsultant / Government…). Relationship type also answers the naming question below.
@@ -41,10 +41,10 @@ IT workspace → Assets → Add asset.)
 - [ ] **Timesheets: faster entry** (3 Jul) — filling the week is fully manual today. Add
   faster paths: "copy last week" button, remember my usual projects, and/or a default row set
   per employee. (Sana: "employee to add manually — or if there is a faster way".)
-- [ ] **Timesheets: line-manager approval** (3 Jul — decision made) — approval moves from HR to
-  the **line manager** (`managerId` already exists on every employee, so the chain is derivable).
-  Manager sees their team's submitted weeks; HR keeps an oversight view. This answers the
-  "who approves" open question — supersedes the HR-only interim.
+- [x] ~~Timesheets: line-manager approval~~ — **Shipped Batch 5 (3 Jul):** anyone with direct
+  reports gets a "Team timesheets" view (badge = team's submitted weeks) and approves their own
+  team; HR's Timesheets view is now company-wide oversight showing who each week is awaiting
+  ("awaiting <manager>", or "HR (no line manager)") and can still step in.
 - [ ] **Timesheets: overhead codes & clearer labels** (3 Jul) — "Code" is unclear. Hours aren't
   always project-linked: expand the non-project buckets to real overhead categories (Admin, IT,
   Marketing, General, Leave, Training…) and label the column so nobody has to ask what a code is.
@@ -60,12 +60,12 @@ IT workspace → Assets → Add asset.)
 - [ ] **IT: add license** (3 Jul) — the license registry is read-only; assets already have "Add
   asset" but licenses need the same (name, vendor, seats, yearly cost, renewal date) so IT can
   register new subscriptions without a code change.
-- [ ] **Work-week patterns on timesheets** (3 Jul) — work usually starts Monday (5 days,
-  Mon–Fri), but Jordan-based staff work Sun–Thu, and some people have other arrangements.
-  Model a work-week pattern (working days + weekend) on the employee record, defaulted
-  automatically from employment type / location when HR picks it on the employment form, and
-  have the timesheet grid + weekend shading + leave calendar follow the employee's own pattern
-  instead of a single company-wide week.
+- [x] ~~Work-week patterns on timesheets~~ — **Shipped Batch 5 (3 Jul):** `WORK_WEEK_PATTERNS`
+  on the employee record (Mon–Fri company default, Sun–Thu Jordan office, Mon–Sat site 6-day),
+  auto-defaulted from employment type on the employment form (location rule ready for when the
+  form gets a location field). Timesheet grid, approval breakdown, and leave-calendar rows all
+  shade the employee's own weekend. Seeds: Naseeb moved to Amman office (Sun–Thu), Samir on the
+  site week; seed timesheet hours shifted to match.
 - [ ] **PRO dashboard & visibility** — right now PRO sees only its task queue. Add a dashboard
   showing task velocity (open/done per week), overdue tasks, and maybe client/project breakdowns
   so the PRO company can run itself. (Depends on decision: is PRO a separate tenant / org or just

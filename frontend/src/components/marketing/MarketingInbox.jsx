@@ -2,13 +2,9 @@ import { useState } from 'react'
 import { Inbox, Camera, Mail, PenLine, Check } from 'lucide-react'
 import Modal from '../crm/Modal'
 import { MARKETING_TASK_TYPES } from '../../data/marketingData'
+import { daysAgo } from '../../utils/date'
 
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-
-const daysAgo = (d) => {
-  const n = Math.floor((new Date() - new Date(d)) / (1000 * 60 * 60 * 24))
-  return n <= 0 ? 'today' : `${n}d ago`
-}
 
 const welcomeEmailDraft = (name) => `Subject: Welcome to ALSUWEIDI, ${name.split(' ')[0]}!
 
@@ -115,22 +111,21 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
           <div className="p-8 text-center text-sm text-gray-400">Inbox zero — nothing waiting on Marketing.</div>
         ) : (
           <div className="divide-y divide-gray-100">
+            {/* Fixed-width columns (chip / description / age / action) so the eye can run down the queue */}
             {open.map((task) => {
               const meta = MARKETING_TASK_TYPES[task.type]
               return (
-                <div key={task.id} className="px-4 py-3 flex items-center justify-between gap-4">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 mt-0.5 ${meta.chip}`}>{meta.label}</span>
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-800 truncate">{task.relatedName}</div>
-                      <div className="text-xs text-gray-500 truncate">{task.notes || meta.hint}</div>
-                    </div>
+                <div key={task.id} className="px-4 py-3 flex items-center gap-3">
+                  <span className={`w-36 shrink-0 px-2 py-0.5 rounded text-xs font-medium text-center truncate ${meta.chip}`}>{meta.label}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">{task.relatedName}</div>
+                    <div className="text-xs text-gray-500 truncate">{task.notes || meta.hint}</div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {task.dueDate && <span className="text-xs text-amber-600 whitespace-nowrap">due {fmt(task.dueDate)}</span>}
-                    <span className="text-xs text-gray-400 whitespace-nowrap">{daysAgo(task.createdDate)}</span>
-                    {actionsFor(task)}
+                  <div className="w-20 shrink-0 text-right">
+                    {task.dueDate && <div className="text-xs text-amber-600 whitespace-nowrap">due {fmt(task.dueDate)}</div>}
+                    <div className="text-xs text-gray-400 whitespace-nowrap">{daysAgo(task.createdDate)}</div>
                   </div>
+                  <div className="w-36 shrink-0 flex items-center justify-end gap-2">{actionsFor(task)}</div>
                 </div>
               )
             })}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, AlertTriangle, Plane, Clock } from 'lucide-react'
-import { ANNUAL_LEAVE_ENTITLEMENT } from '../../data/hrData'
+import { ANNUAL_LEAVE_ENTITLEMENT, WORK_WEEK_PATTERNS, DEFAULT_WORK_WEEK, workWeekOf } from '../../data/hrData'
 import { parseLocalDate, todayLocal } from '../../utils/date'
 
 const MS_DAY = 1000 * 60 * 60 * 24
@@ -18,11 +18,17 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
 
   const active = requests.filter((r) => r.status !== 'denied')
   const inMonth = active.filter((r) => overlap(parseLocalDate(r.startDate), parseLocalDate(r.endDate), monthStart, monthEnd))
-  const byEmployee = [...new Set(inMonth.map((r) => r.employeeName))].map((name) => ({
-    name,
-    dept: employees.find((e) => e.name === name)?.dept || '',
-    requests: inMonth.filter((r) => r.employeeName === name),
-  }))
+  const byEmployee = [...new Set(inMonth.map((r) => r.employeeName))].map((name) => {
+    const employee = employees.find((e) => e.name === name)
+    return {
+      name,
+      dept: employee?.dept || '',
+      // Weekend shading on the row follows this employee's own work-week pattern
+      weekend: new Set(workWeekOf(employee).weekend),
+      requests: inMonth.filter((r) => r.employeeName === name),
+    }
+  })
+  const defaultWeekend = new Set(WORK_WEEK_PATTERNS[DEFAULT_WORK_WEEK].weekend)
 
   const approvedHolidayDates = new Set()
   holidays.filter((h) => h.status === 'approved').forEach((h) => {
@@ -119,7 +125,7 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
                   <th className="text-left pr-4 pb-2 font-semibold text-gray-600 whitespace-nowrap">Employee</th>
                   {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
                     const dow = new Date(y, m, d).getDay()
-                    const weekend = dow === 5 || dow === 6
+                    const weekend = defaultWeekend.has(dow)
                     return (
                       <th key={d} className={`pb-2 font-normal w-6 text-center ${approvedHolidayDates.has(d) ? 'text-brand font-semibold' : weekend ? 'text-gray-300' : 'text-gray-500'}`}>
                         {d}
@@ -137,7 +143,7 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
                     </td>
                     {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
                       const dow = new Date(y, m, d).getDay()
-                      const weekend = dow === 5 || dow === 6
+                      const weekend = emp.weekend.has(dow)
                       const fill = cellFor(emp, d)
                       return (
                         <td key={d} className="p-0.5">
@@ -154,7 +160,7 @@ export default function LeaveDashboard({ employees, requests, holidays }) {
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-500 inline-block" /> Approved</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-yellow-400 inline-block" /> Pending</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-brand/15 inline-block" /> Public holiday</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-gray-100 inline-block" /> Weekend</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-gray-100 inline-block" /> Weekend (per employee's work week)</span>
           </div>
         </div>
       </div>

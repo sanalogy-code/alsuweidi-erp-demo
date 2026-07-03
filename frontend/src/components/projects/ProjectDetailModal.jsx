@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PenTool, HardHat, Banknote, Users as UsersIcon, AlertTriangle, FolderOpen, Pencil, ChevronLeft, ChevronRight } from 'lucide-react'
+import { PenTool, HardHat, Banknote, Users as UsersIcon, AlertTriangle, FolderOpen, Pencil, ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react'
 import Modal from '../crm/Modal'
 import StagePipeline from './StagePipeline'
 import EditProjectModal from './EditProjectModal'
@@ -31,6 +31,7 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
   const [editing, setEditing] = useState(false)
   const [editingProgress, setEditingProgress] = useState(false)
   const [progressForm, setProgressForm] = useState({ approvedPct: '', actualPct: '' })
+  const [decidingConfidentiality, setDecidingConfidentiality] = useState(false)
 
   if (!project) return null
 
@@ -42,19 +43,34 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
 
   // Stage moves are constrained to the stages this project's scope covers
   const stageIdx = project.stagesInvolved.indexOf(project.currentStage)
-  const moveStage = (delta) => {
-    const next = project.stagesInvolved[stageIdx + delta]
+  const advanceStage = (base, delta) => {
+    const idx = base.stagesInvolved.indexOf(base.currentStage)
+    const next = base.stagesInvolved[idx + delta]
     if (!next) return
-    onUpdateProject({ ...project, currentStage: next })
+    onUpdateProject({ ...base, currentStage: next })
     // Reaching the final stage puts completion in sight — queue the professional
     // photography task for Marketing now (it blocks completion later).
-    if (delta > 0 && stageIdx + delta === project.stagesInvolved.length - 1 && !project.photosApproved) {
+    if (delta > 0 && idx + delta === base.stagesInvolved.length - 1 && !base.photosApproved) {
       onAddMarketingTask?.({
-        type: 'project_photos', relatedKind: 'project', relatedId: project.id,
-        relatedName: `${project.projectNo} — ${project.name}`,
+        type: 'project_photos', relatedKind: 'project', relatedId: base.id,
+        relatedName: `${base.projectNo} — ${base.name}`,
         notes: `Reached ${next} — arrange professional photography before completion.`,
       })
     }
+  }
+  const moveStage = (delta) => {
+    // Confidentiality is the PM's call at project start — a project created
+    // before the field existed cannot advance until it's decided.
+    if (delta > 0 && project.confidential === undefined) {
+      setDecidingConfidentiality(true)
+      return
+    }
+    advanceStage(project, delta)
+  }
+  const decideConfidentiality = (isConfidential) => {
+    setDecidingConfidentiality(false)
+    // One update: record the decision and perform the advance that triggered it
+    advanceStage({ ...project, confidential: isConfidential }, 1)
   }
 
   const saveProgress = () => {
@@ -93,7 +109,29 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
 
       <div className="mb-5 bg-gray-50 rounded-lg p-3">
         <StagePipeline stagesInvolved={project.stagesInvolved} currentStage={project.currentStage} />
-        {canEdit && (
+        {canEdit && decidingConfidentiality && (
+          <div className="mt-2 bg-amber-50 border border-amber-200 rounded-md p-3">
+            <div className="text-xs text-amber-800 mb-2">
+              <span className="font-semibold">Confidentiality not decided.</span> The PM must decide whether
+              Marketing can showcase this project before it advances — this controls the portfolio and proposals.
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => decideConfidentiality(false)}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                <Eye size={12} /> Public — showcase allowed, advance
+              </button>
+              <button
+                onClick={() => decideConfidentiality(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-white border border-red-200 text-red-700 hover:bg-red-50"
+              >
+                <EyeOff size={12} /> Confidential — hide, advance
+              </button>
+            </div>
+          </div>
+        )}
+        {canEdit && !decidingConfidentiality && (
           <div className="mt-2 flex items-center justify-between">
             <button
               onClick={() => moveStage(-1)}
@@ -167,6 +205,15 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
               <span className={project.loaObtained ? 'text-green-700' : 'text-red-600'}>{project.loaObtained ? 'Obtained' : 'Not Obtained'}</span>
             </Field>
             <Field label="Contractor">{project.contractorName}</Field>
+            <Field label="Confidentiality">
+              {project.confidential === undefined ? (
+                <span className="text-amber-600">Not decided — blocks stage advance</span>
+              ) : project.confidential ? (
+                <span className="text-red-600 flex items-center gap-1"><EyeOff size={12} /> Confidential</span>
+              ) : (
+                <span className="text-gray-700 flex items-center gap-1"><Eye size={12} /> Public</span>
+              )}
+            </Field>
           </div>
         </div>
       )}

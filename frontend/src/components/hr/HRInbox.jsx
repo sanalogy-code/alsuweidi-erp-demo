@@ -1,5 +1,6 @@
 import { Inbox, FileText } from 'lucide-react'
 import { CERTIFICATE_TYPES, OPEN_POSITIONS } from '../../data/hrData'
+import { daysAgo } from '../../utils/date'
 
 const KIND_CHIP = {
   leave: 'bg-amber-100 text-amber-700',
@@ -13,11 +14,6 @@ const KIND_LABEL = { leave: 'Leave', certificate: 'Certificate', concern: 'Conce
 
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 const certLabel = (v) => CERTIFICATE_TYPES.find((t) => t.value === v)?.label || v
-
-const daysAgo = (d) => {
-  const n = Math.floor((new Date() - new Date(d)) / (1000 * 60 * 60 * 24))
-  return n <= 0 ? 'today' : `${n}d ago`
-}
 
 // One queue of everything waiting on HR, oldest first — replaces per-type badge chasing.
 export function buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }) {
@@ -102,19 +98,16 @@ export default function HRInbox({ leaveRequests, certificateRequests, complaints
           <div className="p-8 text-center text-sm text-gray-400">Inbox zero — nothing waiting on HR.</div>
         ) : (
           <div className="divide-y divide-gray-100">
+            {/* Fixed-width columns (chip / description / age / actions) so the eye can run down the queue */}
             {items.map((item) => (
-              <div key={item.key} className="px-4 py-3 flex items-center justify-between gap-4">
-                <div className="flex items-start gap-3 min-w-0">
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 mt-0.5 ${KIND_CHIP[item.kind]}`}>{KIND_LABEL[item.kind]}</span>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-gray-800 truncate">{item.text}</div>
-                    {item.sub && <div className="text-xs text-gray-500 truncate">{item.sub}</div>}
-                  </div>
+              <div key={item.key} className="px-4 py-3 flex items-center gap-3">
+                <span className={`w-24 shrink-0 px-2 py-0.5 rounded text-xs font-medium text-center ${KIND_CHIP[item.kind]}`}>{KIND_LABEL[item.kind]}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-800 truncate">{item.text}</div>
+                  {item.sub && <div className="text-xs text-gray-500 truncate">{item.sub}</div>}
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-xs text-gray-400 whitespace-nowrap">{daysAgo(item.date)}</span>
-                  <div className="flex gap-2">{actionsFor(item)}</div>
-                </div>
+                <span className="w-16 shrink-0 text-xs text-gray-400 text-right whitespace-nowrap">{daysAgo(item.date)}</span>
+                <div className="w-44 shrink-0 flex items-center justify-end gap-2">{actionsFor(item)}</div>
               </div>
             ))}
           </div>

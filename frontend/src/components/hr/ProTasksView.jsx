@@ -94,15 +94,15 @@ export default function ProTasksView({ tasks, employees = [], isPro = false, onU
         const open = expanded === t.id
         return (
           <div key={t.id} className={`bg-white rounded-lg border shadow-sm ${overdue(t) ? 'border-red-200' : 'border-gray-200'}`}>
-            <button onClick={() => setExpanded(open ? null : t.id)} className="w-full p-4 text-left flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-800">{t.taskType} — {t.employeeName}</div>
-                <div className="text-xs text-gray-500 truncate">{t.details}</div>
+            {/* Fixed-width columns (task type / person / due / status) so the eye can run down the queue */}
+            <button onClick={() => setExpanded(open ? null : t.id)} className="w-full px-4 py-3 text-left flex items-center gap-3">
+              <span className="w-40 shrink-0 px-2 py-0.5 rounded text-xs font-medium text-center truncate bg-gray-100 text-gray-700">{t.taskType}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-gray-800 truncate">{t.employeeName}</div>
+                {t.details && <div className="text-xs text-gray-500 truncate">{t.details}</div>}
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <span className={`text-xs ${overdue(t) ? 'text-red-600 font-semibold' : 'text-gray-400'}`}>Due {fmt(t.dueDate)}</span>
-                <span className={`px-2 py-0.5 rounded text-xs font-medium ${meta.color}`}>{meta.label}</span>
-              </div>
+              <span className={`w-20 shrink-0 text-right text-xs whitespace-nowrap ${overdue(t) ? 'text-red-600 font-semibold' : 'text-gray-400'}`}>Due {fmt(t.dueDate)}</span>
+              <span className={`w-24 shrink-0 px-2 py-0.5 rounded text-xs font-medium text-center ${meta.color}`}>{meta.label}</span>
             </button>
             {open && (
               <div className="border-t border-gray-100 p-4 space-y-3">

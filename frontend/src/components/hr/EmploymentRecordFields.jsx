@@ -2,6 +2,7 @@ import { Sparkles } from 'lucide-react'
 import {
   DEPARTMENTS, DESIGNATIONS, EMPLOYMENT_TYPES, EMPLOYMENT_TYPE_DEFAULTS,
   SCHEDULE_PRESETS, PAYROLL_CATEGORIES,
+  WORK_WEEK_PATTERNS, DEFAULT_WORK_WEEK, defaultWorkWeekFor,
 } from '../../data/hrData'
 
 // The HR half of an employee record — shared by the new-joiner review modal and
@@ -18,6 +19,7 @@ export const emptyEmploymentForm = (positionTitle = '') => ({
   joiningDate: '', managerId: '',
   employmentType: 'Full-time',
   schedule: SCHEDULE_PRESETS[0],
+  workWeek: DEFAULT_WORK_WEEK,
   probationMonths: EMPLOYMENT_TYPE_DEFAULTS['Full-time'].probationMonths,
   noticePeriodDays: EMPLOYMENT_TYPE_DEFAULTS['Full-time'].noticePeriodDays,
   guaranteedIncrement: false, incrementAmount: '',
@@ -46,6 +48,7 @@ export const buildEmploymentRecord = (form) => ({
   startDate: form.joiningDate,
   status: 'active',
   managerId: form.managerId ? Number(form.managerId) : null,
+  workWeek: form.workWeek || DEFAULT_WORK_WEEK,
   contractEndDate: null,
   compensation: {
     basicSalary: Number(form.basicSalary) || 0,
@@ -74,8 +77,8 @@ export default function EmploymentRecordFields({ form, setForm, autoFilled, setA
 
   const pickEmploymentType = (t) => {
     const d = EMPLOYMENT_TYPE_DEFAULTS[t]
-    setForm({ ...form, employmentType: t, probationMonths: d.probationMonths, noticePeriodDays: d.noticePeriodDays })
-    setAutoFilled([...new Set([...autoFilled, 'probationMonths', 'noticePeriodDays'])])
+    setForm({ ...form, employmentType: t, probationMonths: d.probationMonths, noticePeriodDays: d.noticePeriodDays, workWeek: defaultWorkWeekFor({ employmentType: t }) })
+    setAutoFilled([...new Set([...autoFilled, 'probationMonths', 'noticePeriodDays', 'workWeek'])])
   }
 
   const netMonthly = (Number(form.basicSalary) || 0) + (Number(form.housingAllowance) || 0) + (Number(form.transportAllowance) || 0)
@@ -125,6 +128,13 @@ export default function EmploymentRecordFields({ form, setForm, autoFilled, setA
           <select value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} className={inputCls}>
             {SCHEDULE_PRESETS.map((s) => <option key={s}>{s}</option>)}
           </select>
+        </div>
+        <div>
+          <label className={labelCls}>Work week {auto('workWeek')}</label>
+          <select value={form.workWeek || DEFAULT_WORK_WEEK} onChange={(e) => setForm({ ...form, workWeek: e.target.value })} className={inputCls}>
+            {Object.entries(WORK_WEEK_PATTERNS).map(([key, p]) => <option key={key} value={key}>{p.label}</option>)}
+          </select>
+          <div className="text-[10px] text-gray-400 mt-0.5">Drives timesheet & leave-calendar weekends — pick Sun–Thu for Jordan-based staff.</div>
         </div>
         <div><label className={labelCls}>Probation (months) {auto('probationMonths')}</label><input type="number" min="0" value={form.probationMonths} onChange={(e) => setForm({ ...form, probationMonths: e.target.value })} className={inputCls} /></div>
         <div><label className={labelCls}>Notice period (days) {auto('noticePeriodDays')}</label><input type="number" min="0" value={form.noticePeriodDays} onChange={(e) => setForm({ ...form, noticePeriodDays: e.target.value })} className={inputCls} /></div>

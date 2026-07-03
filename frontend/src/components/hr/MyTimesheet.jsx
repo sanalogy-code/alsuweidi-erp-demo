@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Clock, Plus, X, Send, Save } from 'lucide-react'
 import {
-  DAY_LABELS, WEEKEND_DAYS, GENERAL_CODES,
+  DAY_LABELS, GENERAL_CODES,
   weekStartOf, addDays, toLocalISO, fmtWeekRange, timesheetTotal,
 } from '../../data/timesheetData'
+import { workWeekOf } from '../../data/hrData'
 
 const STATUS_CHIP = {
   draft: { label: 'Draft', chip: 'bg-gray-100 text-gray-600' },
@@ -12,9 +13,9 @@ const STATUS_CHIP = {
   rejected: { label: 'Rejected', chip: 'bg-red-100 text-red-700' },
 }
 
-// My weekly timesheet — hours per project code per day, Sun–Sat week
-// (Fri/Sat weekend shaded). Submit by end of day Thursday; unsubmitted
-// weeks block payroll.
+// My weekly timesheet — hours per project code per day on a Sun–Sat grid,
+// with weekend shading following the employee's own work-week pattern.
+// Submit by the end of the week; unsubmitted weeks block payroll.
 export default function MyTimesheet({ employee, projects = [], timesheets = [], onSave }) {
   const [weekStart, setWeekStart] = useState(() => toLocalISO(weekStartOf(new Date())))
   // Draft rows being edited for the selected week (null = not editing yet)
@@ -33,6 +34,8 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
   const mine = timesheets.filter((t) => t.employeeId === employee.id)
   const current = mine.find((t) => t.weekStart === weekStart)
   const editable = !current || current.status === 'draft' || current.status === 'rejected'
+  const workWeek = workWeekOf(employee)
+  const weekendDays = workWeek.weekend
 
   const codeLabel = (code) => {
     if (typeof code === 'number') {
@@ -97,7 +100,10 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
               <Clock size={15} className="text-brand" /> My timesheet
               {status && <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${status.chip}`}>{status.label}</span>}
             </h2>
-            <p className="text-xs text-gray-500">Log hours against project codes. Submit by end of day Thursday — unsubmitted weeks block payroll.</p>
+            <p className="text-xs text-gray-500">
+              Log hours against project codes. Submit by the end of your last working day — unsubmitted weeks block payroll.
+              Your work week: <span className="font-medium text-gray-600">{workWeek.label}</span>.
+            </p>
             {current?.status === 'rejected' && current.rejectReason && (
               <p className="text-xs text-red-600 mt-1">Rejected: {current.rejectReason} — fix and resubmit.</p>
             )}
@@ -117,7 +123,7 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
               <tr>
                 <th className="text-left px-4 py-2 font-semibold text-gray-700 min-w-[220px]">Project / code</th>
                 {DAY_LABELS.map((d, i) => (
-                  <th key={d} className={`px-2 py-2 font-semibold text-center w-16 ${WEEKEND_DAYS.includes(i) ? 'text-gray-400 bg-gray-50' : 'text-gray-700'}`}>{d}</th>
+                  <th key={d} className={`px-2 py-2 font-semibold text-center w-16 ${weekendDays.includes(i) ? 'text-gray-400 bg-gray-50' : 'text-gray-700'}`}>{d}</th>
                 ))}
                 <th className="text-right px-4 py-2 font-semibold text-gray-700 w-16">Total</th>
                 {editable && <th className="w-8" />}
@@ -142,7 +148,7 @@ export default function MyTimesheet({ employee, projects = [], timesheets = [], 
                     )}
                   </td>
                   {r.hours.map((h, di) => (
-                    <td key={di} className={`px-1 py-1.5 text-center ${WEEKEND_DAYS.includes(di) ? 'bg-gray-50' : ''}`}>
+                    <td key={di} className={`px-1 py-1.5 text-center ${weekendDays.includes(di) ? 'bg-gray-50' : ''}`}>
                       {editable ? (
                         <input
                           type="number" min="0" max="24" step="0.5" value={h || ''}

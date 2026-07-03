@@ -14,6 +14,16 @@ export const MAIN_FUNCTIONS = [
 
 export const PROJECT_SCOPES = ['Design + Supervision', 'Design only', 'Supervision only', 'Secondment Services']
 
+// Seed projects predate the explicit `scope` field — derive it from the
+// design/supervision sub-records where absent. New projects store it directly.
+export const scopeOf = (p) => {
+  if (p.scope) return p.scope
+  if (p.type === 'Secondment') return 'Secondment Services'
+  if (p.design && p.supervision) return 'Design + Supervision'
+  if (p.design) return 'Design only'
+  return 'Supervision only'
+}
+
 export const CONTRACT_TYPES = ['Conventional', 'Design & Build', 'Call-off / Framework Agreement']
 
 export const FUND_SOURCES = ['Government', 'Private', 'Bank-ADCB', 'Bank-Other']
@@ -71,13 +81,16 @@ export const PAY_STATUS = ['Not Due', 'Invoices Paid', 'Unsettled', 'Completed',
 // Marketing fields (absent = default): `marketingDescription` (string|null — written by
 // Marketing, required before a project can be marked Completed), `photosApproved`
 // (bool — professional photography signed off by Marketing, also blocks completion),
-// `confidential` (bool — hide from portfolio / proposals).
+// `confidential` (bool — hide from portfolio / proposals; the PM decides at project
+// start. `undefined` = predates the field / not decided — blocks stage advance until
+// the PM picks. Two seeds below are left undecided on purpose to demo that gate).
 export const PROJECTS = [
   {
     id: 1, projectNo: 'P-2701', name: 'Harbour Point Medical Centre', employer: 'Al Reem Development Co', companyId: null, owner: 'Al Reem Development Co',
     type: 'Buildings', mainFunction: 'Healthcare', location: 'Abu Dhabi', sector: 'Al Reem Island', plot: 'RM-114', builtupArea: 28500,
     description: 'Four-storey outpatient medical centre with day-surgery unit and rooftop MEP plant.',
     marketingDescription: 'A 28,500 sqm healthcare destination on Al Reem Island: day-surgery suites, imaging, and outpatient clinics designed around daylight-filled waiting courtyards, delivered in BIM from concept through supervision.',
+    confidential: false,
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 4200000, constructionCost: 165000000, contractorName: 'Emirates BuildCo LLC',
     dpmId: 7, cpmId: 10,
@@ -100,6 +113,7 @@ export const PROJECTS = [
     id: 3, projectNo: 'P-2712', name: 'Al Dhafra Road Upgrades — Package 3', employer: 'Abu Dhabi Municipality', companyId: null, owner: 'Abu Dhabi Municipality',
     type: 'Infrastructure', mainFunction: 'Non-Building', location: 'Western Region', sector: 'Al Dhafra - Madinat Zayed', plot: null, builtupArea: 0,
     description: '14 km of internal road upgrades incl. street lighting, stormwater, and junction improvements.',
+    confidential: false,
     generalStatus: 'In Progress', fund: 'Government', contractType: 'Call-off / Framework Agreement', contractSigned: true, loaObtained: true,
     contractValue: 6800000, constructionCost: 240000000, contractorName: null,
     dpmId: 2, cpmId: null,
@@ -124,6 +138,7 @@ export const PROJECTS = [
     type: 'Buildings', mainFunction: 'Residential Communities', location: 'Abu Dhabi', sector: 'Saadiyat Island', plot: 'SD-C4', builtupArea: 41200,
     description: '38 villas across three prototypes with community landscaping and entry pavilion.',
     marketingDescription: 'Thirty-eight villas across three prototypes on Saadiyat Island, unified by native-planting landscaping and a sculptural entry pavilion — full design and supervision scope for Emaar Properties.',
+    confidential: false,
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 5100000, constructionCost: 210000000, contractorName: 'Coastline Contracting',
     dpmId: 7, cpmId: 10,
@@ -135,6 +150,7 @@ export const PROJECTS = [
     id: 6, projectNo: 'P-2699', name: 'Substation Access & Landscaping Works', employer: 'DEWA', companyId: 3, owner: 'DEWA',
     type: 'Infrastructure', mainFunction: 'Non-Building', location: 'Dubai', sector: 'Al Qudra', plot: null, builtupArea: 0,
     description: 'Supervision of access roads, boundary works, and landscaping around two new substations.',
+    confidential: false,
     generalStatus: 'In Progress', fund: 'Government', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 720000, constructionCost: 18500000, contractorName: 'Desert Line Projects',
     dpmId: null, cpmId: 8,
@@ -157,6 +173,7 @@ export const PROJECTS = [
     id: 8, projectNo: 'P-2650', name: 'Pump Station Upgrade — Ruwais', employer: 'ADNOC', companyId: 1, owner: 'ADNOC', dealId: 101,
     type: 'Buildings', mainFunction: 'Industrial', location: 'Western Region', sector: 'Ruwais', plot: 'RW-19', builtupArea: 3600,
     description: 'Construction supervision of pump station upgrade — the delivery side of the CRM-won deal.',
+    confidential: false,
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 1350000, constructionCost: 48000000, contractorName: 'Emirates BuildCo LLC',
     dpmId: null, cpmId: 10,
@@ -168,6 +185,7 @@ export const PROJECTS = [
     id: 9, projectNo: 'P-2731', name: 'Site Engineering Secondment — Ruwais', employer: 'ADNOC', companyId: 1, owner: 'ADNOC',
     type: 'Secondment', mainFunction: 'Industrial', location: 'Western Region', sector: 'Ruwais', plot: null, builtupArea: 0,
     description: 'Two site engineers seconded to the employer\'s PMO under a framework agreement.',
+    confidential: false,
     generalStatus: 'In Progress', fund: 'Private', contractType: 'Call-off / Framework Agreement', contractSigned: true, loaObtained: true,
     contractValue: 860000, constructionCost: null, contractorName: null,
     dpmId: 1, cpmId: null,
@@ -179,6 +197,7 @@ export const PROJECTS = [
     id: 10, projectNo: 'P-2662', name: 'Al Ain Mosque & Community Hall', employer: 'Private Client — Al Ain', companyId: null, owner: 'Private Client — Al Ain',
     type: 'Buildings', mainFunction: 'Religious', location: 'Al Ain', sector: 'Al Jimi', plot: 'AJ-441', builtupArea: 4200,
     description: '600-worshipper mosque with attached community hall and imam residence.',
+    confidential: false,
     generalStatus: 'On Hold', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 640000, constructionCost: 21000000, contractorName: null,
     dpmId: 7, cpmId: null,
@@ -190,6 +209,7 @@ export const PROJECTS = [
     id: 11, projectNo: 'P-2708', name: 'Madinat Zayed Retail Strip', employer: 'Al Dhafra Retail Holdings', companyId: null, owner: 'Al Dhafra Retail Holdings',
     type: 'Buildings', mainFunction: 'Commercial and Retail', location: 'Western Region', sector: 'Madinat Zayed', plot: 'MZ-63', builtupArea: 7800,
     description: 'Single-storey retail strip with anchor supermarket, F&B units, and surface parking.',
+    confidential: false,
     generalStatus: 'In Progress', fund: 'Bank-ADCB', contractType: 'Design & Build', contractSigned: true, loaObtained: true,
     contractValue: 1120000, constructionCost: 39000000, contractorName: 'Coastline Contracting',
     dpmId: 3, cpmId: 8,
@@ -202,6 +222,7 @@ export const PROJECTS = [
     type: 'Buildings', mainFunction: 'Offices Building', location: 'Abu Dhabi', sector: 'Corniche', plot: 'CN-12', builtupArea: 0,
     description: 'Facade condition assessment and retrofit design for a 24-storey office tower.',
     marketingDescription: 'Condition assessment and full retrofit design for a 24-storey Corniche office tower — thermal performance, safety, and a refreshed identity delivered without decanting the building.', photosApproved: true,
+    confidential: false,
     generalStatus: 'Completed', fund: 'Private', contractType: 'Conventional', contractSigned: true, loaObtained: true,
     contractValue: 510000, constructionCost: 12500000, contractorName: 'Skyline Facades',
     dpmId: 2, cpmId: null,

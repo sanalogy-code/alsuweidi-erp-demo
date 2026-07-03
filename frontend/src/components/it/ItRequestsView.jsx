@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Check, X, PackageCheck } from 'lucide-react'
 import { IT_REQUEST_TYPES, IT_REQUEST_STATUS } from '../../data/itData'
+import { daysAgo } from '../../utils/date'
 
 const inputCls = 'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand'
 const labelCls = 'block text-xs font-medium text-gray-600 mb-1'
@@ -95,43 +96,29 @@ export default function ItRequestsView({ requests, user, mode = 'mine', onSubmit
         </div>
       ) : (
         <div className="divide-y divide-gray-100">
+          {/* Fixed-width columns (type / description / age / status / actions) so the eye can run down the queue */}
           {rows.map((req) => {
             const status = IT_REQUEST_STATUS[req.status]
+            const actionable = mode === 'queue' && (req.status === 'pending' || req.status === 'approved')
             return (
-              <div key={req.id} className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-gray-800">{req.item}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {req.type} • {mode === 'queue' && `${req.requestedBy} • `}requested {req.requestedDate}
+              <div key={req.id} className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="w-28 shrink-0 px-2 py-0.5 rounded text-xs font-medium text-center truncate bg-gray-100 text-gray-700" title={req.type}>{req.type}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">
+                      {req.item}
+                      {mode === 'queue' && <span className="text-gray-500 font-normal"> — {req.requestedBy}</span>}
                     </div>
-                    {req.justification && <div className="text-xs text-gray-600 mt-1">{req.justification}</div>}
+                    {req.justification && <div className="text-xs text-gray-600 truncate">{req.justification}</div>}
                     {req.resolution && (
-                      <div className="text-xs text-gray-500 mt-1 bg-gray-50 rounded px-2 py-1 inline-block">↳ {req.resolution}{req.resolvedDate && ` (${req.resolvedDate})`}</div>
+                      <div className="text-xs text-gray-500 truncate">↳ {req.resolution}{req.resolvedDate && ` (${req.resolvedDate})`}</div>
                     )}
                   </div>
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${status.chip}`}>{status.label}</span>
-                </div>
-
-                {mode === 'queue' && (req.status === 'pending' || req.status === 'approved') && (
-                  resolutionFor === req.id ? (
-                    <div className="mt-3 bg-blue-50 border border-blue-200 rounded-md p-3 space-y-2">
-                      <input
-                        value={resolutionText}
-                        onChange={(e) => setResolutionText(e.target.value)}
-                        placeholder={resolutionStatus === 'rejected' ? 'Reason for rejection…' : 'Resolution note (what was assigned / ordered)…'}
-                        className={inputCls}
-                      />
-                      <div className="flex gap-2">
-                        <button onClick={() => resolve(req)} className="px-3 py-1.5 bg-brand text-white rounded-md text-xs font-medium hover:bg-brand-dark">
-                          Mark {IT_REQUEST_STATUS[resolutionStatus].label.toLowerCase()}
-                        </button>
-                        <button onClick={() => setResolutionFor(null)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200">Cancel</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-2 flex gap-2">
-                      {req.status === 'pending' && (
+                  <span className="w-16 shrink-0 text-xs text-gray-400 text-right whitespace-nowrap">{daysAgo(req.requestedDate)}</span>
+                  <span className={`w-32 shrink-0 px-2 py-0.5 rounded text-xs font-medium text-center truncate ${status.chip}`} title={status.label}>{status.label}</span>
+                  {mode === 'queue' && (
+                    <div className="w-36 shrink-0 flex items-center justify-end gap-2">
+                      {actionable && resolutionFor !== req.id && req.status === 'pending' && (
                         <>
                           <button
                             onClick={() => { setResolutionFor(req.id); setResolutionStatus('approved'); setResolutionText('') }}
@@ -147,7 +134,7 @@ export default function ItRequestsView({ requests, user, mode = 'mine', onSubmit
                           </button>
                         </>
                       )}
-                      {req.status === 'approved' && (
+                      {actionable && resolutionFor !== req.id && req.status === 'approved' && (
                         <button
                           onClick={() => { setResolutionFor(req.id); setResolutionStatus('fulfilled'); setResolutionText(req.resolution || '') }}
                           className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium bg-green-50 text-green-700 hover:bg-green-100"
@@ -156,7 +143,24 @@ export default function ItRequestsView({ requests, user, mode = 'mine', onSubmit
                         </button>
                       )}
                     </div>
-                  )
+                  )}
+                </div>
+
+                {actionable && resolutionFor === req.id && (
+                  <div className="mt-3 bg-blue-50 border border-blue-200 rounded-md p-3 space-y-2">
+                    <input
+                      value={resolutionText}
+                      onChange={(e) => setResolutionText(e.target.value)}
+                      placeholder={resolutionStatus === 'rejected' ? 'Reason for rejection…' : 'Resolution note (what was assigned / ordered)…'}
+                      className={inputCls}
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={() => resolve(req)} className="px-3 py-1.5 bg-brand text-white rounded-md text-xs font-medium hover:bg-brand-dark">
+                        Mark {IT_REQUEST_STATUS[resolutionStatus].label.toLowerCase()}
+                      </button>
+                      <button onClick={() => setResolutionFor(null)} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200">Cancel</button>
+                    </div>
+                  </div>
                 )}
               </div>
             )

@@ -12,6 +12,7 @@ export default function CreateProjectFromDealModal({ deal, company, employees, e
     location: 'Abu Dhabi',
     dpmId: '',
     cpmId: '',
+    confidential: '',
   })
   const [created, setCreated] = useState(null)
   // A won deal means the LOA exists — the project record can't be created without it on file.
@@ -46,6 +47,7 @@ export default function CreateProjectFromDealModal({ deal, company, employees, e
       plot: null,
       builtupArea: 0,
       description: `Created from won CRM deal "${deal.title}".`,
+      confidential: form.confidential === 'confidential',
       generalStatus: 'In Progress',
       fund: 'Private',
       contractType: 'Conventional',
@@ -159,6 +161,16 @@ export default function CreateProjectFromDealModal({ deal, company, employees, e
               {employees.map((emp) => <option key={emp.id} value={emp.id}>{emp.name} — {emp.title}</option>)}
             </select>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Confidentiality * — PM decision, controls portfolio & proposals</label>
+          <select required value={form.confidential} onChange={(e) => setForm({ ...form, confidential: e.target.value })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand">
+            <option value="" disabled>Decide: can Marketing showcase this project?</option>
+            <option value="public">Public — can appear in the portfolio and proposals</option>
+            <option value="confidential">Confidential — hidden from the portfolio and proposals</option>
+          </select>
         </div>
 
         <div>

@@ -75,6 +75,12 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
   const matchedEmployee = employees.find((e) => e.name.toLowerCase() === (user?.username || '').toLowerCase())
   const myName = (matchedEmployee?.name || user?.username || '').toLowerCase()
 
+  // Line-manager lens: anyone with direct reports approves their team's timesheets.
+  const myTeam = matchedEmployee ? employees.filter((e) => e.managerId === matchedEmployee.id) : []
+  const isManager = myTeam.length > 0
+  const teamIds = new Set(myTeam.map((e) => e.id))
+  const teamTimesheets = timesheets.filter((t) => teamIds.has(t.employeeId))
+
   const pendingJoiners = newJoiners.filter((j) => j.status === 'submitted')
   const inboxCount = isHrStaff ? buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates }).length + pendingJoiners.length : 0
 
@@ -119,6 +125,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     { key: 'myhr', label: 'My HR', icon: Home },
     { key: 'people', label: 'People', icon: Users },
     { key: 'mytimesheet', label: 'My timesheet', icon: Clock },
+    ...(isManager ? [{ key: 'teamtimesheets', label: 'Team timesheets', icon: ClipboardCheck, badge: teamTimesheets.filter((t) => t.status === 'submitted').length }] : []),
     { key: 'requests', label: 'My requests', icon: ClipboardList, badge: myPendingCount },
     { key: 'careers', label: 'Careers', icon: Briefcase },
     ...(isNewHire ? [
@@ -579,8 +586,19 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
             />
           )}
 
+          {view === 'teamtimesheets' && isManager && (
+            <TimesheetApprovals
+              mode="manager"
+              timesheets={teamTimesheets}
+              employees={myTeam}
+              projects={projects}
+              onAction={actionTimesheet}
+            />
+          )}
+
           {view === 'timesheets' && canViewSensitive && (
             <TimesheetApprovals
+              mode="oversight"
               timesheets={timesheets}
               employees={employees}
               projects={projects}

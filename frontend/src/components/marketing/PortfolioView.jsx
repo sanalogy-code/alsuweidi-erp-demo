@@ -1,13 +1,26 @@
 import { useState } from 'react'
-import { FolderKanban, Camera, PenLine, EyeOff, Eye, CheckCircle2, AlertCircle } from 'lucide-react'
+import { FolderKanban, Camera, PenLine, EyeOff, Eye, CheckCircle2, AlertCircle, Search } from 'lucide-react'
 import Modal from '../crm/Modal'
-import { PROJECT_TYPES, GENERAL_STATUS } from '../../data/projectsData'
+import { PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_SCOPES, GENERAL_STATUS, scopeOf } from '../../data/projectsData'
+
+// Built-up-area bands for "find me a project about this size" searches.
+// Projects with no recorded area (0 / infrastructure) only match "All sizes".
+const SIZE_BANDS = [
+  { key: 'lt5k', label: 'Under 5,000 sqm', min: 1, max: 4999 },
+  { key: '5k-20k', label: '5,000 – 20,000 sqm', min: 5000, max: 19999 },
+  { key: '20k-50k', label: '20,000 – 50,000 sqm', min: 20000, max: 49999 },
+  { key: 'gte50k', label: '50,000+ sqm', min: 50000, max: Infinity },
+]
 
 // Marketing's lens on the project list: is each project ready to show clients?
 // Portfolio-ready = has a marketing description + approved photography + not
 // confidential. Marketing owns the description and the confidentiality flag here.
 export default function PortfolioView({ projects, onUpdateProject, onCompleteDescriptionTask }) {
+  const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+  const [functionFilter, setFunctionFilter] = useState('')
+  const [sizeFilter, setSizeFilter] = useState('')
+  const [scopeFilter, setScopeFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [readyFilter, setReadyFilter] = useState('')
   const [descProject, setDescProject] = useState(null)
@@ -19,8 +32,14 @@ export default function PortfolioView({ projects, onUpdateProject, onCompleteDes
     return 'incomplete'
   }
 
+  const sizeBand = SIZE_BANDS.find((b) => b.key === sizeFilter)
+  const q = search.trim().toLowerCase()
   const filtered = projects
+    .filter((p) => !q || `${p.projectNo} ${p.name} ${p.employer} ${p.mainFunction} ${p.marketingDescription || ''}`.toLowerCase().includes(q))
     .filter((p) => !typeFilter || p.type === typeFilter)
+    .filter((p) => !functionFilter || p.mainFunction === functionFilter)
+    .filter((p) => !sizeBand || (p.builtupArea >= sizeBand.min && p.builtupArea <= sizeBand.max))
+    .filter((p) => !scopeFilter || scopeOf(p) === scopeFilter)
     .filter((p) => !statusFilter || p.generalStatus === statusFilter)
     .filter((p) => !readyFilter || readiness(p) === readyFilter)
 
@@ -40,7 +59,14 @@ export default function PortfolioView({ projects, onUpdateProject, onCompleteDes
     setDescProject(null)
   }
 
-  const toggleConfidential = (p) => onUpdateProject({ ...p, confidential: !p.confidential })
+  // Confidentiality is the PM's decision at project start — Marketing can see it,
+  // but flipping it here has to be deliberate, hence the confirm.
+  const toggleConfidential = (p) => {
+    const msg = p.confidential
+      ? `Make "${p.projectNo} — ${p.name}" PUBLIC?\n\nIt will appear in the portfolio and can be picked for proposals. Confidentiality is normally the PM's decision at project start — only change it if that's been agreed.`
+      : `Mark "${p.projectNo} — ${p.name}" CONFIDENTIAL?\n\nIt disappears from the portfolio and can no longer be picked for proposals. Confidentiality is normally the PM's decision at project start — only change it if that's been agreed.`
+    if (window.confirm(msg)) onUpdateProject({ ...p, confidential: !p.confidential })
+  }
 
   const READY_CHIP = {
     ready: { label: 'Portfolio-ready', chip: 'bg-green-100 text-green-700', icon: CheckCircle2 },
@@ -68,24 +94,49 @@ export default function PortfolioView({ projects, onUpdateProject, onCompleteDes
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <FolderKanban size={15} className="text-brand" /> Portfolio
-          </h2>
-          <div className="flex gap-2">
+        <div className="p-4 border-b border-gray-200 space-y-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+              <FolderKanban size={15} className="text-brand" /> Portfolio
+              <span className="text-xs font-normal text-gray-400">{filtered.length} of {projects.length}</span>
+            </h2>
+            <div className="relative">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, client, description…"
+                className="w-64 border border-gray-200 rounded-md pl-8 pr-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
+              />
+            </div>
+          </div>
+          {/* Find a reference project by what it is, not just its status: industry, size band, and scope */}
+          <div className="flex gap-2 flex-wrap">
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={selectCls}>
+              <option value="">All types</option>
+              {PROJECT_TYPES.map((t) => <option key={t}>{t}</option>)}
+            </select>
+            <select value={functionFilter} onChange={(e) => setFunctionFilter(e.target.value)} className={selectCls}>
+              <option value="">All industries</option>
+              {MAIN_FUNCTIONS.map((f) => <option key={f}>{f}</option>)}
+            </select>
+            <select value={sizeFilter} onChange={(e) => setSizeFilter(e.target.value)} className={selectCls}>
+              <option value="">All sizes</option>
+              {SIZE_BANDS.map((b) => <option key={b.key} value={b.key}>{b.label}</option>)}
+            </select>
+            <select value={scopeFilter} onChange={(e) => setScopeFilter(e.target.value)} className={selectCls}>
+              <option value="">All scopes</option>
+              {PROJECT_SCOPES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectCls}>
+              <option value="">All statuses</option>
+              {GENERAL_STATUS.map((s) => <option key={s}>{s}</option>)}
+            </select>
             <select value={readyFilter} onChange={(e) => setReadyFilter(e.target.value)} className={selectCls}>
               <option value="">All readiness</option>
               <option value="ready">Portfolio-ready</option>
               <option value="incomplete">Incomplete</option>
               <option value="confidential">Confidential</option>
-            </select>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={selectCls}>
-              <option value="">All types</option>
-              {PROJECT_TYPES.map((t) => <option key={t}>{t}</option>)}
-            </select>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectCls}>
-              <option value="">All statuses</option>
-              {GENERAL_STATUS.map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>
         </div>
@@ -102,7 +153,9 @@ export default function PortfolioView({ projects, onUpdateProject, onCompleteDes
                       <span className="text-sm font-medium text-gray-800">{p.projectNo} — {p.name}</span>
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-1 ${r.chip}`}><Icon size={10} /> {r.label}</span>
                     </div>
-                    <div className="text-xs text-gray-500">{p.employer} • {p.type} • {p.location} • {p.generalStatus}</div>
+                    <div className="text-xs text-gray-500">
+                      {p.employer} • {p.mainFunction}{p.builtupArea ? ` • ${p.builtupArea.toLocaleString()} sqm` : ''} • {scopeOf(p)} • {p.generalStatus}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className={`text-xs flex items-center gap-1 ${p.photosApproved ? 'text-green-700' : 'text-gray-400'}`}>
@@ -113,10 +166,10 @@ export default function PortfolioView({ projects, onUpdateProject, onCompleteDes
                     </button>
                     <button
                       onClick={() => toggleConfidential(p)}
-                      className={`text-xs font-medium hover:underline flex items-center gap-1 ${p.confidential ? 'text-red-600' : 'text-gray-400'}`}
-                      title={p.confidential ? 'Confidential — hidden from portfolio and proposals' : 'Mark confidential'}
+                      className={`text-xs font-medium hover:underline flex items-center gap-1 ${p.confidential ? 'text-red-600' : p.confidential === undefined ? 'text-amber-600' : 'text-gray-400'}`}
+                      title={p.confidential ? 'Confidential — hidden from portfolio and proposals' : p.confidential === undefined ? 'PM has not decided confidentiality yet — treated as public for now' : 'Mark confidential (PM decision — confirm required)'}
                     >
-                      {p.confidential ? <EyeOff size={12} /> : <Eye size={12} />} {p.confidential ? 'Confidential' : 'Public'}
+                      {p.confidential ? <EyeOff size={12} /> : <Eye size={12} />} {p.confidential ? 'Confidential' : p.confidential === undefined ? 'Not decided' : 'Public'}
                     </button>
                   </div>
                 </div>

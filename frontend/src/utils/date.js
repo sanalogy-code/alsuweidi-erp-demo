@@ -13,3 +13,9 @@ export function todayLocal() {
   t.setHours(0, 0, 0, 0)
   return t
 }
+
+// Compact age for queue/inbox rows — 'today' or 'Nd ago'.
+export function daysAgo(iso) {
+  const n = Math.floor((todayLocal() - parseLocalDate(iso)) / (1000 * 60 * 60 * 24))
+  return n <= 0 ? 'today' : `${n}d ago`
+}

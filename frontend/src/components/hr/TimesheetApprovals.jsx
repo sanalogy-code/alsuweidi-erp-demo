@@ -1,13 +1,19 @@
 import { useState } from 'react'
 import { ClipboardCheck, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
-import { GENERAL_CODES, DAY_LABELS, WEEKEND_DAYS, weekStartOf, addDays, toLocalISO, fmtWeekRange, timesheetTotal } from '../../data/timesheetData'
+import { GENERAL_CODES, DAY_LABELS, weekStartOf, addDays, toLocalISO, fmtWeekRange, timesheetTotal } from '../../data/timesheetData'
+import { workWeekOf } from '../../data/hrData'
 
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
-// HR's timesheet queue: approve/reject submitted weeks, and see who hasn't
-// submitted last week at all — those employees are flagged to payroll
-// (unsubmitted timesheets block WPS processing per policy).
-export default function TimesheetApprovals({ timesheets, employees = [], projects = [], onAction }) {
+// The timesheet approval queue, in two modes:
+//   mode 'manager'  — a line manager approving their own team's weeks (the
+//                     normal path; timesheets/employees are pre-filtered to the team)
+//   mode 'oversight'— HR's company-wide view: sees every week and which manager
+//                     it's waiting on, and can step in where there is no line
+//                     manager or the manager is unavailable
+// Both also list who hasn't submitted last week at all — those employees are
+// flagged to payroll (unsubmitted timesheets block WPS processing per policy).
+export default function TimesheetApprovals({ timesheets, employees = [], projects = [], onAction, mode = 'oversight' }) {
   const [expanded, setExpanded] = useState(null)
   const [rejecting, setRejecting] = useState(null)
   const [reason, setReason] = useState('')
@@ -27,6 +33,13 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
       return p ? `${p.projectNo} — ${p.name}` : `Project #${code}`
     }
     return GENERAL_CODES.find((g) => g.code === code)?.label || code
+  }
+
+  // Who a submitted week is waiting on: the employee's line manager, or HR if none.
+  const approverFor = (t) => {
+    const emp = employees.find((e) => e.id === t.employeeId)
+    const manager = emp?.managerId ? employees.find((e) => e.id === emp.managerId) : null
+    return manager ? manager.name : 'HR (no line manager)'
   }
 
   const approve = (t) => onAction({ ...t, status: 'approved', approvedDate: toLocalISO(new Date()) })
@@ -60,7 +73,11 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
           <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
             <ClipboardCheck size={15} className="text-brand" /> Awaiting approval ({pending.length})
           </h2>
-          <p className="text-xs text-gray-500">Submitted weeks, oldest first. Manager/PM approval chains are a Phase 2 decision — HR approves for now.</p>
+          <p className="text-xs text-gray-500">
+            {mode === 'manager'
+              ? "Your team's submitted weeks, oldest first — as line manager, you approve them."
+              : 'Every submitted week company-wide, oldest first. Line managers approve their own team — HR steps in where there is no manager or the manager is away.'}
+          </p>
         </div>
 
         {pending.length === 0 ? (
@@ -75,6 +92,7 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
                     <div className="text-xs text-gray-500">
                       {timesheetTotal(t)}h across {t.entries.length} code{t.entries.length > 1 ? 's' : ''}
                       {t.submittedDate && ` • submitted ${fmt(t.submittedDate)}`}
+                      {mode === 'oversight' && <span className="text-amber-600"> • awaiting {approverFor(t)}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
@@ -98,14 +116,17 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
                   </div>
                 )}
 
-                {expanded === t.id && (
+                {expanded === t.id && (() => {
+                  // Weekend shading follows the submitting employee's own work week
+                  const weekendDays = workWeekOf(employees.find((e) => e.id === t.employeeId)).weekend
+                  return (
                   <div className="mt-2 overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="text-gray-400">
                           <th className="text-left py-1 font-medium min-w-[180px]">Code</th>
                           {DAY_LABELS.map((d, i) => (
-                            <th key={d} className={`py-1 font-medium text-center w-12 ${WEEKEND_DAYS.includes(i) ? 'text-gray-300' : ''}`}>{d}</th>
+                            <th key={d} className={`py-1 font-medium text-center w-12 ${weekendDays.includes(i) ? 'text-gray-300' : ''}`}>{d}</th>
                           ))}
                           <th className="text-right py-1 font-medium w-12">Total</th>
                         </tr>
@@ -115,7 +136,7 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
                           <tr key={i} className="border-t border-gray-100">
                             <td className="py-1 text-gray-700">{codeLabel(e.code)}</td>
                             {e.hours.map((h, di) => (
-                              <td key={di} className={`py-1 text-center ${WEEKEND_DAYS.includes(di) ? 'bg-gray-50 text-gray-400' : 'text-gray-700'}`}>{h || '—'}</td>
+                              <td key={di} className={`py-1 text-center ${weekendDays.includes(di) ? 'bg-gray-50 text-gray-400' : 'text-gray-700'}`}>{h || '—'}</td>
                             ))}
                             <td className="py-1 text-right font-medium text-gray-800">{e.hours.reduce((a, b) => a + b, 0)}</td>
                           </tr>
@@ -123,7 +144,8 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
                       </tbody>
                     </table>
                   </div>
-                )}
+                  )
+                })()}
               </div>
             ))}
           </div>

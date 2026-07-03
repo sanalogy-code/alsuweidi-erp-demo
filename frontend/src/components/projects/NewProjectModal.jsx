@@ -25,6 +25,7 @@ export default function NewProjectModal({ employees, existingProjects, onClose, 
     contractValue: '',
     dpmId: '', cpmId: '',
     description: '',
+    confidential: '',
   })
   const [loaFile, setLoaFile] = useState(null)
   const loaRef = useRef(null)
@@ -57,6 +58,7 @@ export default function NewProjectModal({ employees, existingProjects, onClose, 
       plot: null,
       builtupArea: 0,
       description: form.description.trim() || null,
+      confidential: form.confidential === 'confidential',
       generalStatus: 'In Progress',
       fund: form.fund,
       contractType: form.contractType,
@@ -155,6 +157,15 @@ export default function NewProjectModal({ employees, existingProjects, onClose, 
         <div>
           <label className={labelCls}>Description</label>
           <textarea rows={2} value={form.description} onChange={set('description')} className={inputCls} />
+        </div>
+
+        <div>
+          <label className={labelCls}>Confidentiality * — PM decision, controls portfolio & proposals</label>
+          <select required value={form.confidential} onChange={set('confidential')} className={inputCls}>
+            <option value="" disabled>Decide: can Marketing showcase this project?</option>
+            <option value="public">Public — can appear in the portfolio and proposals</option>
+            <option value="confidential">Confidential — hidden from the portfolio and proposals</option>
+          </select>
         </div>
 
         <div>

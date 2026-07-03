@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
-import { PROJECT_TYPES, PROJECT_SCOPES, GENERAL_STATUS, PROJECT_LOCATIONS } from '../../data/projectsData'
+import { PROJECT_TYPES, PROJECT_SCOPES, GENERAL_STATUS, PROJECT_LOCATIONS, scopeOf } from '../../data/projectsData'
 
 const STATUS_CHIP = {
   'In Progress': 'bg-blue-100 text-blue-700',
@@ -19,14 +19,6 @@ export default function ProjectList({ projects, employees, user, onViewProject }
 
   const empName = (id) => employees.find((e) => e.id === id)?.name || null
   const myName = (user?.username || '').toLowerCase()
-
-  const scopeOf = (p) => {
-    if (p.scope) return p.scope
-    if (p.type === 'Secondment') return 'Secondment Services'
-    if (p.design && p.supervision) return 'Design + Supervision'
-    if (p.design) return 'Design only'
-    return 'Supervision only'
-  }
 
   const rows = projects
     .filter((p) =>

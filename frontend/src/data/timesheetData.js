@@ -1,14 +1,16 @@
 // Dummy weekly timesheet data — modeled on the current external timesheet system:
-// hours logged per project code per day, submitted weekly, approved by HR
-// (manager/PM approval chains are a Phase 2 decision, same as leave).
+// hours logged per project code per day, submitted weekly, approved by the
+// employee's line manager (employees.managerId). Employees without a line
+// manager fall to HR, and HR keeps an oversight view of every submitted week.
 //
 // Policy hooks (see hrData ONBOARDING_SECTIONS): hours are logged weekly, submit
 // by end of day Thursday; unsubmitted timesheets block payroll processing.
 //
-// Week = Sunday → Saturday (Sun–Thu working week, Fri/Sat weekend).
+// The grid is always a Sunday → Saturday calendar week; which days count as
+// weekend is per-employee (hrData WORK_WEEK_PATTERNS via workWeekOf) — company
+// default Mon–Fri, Jordan staff Sun–Thu, site teams six days.
 
 export const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-export const WEEKEND_DAYS = [5, 6] // Fri, Sat
 
 // Non-project codes selectable alongside real projects.
 export const GENERAL_CODES = [
@@ -50,8 +52,8 @@ export const TIMESHEETS = [
   {
     id: 1, employeeId: 1, employeeName: 'Osama Hussain', weekStart: '2026-06-21',
     entries: [
-      { code: 1, hours: [8, 8, 4, 8, 8, 0, 0] },
-      { code: 'general', hours: [0, 0, 4, 0, 0, 0, 0] },
+      { code: 1, hours: [0, 8, 8, 4, 8, 8, 0] },
+      { code: 'general', hours: [0, 0, 0, 4, 0, 0, 0] },
     ],
     status: 'submitted', submittedDate: '2026-06-25', approvedBy: null, approvedDate: null, rejectReason: null,
   },
@@ -63,20 +65,20 @@ export const TIMESHEETS = [
   {
     id: 3, employeeId: 3, employeeName: 'Mohammad Kubba', weekStart: '2026-06-21',
     entries: [
-      { code: 2, hours: [4, 4, 4, 4, 4, 0, 0] },
-      { code: 11, hours: [4, 4, 4, 4, 4, 0, 0] },
+      { code: 2, hours: [0, 4, 4, 4, 4, 4, 0] },
+      { code: 11, hours: [0, 4, 4, 4, 4, 4, 0] },
     ],
     status: 'submitted', submittedDate: '2026-06-26', approvedBy: null, approvedDate: null, rejectReason: null,
   },
   {
     id: 4, employeeId: 10, employeeName: 'Samir Al Mazrouei', weekStart: '2026-06-21',
-    entries: [{ code: 8, hours: [9, 9, 9, 9, 6, 0, 0] }],
+    entries: [{ code: 8, hours: [0, 8, 8, 8, 8, 8, 2] }],
     status: 'submitted', submittedDate: '2026-06-27', approvedBy: null, approvedDate: null, rejectReason: null,
   },
   // Draft = started but never submitted — still counts as missing for payroll.
   {
     id: 5, employeeId: 7, employeeName: 'Fatima Al Mansouri', weekStart: '2026-06-21',
-    entries: [{ code: 5, hours: [8, 8, 0, 0, 0, 0, 0] }],
+    entries: [{ code: 5, hours: [0, 8, 8, 0, 0, 0, 0] }],
     status: 'draft', submittedDate: null, approvedBy: null, approvedDate: null, rejectReason: null,
   },
 ]
