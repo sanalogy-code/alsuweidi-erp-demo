@@ -6,7 +6,11 @@ one-off small changes. Add items here as they come up; strike them when they shi
 
 **Last updated:** 2026-07-03 (Batch 5 shipped: confidential-flag hardening, scannable queue
 layouts, marketing portfolio search, line-manager timesheet approval, per-employee work-week
-patterns. Earlier same day: Batches 3 & 4 — Marketing module + Timesheets.)
+patterns. Earlier same day: Batches 3 & 4 — Marketing module + Timesheets. Since then: Sana's
+review of Marketing added a large batch of new requirements (proposal builder removed in favor
+of richer project fields + a real photo workflow, content calendar rework, CRM portfolio
+downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
+six of the seven open decisions below.)
 
 ## Next batch (UI demo work, ready to build)
 
@@ -22,13 +26,16 @@ patterns. Earlier same day: Batches 3 & 4 — Marketing module + Timesheets.)
   client, description) + industry (mainFunction), built-up-area bands, scope, status, and
   readiness filters with a live "N of M" counter; scope now derives via shared `scopeOf()`
   in projectsData (seeds have no scope field).
-- [ ] **Company details fields** (3 Jul) — CRM companies get: website, head office location,
-  size (employee band), relationship type (Client / Contractor / Developer / Partner /
-  Subconsultant / Government…). Relationship type also answers the naming question below.
+- [ ] **Company details fields** (3 Jul, refined 3 Jul — decision made) — CRM companies get:
+  website, head office location, size (employee band), and **relationship tags — multi-select,
+  not a single type** (a company can be Client AND Supplier at once, e.g.). Add relationship
+  tag(s) as a filter, plus filters based on the company's experience/main service (disciplines
+  for subconsultants, or main business line generally). This closes the "Companies naming"
+  decision below — name stays "Companies", the tag does the work a rename would have.
 - [ ] **Subconsultant tracking** (3 Jul) — track subconsultants: what they do (disciplines),
-  contacts/people, last worked with (per project), notes. Likely = CRM company with
-  relationshipType 'Subconsultant' + a per-project link (which project, what scope, how did it
-  go) rather than a separate module.
+  contacts/people, last worked with (per project), notes. = CRM company with a 'Subconsultant'
+  relationship tag (see above, now multi-select) + a per-project link (which project, what
+  scope, how did it go) rather than a separate module.
 - [ ] **Lessons learned & notes** (3 Jul) — lessons learned per project (list on the project
   record); "keep in mind" notes on companies/clients/people (CRM + subconsultants). Same
   free-text + date + author shape everywhere.
@@ -74,6 +81,68 @@ patterns. Earlier same day: Batches 3 & 4 — Marketing module + Timesheets.)
   (seniority covers the demo). If the company genuinely uses pay grades, add it back as an
   HR-side field. **Ask management which.**
 
+- [ ] **Remove Proposal Builder; move its fields onto the project record** (3 Jul — Sana's
+  review) — "Portfolio + CV search is enough — the proposal builder doesn't work because this
+  information needs to live in the actual documents, not a separate assembly tool." Remove the
+  Proposal Builder tile/page entirely. Instead expand the **project record** with the richer
+  fields Marketing actually needs: client, size, project value, location, year started, year
+  completed, scope, description, and **images** (no image field exists today — file-name-only
+  is fine, matching the Phase 2 storage placeholder pattern used elsewhere), plus a free-form
+  **"special features" list** for anything project-specific and notable (number of students,
+  number of beds, uptime %, or whatever else applies) — not a fixed schema, since this varies
+  wildly by project type.
+- [ ] **Project photo task becomes a real multi-step workflow, not one click** (3 Jul) — Today
+  Marketing's inbox has a single "Approve photos" button. Replace with a small state machine:
+  (1) arrange a photographer or an in-house Marketing person, (2) coordinate with the
+  **Supervision team** so the shoot happens *before* the project is released/handed over,
+  (3) photos taken, (4) photos reviewed, approved, and uploaded — only then is the task done.
+  Ties into the completion gate already in place (SPEC.md §Marketing).
+- [ ] **Content calendar: fixed channel set + copy/media as the primary fields** (3 Jul) —
+  Channels are only **Website, LinkedIn, Email** (drop Instagram/Print/Event from
+  `CONTENT_CHANNELS` in `marketingData.js`). Title becomes optional ("for reference" only) —
+  the real content is the **copy** (text) and **media** (any attached image/asset); make those
+  the fields that matter, not the title.
+- [ ] **Content list view: structured columns, like the Batch 5 inbox rework** (3 Jul) — Sana
+  liked the fixed-column alignment from Batch 5 (type chip / description / age / actions, status
+  clearly stacked, quick actions aligned across rows). Apply that same treatment to the Content
+  calendar's list view — and treat it as the **house style for any listed page going forward**
+  (projects, inboxes, whatever), not a one-off.
+- [ ] **Content calendar: custom date range view** (3 Jul) — add a From/To custom range option
+  alongside the month view, matching the date-range selector already built for CRM
+  Pipeline/Reports.
+- [ ] **Campaigns** (3 Jul, tentative — needs scoping before building) — Sana: "perhaps we can
+  plan and start a campaign too?" A lightweight grouping of coordinated content pieces under a
+  campaign name/goal. Discuss shape with Sana before building blind.
+- [ ] **CRM: downloadable portfolio PDFs by category** (3 Jul) — let CRM users download
+  portfolio PDFs that Marketing has prepared and uploaded (not auto-generated). Organize by
+  portfolio type — e.g. Education, Data Center, Mixed Use, Communities, Industrial — **and the
+  type list must be extensible** (add a new category without a code change).
+- [ ] **Branding: logo & font library overhaul** (3 Jul) — remove the Arabic logo asset.
+  Logo variants needed: **Symbol, Primary, Vertical**, each in two-plus color versions. Add font
+  assets: the Arabic font and the English font. Add a **quick-guidelines section** (candidate to
+  become Branding's default/main view) covering when to use which logo variant, which font, and
+  which colors. Add two new brand documents: **Brand Guidelines** and a **Platform + Narrative
+  Guide**.
+- [ ] **HR: add "Request business card" to self-service** (3 Jul) — new request type alongside
+  leave/certificate/concern, same request→inbox→fulfil shape.
+- [ ] **CRM: make the name clickable in "Needs Follow-Up"** (3 Jul) — today the contact's name in
+  the Needs Follow-Up dashboard widget isn't a link, so there's no way to get their phone number
+  from it. Make the name clickable, surfacing phone, email, company, and current project (if
+  any) — presumably by opening the existing contact detail modal.
+- [ ] **HR: documents get a real review status (edit + reject)** (3 Jul — decision resolved) —
+  `DocumentChecklist` today is upload/remove only. Add a status per document (pending / verified
+  / rejected) with a rejection reason that prompts re-upload, and let HR edit the record around
+  it — same shape as the existing certificate/leave rejection flow.
+- [ ] **Payroll cutoff on last working day** (3 Jul — decision resolved) — when an employee's
+  last working day is set (offboarding), stop payroll after that date; calculate end-of-service
+  settlement and anything else owed and fold it into **that month's** payroll run.
+- [ ] **Mid-month hire "late pay" catch-up** (3 Jul — decision resolved) — auto-calculate the
+  pro-rated salary percentage for the partial days worked in the joining month, and add that
+  catch-up amount to the **next** month's payroll run (not the joining month itself).
+- [ ] **Leave approval: manager first, then HR** (3 Jul — decision resolved) — two-step chain,
+  same pattern as the line-manager timesheet approval from Batch 5 (`managerId`-derived team
+  view). Supersedes the HR-only interim in `LeaveDashboard`/`HRInbox`.
+
 ## Shipped — Batch 2 (3 Jul 2026, night)
 
 - [x] ~~HR "Add employee" direct entry~~ — People view button (HR staff only), same employment
@@ -92,28 +161,41 @@ patterns. Earlier same day: Batches 3 & 4 — Marketing module + Timesheets.)
 
 ## Needs a decision from Sana / management before building
 
-- [ ] **"Companies" naming** (3 Jul) — clients are rarely individuals, and companies aren't always
-  clients (partners, subconsultants, contractors…). "Clients" doesn't fit either. Options:
-  keep "Companies" + a prominent relationship-type field/filter, or rename to something neutral
-  ("Organizations", "Directory"). Individuals-as-clients: allow a company record flagged
-  `kind: individual`? Decide before the CRM relabel.
+Six of the seven open questions were resolved 3 Jul — decisions captured here, the resulting
+build work moved into **Next batch** (or **Phase 2** where the decision itself depends on the
+real backend). Individuals-as-clients (`kind: individual` company records) is the one piece of
+the naming question still open — folded into it below.
 
-- [ ] **HR document review** — new employees upload documents in the self-service wizard; HR sees
-  them in the review modal (read-only). But **can HR edit/delete/request re-upload if a document is
-  wrong?** Decide the workflow.
-- [ ] **Offboarding & payroll** — when offboarding is marked complete, does it auto-stop the
-  employee's payroll deductions / final settlement? Or is that a separate Finance step?
-- [ ] **Mid-month hires and "late pay"** — what happens when someone joins mid-month (e.g.,
-  15th)? ALSUWEIDI has a concept called "late pay" — clarify: is that a payroll adjustment, a
-  flag, or something else? How should the system handle pro-rated salary or holdbacks?
-- [ ] **Login ↔ employee identity** — today "who am I" is matched by typing your exact full name at
-  login. Works for a demo, but "My projects", leave balances, and self-service all hang off it.
-  Decide the model (pick from employee list at login? invite codes?) — this also shapes the
-  Phase 2 auth schema, so worth deciding early.
-- [ ] **Manager role in leave approval** — currently HR-only, single-step. Original design says
-  manager-first chains are Phase 2, but management may notice PMs can't see team leave at all.
-  Decide: keep HR-only for the demo, or give managers a read-only team-leave view now?
-- [ ] **CRM vs Bidding separation** — watch for this request when management reviews Phase 1.
+- [ ] **Individuals as CRM clients** (3 Jul, split off from "Companies" naming) — the naming
+  half is resolved (see Next batch: relationship tags, multi-select). Still open: should an
+  individual client be allowed as a company record flagged `kind: individual`, or handled some
+  other way? Decide before building.
+
+### Resolved 3 Jul
+
+- [x] ~~"Companies" naming~~ — **Decided:** keep the name "Companies". Add a **multi-select**
+  relationship tag (a company can be Client *and* Supplier at once) plus filters on relationship
+  tag and on experience/main service. See Next batch: Company details fields.
+- [x] ~~HR document review~~ — **Decided: yes, HR can edit and reject** documents uploaded by
+  employees. Today `DocumentChecklist` has no review status at all (upload/remove only) — build
+  work: add a review status + rejection reason, matching the pattern already used for leave/cert
+  rejections elsewhere in HR. → add to Next batch.
+- [x] ~~Offboarding & payroll~~ — **Decided:** when a last working day is set, payroll cuts off
+  after that date; end-of-service settlement and anything else owed gets calculated and folded
+  into **that month's** payroll run (no separate off-cycle run, for now). → add to Next batch.
+- [x] ~~Mid-month hires and "late pay"~~ — **Decided:** automatically calculate the pro-rated
+  percentage of salary for the partial days worked in the starting month, and add that "late
+  pay" catch-up amount onto the **next** payroll cycle (not the first partial month itself —
+  deferred one cycle). → add to Next batch.
+- [x] ~~Login ↔ employee identity~~ — **Decided:** when an employee record is created, send an
+  automated email with a link to set a password — that becomes their login. From then,
+  onboarding should be **mandatory before anything else** in the system. Note: the email-sending
+  half needs the Phase 2 backend (already tracked under Phase 2 → Email/notifications); the
+  "mandatory onboarding gate" UI could be attempted sooner as a client-side-only piece.
+- [x] ~~Manager role in leave approval~~ — **Decided: yes** — manager approves first, then HR
+  (two-step chain), mirroring the line-manager timesheet approval shipped in Batch 5. → add to
+  Next batch.
+- [x] ~~CRM vs Bidding separation~~ — **Decided: keep together for now.** No action.
 
 ## Future / TBD Scope (awaiting spec or prioritization)
 
@@ -124,8 +206,10 @@ patterns. Earlier same day: Batches 3 & 4 — Marketing module + Timesheets.)
   lives in Payroll (monthly adjustment) or separate module (Compensation → Bonuses tab). (Spec pending.)
 - [ ] **Evaluation system** — performance reviews, feedback cycles, review workflows (self → manager →
   HR review), rating models, competency mapping. Overlaps with Appraisals module. (Spec pending.)
-- [ ] **Content calendar** — marketing/comms planning (posts, campaigns, milestones, publishing schedule,
-  asset ownership, approval workflows). May tie to project timelines and news feed.
+- [ ] **Content calendar** — *stale — the content calendar itself shipped in Batch 3; the
+  still-open pieces (campaigns, custom date range, channel/field rework) are now tracked
+  individually in Next batch.* Leaving this line as a reminder of the original broader
+  ambition (asset ownership, tying into project timelines / a news feed) in case it resurfaces.
 - [ ] **Marketing metrics & analytics** — campaign performance, portfolio engagement (views/downloads),
   proposal win/loss rates, content ROI tracking.
 
