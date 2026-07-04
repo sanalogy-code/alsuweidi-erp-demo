@@ -12,9 +12,9 @@
 //   goodtohave   — fresh ideas noticed while reviewing (not yet agreed)
 //   phase2       — needs the real backend
 //
-// Last reviewed: 2026-07-04 (Batch 7 — Financials first pass + this log).
+// Last reviewed: 2026-07-05 (Batch 8 — Admin Center).
 
-export const DEV_LOG_UPDATED = '2026-07-04'
+export const DEV_LOG_UPDATED = '2026-07-05'
 
 export const DEV_LOG = [
   {
@@ -23,6 +23,7 @@ export const DEV_LOG = [
     accent: 'emerald',
     blurb: 'Shipped and live on the demo. Built in fast batches on real management feedback.',
     items: [
+      { title: 'Batch 8 — Admin Center', detail: 'Users (add / edit role / disable / delete, mock invitation flow), role × module permissions matrix mirroring the real app gating (the Phase 2 RBAC spec, visualized), filterable audit-trail mock, usage dashboards. Last "Coming Soon" tile gone.', meta: '4 Jul 2026', status: 'shipped' },
       { title: 'Batch 7 — Financials & Accounting (first pass)', detail: 'New gated module: overview (cash, receivables, revenue by project type), invoices linked to projects, expenses with approvals, P&L summary. Demo-grade conversation starter.', meta: '4 Jul 2026', status: 'shipped' },
       { title: 'Batch 7 — Dashboard work log', detail: 'This presentable log, data-driven from devLogData.js.', meta: '4 Jul 2026', status: 'shipped' },
       { title: 'Batch 6 — 19 items across CRM / Marketing / HR / IT', detail: 'CRM company tags + subconsultant history + lessons/notes; Marketing proposal-builder removal, 4-step photo workflow, content calendar rework, branding overhaul; HR faster timesheets, overhead codes, reminder/lockout gate, business cards, document review, payroll offboarding + mid-month-hire catch-up, two-step leave approval; new IT + Admin-staff roles.', meta: '3 Jul 2026', status: 'shipped' },

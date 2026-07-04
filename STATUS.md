@@ -2,13 +2,16 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-04 (Batch 7 shipped — Financials & Accounting module first pass + Developer Dashboard work log)
+**Last updated:** 2026-07-05 (Batch 8 shipped — Admin Center module: users, roles & permissions, activity log)
 
-**Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed. **Financials is gated to Management/Admin** — log in as `Management` to see it.
+**Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed. **Financials and the Admin Center are gated to Management/Admin** — log in as `Management` to see them.
 
-**Phase 1 Status:** Six modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), Projects (dashboard + portfolio + record), IT & Assets, Marketing, and **Financials (new — first-pass, demo-grade)**. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
+**Phase 1 Status:** Seven modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), Projects (dashboard + portfolio + record), IT & Assets, Marketing, Financials (first-pass, demo-grade), and **Admin Center (new)**. Every home tile is now live — no "Coming Soon" left. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (Batch 7, 4 Jul 2026):**
+**Latest (Batch 8, 4 Jul 2026 evening):**
+- **Admin Center (new module):** `/admin`, gated to Management/Admin (`ADMIN_VIEW_ROLES` in `data/adminData.js`), sidebar nav — **Overview** (account stats, active users by role, mock 30-day module usage, needs-attention list, recent activity), **Users** (accounts mirroring the HR seeds — add user with mock invitation email, edit role, password reset, disable/enable, delete with "disable instead" advice), **Roles & permissions** (the role × module access matrix mirroring the app's real client-side gates — click-to-cycle, reset button; doubles as the Phase 2 RBAC spec), **Activity log** (filterable mock audit trail incl. an access-denied event). Honest caveat shown on-screen: login is still password-less, so accounts are display-only until Phase 2 auth. The unused ComingSoon page was deleted.
+
+**Earlier (Batch 7, 4 Jul 2026):**
 - **Financials & Accounting (new module):** first UI pass, gated to Management/Admin (`FINANCE_VIEW_ROLES`). `/finance` with sidebar nav — Overview (cash position, receivables/payables, overdue, revenue by project type, recent invoices), Invoices (client invoices linked to projects/deals: draft → sent → partially paid → paid → overdue, with send/mark-paid), Expenses (categories + approval status, approve/reject), and a P&L summary (H1 2026 monthly breakdown + income statement + net trend). Seed data (`data/financeData.js`) ties into the Projects/CRM seeds — invoices bill against project consultancy fees, a couple trace back to won deals. **Demo-grade — a conversation starter; needs proper scoping with Sana/Finance (see BACKLOG.md).**
 - **Developer Dashboard work log:** a presentable, data-driven "log for show" at the bottom of `/dev` — category tabs (Done / To do / Needs a decision / Good to have / Phase 2) with fixed-column rows, status chips, right-aligned dates. Data in `data/devLogData.js`.
 - **Code review:** medium-effort review over the Batch 6–7 diff found **no confirmed correctness bugs** — the code is defensively written; the few low-confidence candidates were refuted against the actual code and seeds.
@@ -127,6 +130,21 @@ but coherent first pass for requirements gathering — **not real accounting**. 
 - Everything is clearly marked mock/Phase 2: real ledger, VAT returns, bank feed, WPS→P&L
   integration and reconciliation are Phase 2. **Scope needs a proper conversation with Sana/Finance.**
 
+### ✅ Admin Center — LIVE (new in Batch 8 — users, roles, audit)
+
+Management/Admin only (`ADMIN_VIEW_ROLES`; same restricted-screen + hidden-tile pattern as
+Financials). Demo-grade user management to agree the workflows before Phase 2 auth. `data/adminData.js`.
+
+- **Overview** — active/invited/disabled counts, access-denied alerts, active users by role,
+  mock 30-day module-usage bars, needs-attention list, recent activity.
+- **Users** — every login (seeded from the HR employees + Sana + the PRO company + a pending
+  invite): add user (mock invitation email per the 3 Jul login decision), edit name/email/role,
+  password reset (mock), disable/re-enable, delete behind a confirm that recommends disabling.
+- **Roles & permissions** — role × module matrix (— / View / Full) mirroring the app's actual
+  client-side gates; click-to-cycle with a reset button. This is the Phase 2 RBAC spec, visualized.
+- **Activity log** — filterable mock audit trail (user / module / action kind) across modules.
+- On-screen caveat: the login page is still password-less, so none of this gates sign-in yet.
+
 ### ✅ Projects module — LIVE (dashboard + portfolio + record)
 
 **New in Batch 2:** "New project" button for direct awards/tenders (LOA attachment still required — same rule as the won-deal path), an Edit modal on the record (financial fields visible only to sensitive roles), stage back/advance controls under the pipeline strip, and inline supervision approved/actual % updates.
@@ -143,7 +161,7 @@ Modeled on the structure of the company's existing ERP export (140 projects × 4
 - **Cross-module links** — DPM/CPM open the HR profile; employers matching CRM companies are tagged "CRM client"
 
 ### 📋 Not yet built (known gaps, roughly in priority order)
-- **RBAC is prototyped, not enforced** — the UI genuinely gates by role now (sensitive tabs, HR workspace), which doubles as the Phase 2 access-control spec, but it's client-side against a password-less login. Real enforcement (auth + API filtering) is the first backend job — see SPEC.md §5.
+- **RBAC is prototyped, not enforced** — the UI genuinely gates by role now (sensitive tabs, HR workspace), and the Admin Center renders the full role × module matrix as the Phase 2 access-control spec — but it's client-side against a password-less login, and the Admin Center's user accounts/invites/audit log are display-only mocks. Real enforcement (auth + API filtering) is the first backend job — see SPEC.md §5.
 - **No notifications** — leave (manager → HR) and timesheet (line manager) approval chains now exist in the UI, but nobody gets notified of anything, and nothing hard-blocks conflicting leave. Phase 2.
 - **Attendance device feed** — dashboard is mocked; fingerprint/biometric integration needs the backend. Timesheets are fully built (grid, overhead codes, manager approvals, per-employee work weeks, reminder + lockout) but the payroll block is display-only and the lockout is demo-dismissable — real enforcement is Phase 2.
 - **Zoho Sign integration** (mocked), **document/media storage** (everything is file-name-only — documents, project images, portfolio PDFs, brand assets), **appraisals** (awaiting spec — cycle, reviewers, rating model).

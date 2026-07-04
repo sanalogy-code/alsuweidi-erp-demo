@@ -4,7 +4,9 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-04 (Batch 7 shipped — Financials & Accounting module first pass +
+**Last updated:** 2026-07-05 (Batch 8 shipped — Admin Center module: users, roles & permissions
+matrix, activity log. See "Shipped — Batch 8" below. Earlier: Batch 7 shipped — Financials &
+Accounting module first pass +
 Developer Dashboard work log. See "Shipped — Batch 7" below. Earlier: Batch 6 shipped — 19 items, nearly the whole "Next batch": CRM
 company tags/details + subconsultant tracking + lessons & notes + clickable Needs Follow-Up +
 portfolio PDF downloads; Marketing proposal-builder removal + richer project record + 4-step
@@ -144,6 +146,19 @@ six of the seven open decisions below.)
   get a "Team leave" view + badge ("Approve → HR"), HR inbox shows only manager-approved or
   no-manager requests, and My requests shows "Awaiting manager (1/2)" / "Awaiting HR (2/2)".
   Demo: "Osama Hussain" (manager step for Hassan) then "Layla Al Mazrouei" (HR final).
+
+## Shipped — Batch 8 (4 Jul 2026, evening)
+
+- [x] ~~Admin Center module~~ — **Shipped Batch 8 (4 Jul):** new gated module (`/admin`, tile +
+  `ADMIN_VIEW_ROLES = admin/management` in `data/adminData.js`) with sidebar nav: **Overview**
+  (account stats, active users by role, mock 30-day module usage, needs-attention list, recent
+  activity), **Users** (accounts seeded from the HR employees + Sana + PRO company + a pending
+  invite — add user with mock invitation email, edit role, password reset, disable/enable,
+  delete with "disable instead" advice), **Roles & permissions** (role × module matrix mirroring
+  the app's real client-side gates — click-to-cycle — / View / Full, reset button; doubles as
+  the Phase 2 RBAC spec), **Activity log** (filterable mock audit trail incl. access-denied).
+  On-screen caveat: login stays password-less, so accounts are display-only until Phase 2 auth.
+  Removed the now-unused ComingSoon page — every home tile is live.
 
 ## Shipped — Batch 7 (4 Jul 2026)
 

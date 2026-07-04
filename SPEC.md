@@ -11,7 +11,7 @@ If you're a developer, an AI agent, or anyone picking this project up cold: read
 ## 1. Architecture
 
 - **Frontend**: React 18 + Vite + Tailwind CSS + React Router. No backend, no API calls, no database.
-- **State**: all data lives in `useState` at the page level (`pages/CRM.jsx`, `pages/HR.jsx`, `pages/Projects.jsx`, `pages/IT.jsx`, `pages/Marketing.jsx`; public holidays, projects, deals, and **marketing tasks** are lifted to `App.jsx` — the last because other modules feed Marketing's inbox) and is passed down as props. Two exceptions: portfolio packs live in a tiny `useSyncExternalStore` module store (`data/portfolioPacksStore.js` — shared between the Marketing and CRM route trees), and the timesheet reminder/lockout gate (`components/TimesheetGate.jsx`) wraps the whole app. Refreshing the page resets everything to the seed data in `data/*.js`. This is intentional for now — see §5.
+- **State**: all data lives in `useState` at the page level (`pages/CRM.jsx`, `pages/HR.jsx`, `pages/Projects.jsx`, `pages/IT.jsx`, `pages/Marketing.jsx`, `pages/Finance.jsx`, `pages/Admin.jsx`; public holidays, projects, deals, and **marketing tasks** are lifted to `App.jsx` — the last because other modules feed Marketing's inbox) and is passed down as props. Two exceptions: portfolio packs live in a tiny `useSyncExternalStore` module store (`data/portfolioPacksStore.js` — shared between the Marketing and CRM route trees), and the timesheet reminder/lockout gate (`components/TimesheetGate.jsx`) wraps the whole app. Refreshing the page resets everything to the seed data in `data/*.js`. This is intentional for now — see §5.
 - **Auth**: cosmetic only. Login is a name + role dropdown, no password, nothing sent anywhere. The `role` field **does** drive what renders (sensitive tabs, HR workspace, project financials — see role groups in §2), but purely client-side; anyone can pick any role — see §5.
 - **Hosting**: [github.com/sanalogy-code/alsuweidi-erp-demo](https://github.com/sanalogy-code/alsuweidi-erp-demo) → Cloudflare Pages, auto-deploys on push to `master`.
 - **Dependencies of note**: `lucide-react` (icons), `xlsx` (Excel/CSV export, lazy-loaded via dynamic `import()` so it doesn't bloat the main bundle — installed from SheetJS's own CDN build, not the npm registry package, which has two unpatched CVEs that don't apply to write-only usage but aren't worth shipping anyway).
@@ -196,7 +196,16 @@ Modeled on the column structure of the company's existing ERP export (140 projec
 
 Batch 6 added two roles: `it` (IT department) and `adminstaff` (office administration — employee-level access only, no sensitive data). The full role → workspace matrix is documented in a comment in `dashboardData.js`.
 
-`HR_STAFF_ROLES = ['hr', 'admin']` (process requests: inbox, certificates, complaints, holidays, business cards, document review). `SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']` (view sensitive data: visa/dependents/compensation tabs, renewals, payroll, attendance, leave planner, timesheet oversight, project financials). `IT_VIEW_ROLES = ['it', 'admin', 'management']` (IT workspace — Batch 6; HR staff no longer piggyback). `MARKETING_VIEW_ROLES = ['marketing', 'management', 'admin']` (Marketing workspace — everything except Branding, which is visible to everyone). `FINANCE_VIEW_ROLES = ['management', 'admin']` (Batch 7 — the whole Financials & Accounting module is sensitive; other roles get a "Restricted module" screen and the home tile is hidden). Separately from role groups, anyone with direct reports (`managerId` links) gets Team timesheets and Team leave approval views. Client-side gating only — see §5.
+`HR_STAFF_ROLES = ['hr', 'admin']` (process requests: inbox, certificates, complaints, holidays, business cards, document review). `SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']` (view sensitive data: visa/dependents/compensation tabs, renewals, payroll, attendance, leave planner, timesheet oversight, project financials). `IT_VIEW_ROLES = ['it', 'admin', 'management']` (IT workspace — Batch 6; HR staff no longer piggyback). `MARKETING_VIEW_ROLES = ['marketing', 'management', 'admin']` (Marketing workspace — everything except Branding, which is visible to everyone). `FINANCE_VIEW_ROLES = ['management', 'admin']` (Batch 7 — the whole Financials & Accounting module is sensitive; other roles get a "Restricted module" screen and the home tile is hidden). `ADMIN_VIEW_ROLES = ['admin', 'management']` (Batch 8, lives in `adminData.js` — the Admin Center, same gating pattern as Finance). Separately from role groups, anyone with direct reports (`managerId` links) gets Team timesheets and Team leave approval views. Client-side gating only — see §5.
+
+### Admin model (`frontend/src/data/adminData.js`, Batch 8)
+
+| Entity | Shape / notes |
+|---|---|
+| `USER_ACCOUNTS` | `{ id, name, email, role, employeeId (FK → EMPLOYEES, null for system/external accounts), status: active\|invited\|disabled, createdDate, lastLogin, logins30d, note?, disabledReason? }` — seeded to mirror the HR employee seeds plus Sana (system admin), the PRO company, and one pending invite |
+| `DEFAULT_PERMISSIONS` | role × module access matrix (`none\|view\|full` per `PERMISSION_MODULES` key) — **mirrors the app's actual client-side gates** (`*_VIEW_ROLES` + per-view checks) and doubles as the Phase 2 RBAC spec. Keep in sync when a gate changes |
+| `AUDIT_LOG` | mock audit trail: `{ ts, user, module, kind: login\|create\|update\|approve\|reject\|delete\|access_denied\|export, detail }` — entries reference real seed events across modules |
+| `MODULE_USAGE_30D` | mock 30-day sessions per module for the usage bars |
 
 ---
 
@@ -325,6 +334,30 @@ Everything is clearly marked mock/Phase 2 — real ledger, VAT returns, bank fee
 integration and reconciliation are Phase 2, and the module scope itself needs a proper
 conversation with Sana/Finance (see BACKLOG.md → Needs a decision).
 
+### Admin Center (`pages/Admin.jsx`, Batch 8, data in `data/adminData.js`)
+
+Gated to `ADMIN_VIEW_ROLES` (admin + management) with the Finance pattern (restricted screen for
+other roles, home tile hidden). Replaced the last "Coming Soon" tile — `pages/ComingSoon.jsx` is
+deleted. Sidebar nav:
+
+1. **Overview** (`AdminOverview`) — account stat cards (active / invited / disabled / access-denied,
+   each jumping to the relevant view), active users by role bars, mock 30-day module-usage bars,
+   a "Needs attention" list (pending invites, access denials, disabled accounts) and recent activity.
+2. **Users** (`UsersView`) — search + role/status filters over `USER_ACCOUNTS`; **Add user** (name /
+   email / role → account created as `invited`, invitation email mocked per the 3 Jul login decision);
+   per-row actions: edit (name/email/role), send password reset (mock), disable / re-enable sign-in,
+   and delete behind a confirm dialog that recommends disabling instead (audit-trail advice).
+3. **Roles & permissions** (`RolesPermissionsView`) — the role × module matrix, click-to-cycle
+   `— → View → Full`, per-role active-user counts, "Reset to current app gating" button (dirty
+   state derived by comparison, so it survives view switches). Edits capture requirements only —
+   they don't re-gate the running demo.
+4. **Activity log** (`AuditLogView`) — the mock audit trail with user / module / action-kind
+   filters and an access-denied counter.
+
+**Honest caveat, stated on-screen:** login is still password-less, so these accounts don't
+actually control who can sign in — user management becomes real in Phase 2 (auth + invite email
+→ set password → mandatory onboarding).
+
 ---
 
 ## 4. UI Conventions
@@ -340,7 +373,8 @@ conversation with Sana/Finance (see BACKLOG.md → Needs a decision).
 
 This is the honest risk list, not just a TODO.
 
-- **RBAC is prototyped, not enforced.** The UI now genuinely gates by role (`HR_STAFF_ROLES` / `SENSITIVE_VIEW_ROLES` hide sensitive views, PRO role isolation limits access to task queue only, and multi-lens designs answer "what should each role see") — but it's all client-side against a password-less login where anyone can pick any role from a dropdown. The gating is the *spec* for Phase 2, not security. Real enforcement (auth + API-level filtering) is the first backend job.
+- **RBAC is prototyped, not enforced.** The UI now genuinely gates by role (`HR_STAFF_ROLES` / `SENSITIVE_VIEW_ROLES` hide sensitive views, PRO role isolation limits access to task queue only, and multi-lens designs answer "what should each role see"), and since Batch 8 the Admin Center renders the whole role × module matrix explicitly — but it's all client-side against a password-less login where anyone can pick any role from a dropdown. The gating (and now the matrix) is the *spec* for Phase 2, not security. Real enforcement (auth + API-level filtering) is the first backend job.
+- **Admin Center user management is display-only.** Accounts, invites, password resets, disable/delete, and the audit log are all in-memory mocks — none of it touches the (password-less) login. It exists to agree the workflows before Phase 2 wires them to real auth and a real audit trail.
 - **No persistence.** Every add/edit/delete is `setState` on in-memory arrays. Refreshing resets to seed data — visibly so, now that there are inbox queues and badges. Fine for Phase 1 demo; Phase 2 backend will fix this.
 - **Approval chains exist, but nothing notifies anyone.** Leave (manager → HR, Batch 6) and timesheets (line manager, Batch 5) now have real two-step/manager approval in the UI, and the planner flags same-team overlaps — but there are no notifications and nothing *prevents* approving a conflicting leave request. Notification plumbing is Phase 2.
 - **Attendance is a mock dashboard.** The layout exists for sign-off; the actual fingerprint/card-reader feed and timesheet validation need the Phase 2 backend. Timesheets themselves are built (grid, copy-last-week, overhead codes, manager approvals, per-employee work weeks, reminder + lockout gate) — but the "unsubmitted blocks payroll" rule is display-only and the lockout has a deliberate "demo: dismiss" escape hatch; real enforcement is Phase 2.
