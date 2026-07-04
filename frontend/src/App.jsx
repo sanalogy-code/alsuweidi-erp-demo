@@ -9,7 +9,7 @@ import Projects from './pages/Projects'
 import IT from './pages/IT'
 import Marketing from './pages/Marketing'
 import Finance from './pages/Finance'
-import ComingSoon from './pages/ComingSoon'
+import Admin from './pages/Admin'
 import TimesheetGate from './components/TimesheetGate'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
 import { TIMESHEETS } from './data/timesheetData'
@@ -122,7 +122,7 @@ export default function App() {
       <Route path="/finance" element={<Finance user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/content" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
-      <Route path="/admin" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="admin" />} />
+      <Route path="/admin" element={<Admin user={user} onLogout={handleLogout} />} />
       <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       </Routes>
     </>

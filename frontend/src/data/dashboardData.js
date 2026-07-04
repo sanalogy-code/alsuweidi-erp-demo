@@ -61,7 +61,8 @@ export const MODULES = [
   { key: 'marketing', icon: '📈', label: 'Marketing', description: 'Content, portfolio, branding & analytics', path: '/marketing', status: 'live' },
   // Finance tile is gated — only shown to FINANCE_VIEW_ROLES (see roles below). HomePage filters on `roles`.
   { key: 'finance', icon: '💰', label: 'Financials', description: 'Invoices, expenses, cash & P&L', path: '/finance', status: 'live', roles: ['admin', 'management'] },
-  { key: 'admin', icon: '⚙️', label: 'Admin Center', description: 'Users, roles & permissions', path: '/admin', status: 'soon' },
+  // Admin tile is gated like Finance — only shown to ADMIN_VIEW_ROLES (adminData.js).
+  { key: 'admin', icon: '⚙️', label: 'Admin Center', description: 'Users, roles & permissions', path: '/admin', status: 'live', roles: ['admin', 'management'] },
 ]
 
 export const ROLES = [
