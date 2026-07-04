@@ -196,7 +196,7 @@ Modeled on the column structure of the company's existing ERP export (140 projec
 
 Batch 6 added two roles: `it` (IT department) and `adminstaff` (office administration — employee-level access only, no sensitive data). The full role → workspace matrix is documented in a comment in `dashboardData.js`.
 
-`HR_STAFF_ROLES = ['hr', 'admin']` (process requests: inbox, certificates, complaints, holidays, business cards, document review). `SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']` (view sensitive data: visa/dependents/compensation tabs, renewals, payroll, attendance, leave planner, timesheet oversight, project financials). `IT_VIEW_ROLES = ['it', 'admin', 'management']` (IT workspace — Batch 6; HR staff no longer piggyback). `MARKETING_VIEW_ROLES = ['marketing', 'management', 'admin']` (Marketing workspace — everything except Branding, which is visible to everyone). Separately from role groups, anyone with direct reports (`managerId` links) gets Team timesheets and Team leave approval views. Client-side gating only — see §5.
+`HR_STAFF_ROLES = ['hr', 'admin']` (process requests: inbox, certificates, complaints, holidays, business cards, document review). `SENSITIVE_VIEW_ROLES = ['hr', 'admin', 'management']` (view sensitive data: visa/dependents/compensation tabs, renewals, payroll, attendance, leave planner, timesheet oversight, project financials). `IT_VIEW_ROLES = ['it', 'admin', 'management']` (IT workspace — Batch 6; HR staff no longer piggyback). `MARKETING_VIEW_ROLES = ['marketing', 'management', 'admin']` (Marketing workspace — everything except Branding, which is visible to everyone). `FINANCE_VIEW_ROLES = ['management', 'admin']` (Batch 7 — the whole Financials & Accounting module is sensitive; other roles get a "Restricted module" screen and the home tile is hidden). Separately from role groups, anyone with direct reports (`managerId` links) gets Team timesheets and Team leave approval views. Client-side gating only — see §5.
 
 ---
 
@@ -295,6 +295,35 @@ Content sits *inside* Marketing (the separate "Content" home tile was removed). 
 5. **CV search** (`CvSearch`, shared with HR People) — keyword / department / accomplishment filters over active employees, accomplishment chips, headshot-on-file indicator.
 6. **Analytics** (`MarketingAnalytics`) — proposal win rate computed **live from CRM deals** (won vs lost); portfolio-ready count; content pipeline by status; LinkedIn follower/seniority and website top-pages panels are labelled mock feeds pending Phase 2 integrations.
 7. **Branding** (`BrandAssetsView`, everyone; overhauled Batch 6) — **Quick guidelines** is the default view (logo / font / colour usage rules); asset library has Symbol/Primary/Vertical logos in full-colour + reversed (Arabic logo removed), English + Arabic font assets, Brand Guidelines + Platform & Narrative Guide documents, templates, stationery, photography — category filter chips; downloads demo-only until Phase 2 file storage.
+
+### Financials & Accounting (`pages/Finance.jsx`, Batch 7, data in `data/financeData.js`)
+
+First-pass, demo-grade UI proof-of-concept — **not real accounting**. The whole module is
+sensitive: gated to `FINANCE_VIEW_ROLES` (management + admin); other roles get a "Restricted
+module" screen and the home tile is hidden (`MODULES` entries can carry an optional `roles`
+filter, applied in `HomePage`). Sidebar nav matching the other modules:
+
+1. **Overview** (`FinanceOverview`) — cash position (mock `CASH_ACCOUNTS`), receivables
+   outstanding, payables (approved + pending expenses), overdue total; revenue by project type
+   (invoices joined to `PROJECTS` by `type`); cash-accounts breakdown; recent invoices.
+2. **Invoices** (`InvoicesView`) — client invoices billed against project **consultancy fees**
+   (not construction cost), linked to projects by `projectId` and a couple to won deals by
+   `dealId`. Status flow `draft → sent → partially_paid → paid`, with `overdue` layered on an
+   unpaid invoice past its due date; 5% UAE VAT (`VAT_RATE`); outstanding = total − paid; status
+   filter; send / mark-paid actions (in-memory).
+3. **Expenses** (`ExpensesView`) — `EXPENSE_CATEGORIES` (software, subconsultants, rent, travel,
+   government fees…), approval status `pending → approved | rejected | reimbursed`, category +
+   status filters, approve/reject, optional `projectId` job-costing link.
+4. **P&L summary** (`ProfitLossView`) — `MONTHLY_PL` H1 2026 breakdown (revenue / direct costs /
+   payroll / overhead / net) + income statement + net-profit trend + margin.
+
+Data model (`financeData.js`): `INVOICES` `{ invoiceNo, projectId (FK), companyId (FK), clientName,
+description, issueDate, dueDate, amount (net), vatAmount, amountPaid, status, dealId? }`;
+`EXPENSES` `{ date, category, vendor, description, amount, status, submittedBy, projectId? }`;
+`CASH_ACCOUNTS`, `MONTHLY_PL`. Helpers: `fmtAED`, `invoiceTotal/Outstanding`, `deriveInvoiceStatus`.
+Everything is clearly marked mock/Phase 2 — real ledger, VAT returns, bank feed, WPS→P&L
+integration and reconciliation are Phase 2, and the module scope itself needs a proper
+conversation with Sana/Finance (see BACKLOG.md → Needs a decision).
 
 ---
 

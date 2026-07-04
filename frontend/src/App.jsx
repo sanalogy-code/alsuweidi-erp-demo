@@ -8,6 +8,7 @@ import HR from './pages/HR'
 import Projects from './pages/Projects'
 import IT from './pages/IT'
 import Marketing from './pages/Marketing'
+import Finance from './pages/Finance'
 import ComingSoon from './pages/ComingSoon'
 import TimesheetGate from './components/TimesheetGate'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
@@ -118,6 +119,7 @@ export default function App() {
       <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} />} />
       <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />
+      <Route path="/finance" element={<Finance user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/content" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/admin" element={<ComingSoon user={user} onLogout={handleLogout} moduleKey="admin" />} />

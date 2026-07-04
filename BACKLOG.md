@@ -4,7 +4,8 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-03 (Batch 6 shipped — 19 items, nearly the whole "Next batch": CRM
+**Last updated:** 2026-07-04 (Batch 7 shipped — Financials & Accounting module first pass +
+Developer Dashboard work log. See "Shipped — Batch 7" below. Earlier: Batch 6 shipped — 19 items, nearly the whole "Next batch": CRM
 company tags/details + subconsultant tracking + lessons & notes + clickable Needs Follow-Up +
 portfolio PDF downloads; Marketing proposal-builder removal + richer project record + 4-step
 photo workflow + content calendar rework + branding overhaul; HR/timesheets faster entry +
@@ -144,6 +145,40 @@ six of the seven open decisions below.)
   no-manager requests, and My requests shows "Awaiting manager (1/2)" / "Awaiting HR (2/2)".
   Demo: "Osama Hussain" (manager step for Hassan) then "Layla Al Mazrouei" (HR final).
 
+## Shipped — Batch 7 (4 Jul 2026)
+
+- [x] ~~Financials & Accounting module — first UI pass~~ — **Shipped Batch 7 (4 Jul):** new
+  gated module (`/finance`, tile + `FINANCE_VIEW_ROLES = management/admin`) with sidebar nav:
+  **Overview** (cash position, receivables/payables, overdue, revenue by project type, recent
+  invoices), **Invoices** (client invoices linked to projects/deals — draft→sent→partially
+  paid→paid→overdue, seed data, send/mark-paid actions), **Expenses** (categories, approval
+  status, approve/reject), **P&L summary** (H1 2026 monthly breakdown + income statement +
+  net trend). Seed data in `data/financeData.js`, tied to the Projects/CRM seeds (invoices bill
+  against project consultancy fees; a couple trace to won deals). **Demo-grade — a conversation
+  starter. Needs proper scoping with Sana/Finance (see Needs a decision below).**
+- [x] ~~Developer Dashboard "log for show"~~ — **Shipped Batch 7 (4 Jul):** presentable,
+  data-driven work log at the bottom of `/dev` — category tabs (Done / To do / Needs a decision /
+  Good to have / Phase 2) with fixed-column rows, status chips and right-aligned dates. Data in
+  `data/devLogData.js` (edit the data, not the JSX). For Sana to present from; she and Claude keep
+  working from STATUS.md / BACKLOG.md.
+- Code review (medium) over Batches 6–7 diff: **no confirmed correctness bugs** — batch is
+  defensively coded (empty-array-safe `Math.max(0, …)`, `?? 0`, `|| []`, functional setState;
+  ProposalBuilder deletion clean; all renamed exports consistently wired). Low-confidence
+  candidates (stale-tab in CompaniesView, legacy `pending` leave bypass) were refuted against the
+  actual code/seeds.
+
+## New good-to-have ideas (noticed while building Financials — not yet agreed)
+
+- [ ] **Auto-draft invoices from project events** — when a project hits a billing milestone (or a
+  deal is won), auto-create a draft invoice in Financials, mirroring the won-deal → project →
+  marketing-task wiring already in place.
+- [ ] **Invoiced % on the project record** — surface fees invoiced vs contract value on each
+  project so PMs see billing progress next to delivery progress.
+- [ ] **Receivables aging report** — 30/60/90-day buckets on outstanding invoices (what Finance
+  actually chases).
+- [ ] **Payroll total feeds the P&L** — pull the monthly WPS run total from HR into the P&L
+  payroll line instead of a mock figure.
+
 ## Shipped — Batch 2 (3 Jul 2026, night)
 
 - [x] ~~HR "Add employee" direct entry~~ — People view button (HR staff only), same employment
@@ -167,6 +202,11 @@ build work moved into **Next batch** (or **Phase 2** where the decision itself d
 real backend). Individuals-as-clients (`kind: individual` company records) is the one piece of
 the naming question still open — folded into it below.
 
+- [ ] **Financials & Accounting scope** (4 Jul, new) — the Batch 7 module is a **first-pass UI
+  proof-of-concept / conversation starter only**. Needs proper scoping with Sana/Finance before
+  building further: chart of accounts, VAT-return handling, billing-milestone model, WPS/payroll
+  integration into the P&L, receivables/aging, and **who owns it** (add a dedicated `finance`
+  role, or keep it management/admin?). Decide the real requirements before investing more.
 - [ ] **Individuals as CRM clients** (3 Jul, split off from "Companies" naming) — the naming
   half is resolved (see Next batch: relationship tags, multi-select). Still open: should an
   individual client be allowed as a company record flagged `kind: individual`, or handled some

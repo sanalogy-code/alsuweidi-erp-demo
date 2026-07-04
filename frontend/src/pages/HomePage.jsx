@@ -133,7 +133,7 @@ export default function HomePage({ user, onLogout, holidays = [] }) {
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Modules</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {MODULES.map((m) => (
+            {MODULES.filter((m) => !m.roles || m.roles.includes(user?.role)).map((m) => (
               <button
                 key={m.key}
                 onClick={() => navigate(m.path)}

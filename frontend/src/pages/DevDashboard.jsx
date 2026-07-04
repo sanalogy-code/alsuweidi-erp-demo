@@ -4,8 +4,9 @@ import {
   ArrowLeft, GitCommitHorizontal, FileCode2, Boxes, CalendarDays, Server,
   Rocket, Database, ShieldCheck, Mail, HardDrive, Globe, Zap, ListChecks,
   Lightbulb, CircleDot, CheckCircle2, ArrowRight, Building2, Users, FolderKanban,
-  Monitor, Megaphone,
+  Monitor, Megaphone, ClipboardList, Wallet,
 } from 'lucide-react'
+import { DEV_LOG, DEV_LOG_UPDATED } from '../data/devLogData'
 
 // The "behind the curtain" dashboard — deliberately NOT the ERP's design
 // language. Dark, animated, presentation-grade: what got built, how fast,
@@ -61,6 +62,7 @@ const MODULES = [
   { icon: FolderKanban, name: 'Projects', blurb: '9-stage delivery pipeline, design & supervision sub-records, gated financials, marketing sign-off gate' },
   { icon: Monitor, name: 'IT & Assets', blurb: 'Request queue (approve→procure→fulfil), tagged asset registry, license renewal radar' },
   { icon: Megaphone, name: 'Marketing', blurb: 'Auto-fed inbox, content calendar, portfolio readiness, CV search, completion gate' },
+  { icon: Wallet, name: 'Financials', blurb: 'Cash & receivables overview, project-linked invoices, expense approvals, P&L summary — gated, first pass' },
 ]
 
 const PHASE2 = [
@@ -139,6 +141,81 @@ function BigStat({ target, suffix = '', label, sub }) {
 }
 
 // ---------------------------------------------------------------------------
+// Work log — the "log for show". Category tabs + fixed-column rows with type
+// chips and right-aligned metadata (the app's house-style row pattern, rendered
+// in the dashboard's dark theme). Data lives in data/devLogData.js.
+// ---------------------------------------------------------------------------
+
+// Literal class strings per accent so Tailwind's scanner keeps them.
+const LOG_ACCENT = {
+  emerald: { dot: 'bg-emerald-400', text: 'text-emerald-300', tabOn: 'border-emerald-400/50 bg-emerald-400/[0.08] text-white', chip: 'bg-emerald-400/10 text-emerald-300 border-emerald-400/25' },
+  sky: { dot: 'bg-sky-400', text: 'text-sky-300', tabOn: 'border-sky-400/50 bg-sky-400/[0.08] text-white', chip: 'bg-sky-400/10 text-sky-300 border-sky-400/25' },
+  amber: { dot: 'bg-amber-400', text: 'text-amber-300', tabOn: 'border-amber-400/50 bg-amber-400/[0.08] text-white', chip: 'bg-amber-400/10 text-amber-300 border-amber-400/25' },
+  violet: { dot: 'bg-violet-400', text: 'text-violet-300', tabOn: 'border-violet-400/50 bg-violet-400/[0.08] text-white', chip: 'bg-violet-400/10 text-violet-300 border-violet-400/25' },
+  fuchsia: { dot: 'bg-fuchsia-400', text: 'text-fuchsia-300', tabOn: 'border-fuchsia-400/50 bg-fuchsia-400/[0.08] text-white', chip: 'bg-fuchsia-400/10 text-fuchsia-300 border-fuchsia-400/25' },
+}
+
+function WorkLog() {
+  const [active, setActive] = useState(DEV_LOG[0]?.key)
+  const group = DEV_LOG.find((g) => g.key === active) || DEV_LOG[0]
+  const accent = LOG_ACCENT[group.accent] || LOG_ACCENT.emerald
+
+  return (
+    <section className="mt-24">
+      <Reveal>
+        <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-white/40 mb-2 flex items-center gap-2"><ClipboardList size={14} /> Work log</h2>
+        <p className="text-xs text-white/35 mb-6">The full picture at a glance — {DEV_LOG.reduce((s, g) => s + g.items.length, 0)} items across {DEV_LOG.length} tracks. Reviewed {fmtDay(DEV_LOG_UPDATED)}.</p>
+      </Reveal>
+
+      {/* Category tabs */}
+      <Reveal>
+        <div className="flex flex-wrap gap-2 mb-5">
+          {DEV_LOG.map((g) => {
+            const a = LOG_ACCENT[g.accent] || LOG_ACCENT.emerald
+            const on = g.key === active
+            return (
+              <button
+                key={g.key}
+                onClick={() => setActive(g.key)}
+                className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors ${on ? a.tabOn : 'border-white/10 bg-white/[0.03] text-white/55 hover:text-white/80 hover:border-white/25'}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${a.dot}`} />
+                {g.label}
+                <span className="text-white/40 tabular-nums">{g.items.length}</span>
+              </button>
+            )
+          })}
+        </div>
+      </Reveal>
+
+      {/* Active group */}
+      <Reveal key={group.key}>
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-white/10 flex items-center gap-2">
+            <span className={`h-2 w-2 rounded-full ${accent.dot}`} />
+            <span className="font-bold text-white/90">{group.label}</span>
+            <span className="text-xs text-white/40 hidden sm:block">— {group.blurb}</span>
+          </div>
+          <div className="divide-y divide-white/[0.06]">
+            {group.items.map((it) => (
+              <div key={it.title} className="px-5 py-3.5 flex items-start gap-3 hover:bg-white/[0.02] transition-colors">
+                <span className={`shrink-0 mt-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full border px-2 py-0.5 w-24 text-center ${accent.chip}`}>{it.status}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold text-white/90">{it.title}</div>
+                  <div className="text-xs text-white/45 mt-0.5 leading-relaxed">{it.detail}</div>
+                </div>
+                <span className="shrink-0 text-[11px] font-mono text-white/35 text-right whitespace-nowrap pt-0.5 w-24">{it.meta}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+      <p className="text-[11px] text-white/25 mt-4">Presentation copy — Sana & Claude keep working from STATUS.md / BACKLOG.md. Edit data/devLogData.js to update this log.</p>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
 
 const fmtDay = (iso) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—')
 
@@ -213,7 +290,7 @@ export default function DevDashboard() {
           </Reveal>
           <Reveal delay={120}>
             <h1 className="text-5xl sm:text-7xl font-black tracking-tight leading-[1.04]">
-              Five modules.
+              Six modules.
               <br />
               <span className="bg-gradient-to-r from-red-500 via-orange-400 to-amber-300 bg-clip-text text-transparent">{elapsedDays} days.</span>
               <br />
@@ -222,7 +299,7 @@ export default function DevDashboard() {
           </Reveal>
           <Reveal delay={260}>
             <p className="mt-6 text-white/50 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-              A full ERP UI proof-of-concept — CRM, HR, Projects, IT &amp; Assets, Marketing — built by
+              A full ERP UI proof-of-concept — CRM, HR, Projects, IT &amp; Assets, Marketing, Financials — built by
               one person pair-programming with AI, iterating on real management feedback instead of
               writing spec documents. Every number below is pulled live from git and the backlog at build time.
             </p>
@@ -235,7 +312,7 @@ export default function DevDashboard() {
             <BigStat target={STATS.commits} label="Commits" sub={`since ${fmtDay(STATS.firstCommitDate)}`} />
             <BigStat target={STATS.loc} label="Lines of app code" sub={`${STATS.files} source files`} />
             <BigStat target={STATS.components} label="React components" sub="incl. pages" />
-            <BigStat target={5} label="Modules live" sub="CRM · HR · Projects · IT · Marketing" />
+            <BigStat target={6} label="Modules live" sub="CRM · HR · Projects · IT · Marketing · Finance" />
             <BigStat target={shippedTotal} label="Backlog items shipped" sub={`${openTotal} still open — on purpose`} />
             <BigStat target={0} suffix=" AED" label="Monthly infra cost" sub="Cloudflare Pages free tier" />
           </div>
@@ -393,6 +470,9 @@ export default function DevDashboard() {
             </div>
           </section>
         )}
+
+        {/* work log — the "log for show" */}
+        <WorkLog />
 
         {/* footer */}
         <Reveal>

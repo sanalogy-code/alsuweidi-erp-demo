@@ -2,11 +2,16 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-03 (Batch 6 shipped — 19 backlog items across CRM, Marketing, HR/timesheets, and roles)
+**Last updated:** 2026-07-04 (Batch 7 shipped — Financials & Accounting module first pass + Developer Dashboard work log)
 
-**Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed.
+**Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed. **Financials is gated to Management/Admin** — log in as `Management` to see it.
 
-**Phase 1 Status:** Five modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), Projects (dashboard + portfolio + record), IT & Assets, and Marketing. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
+**Phase 1 Status:** Six modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), Projects (dashboard + portfolio + record), IT & Assets, Marketing, and **Financials (new — first-pass, demo-grade)**. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
+
+**Latest (Batch 7, 4 Jul 2026):**
+- **Financials & Accounting (new module):** first UI pass, gated to Management/Admin (`FINANCE_VIEW_ROLES`). `/finance` with sidebar nav — Overview (cash position, receivables/payables, overdue, revenue by project type, recent invoices), Invoices (client invoices linked to projects/deals: draft → sent → partially paid → paid → overdue, with send/mark-paid), Expenses (categories + approval status, approve/reject), and a P&L summary (H1 2026 monthly breakdown + income statement + net trend). Seed data (`data/financeData.js`) ties into the Projects/CRM seeds — invoices bill against project consultancy fees, a couple trace back to won deals. **Demo-grade — a conversation starter; needs proper scoping with Sana/Finance (see BACKLOG.md).**
+- **Developer Dashboard work log:** a presentable, data-driven "log for show" at the bottom of `/dev` — category tabs (Done / To do / Needs a decision / Good to have / Phase 2) with fixed-column rows, status chips, right-aligned dates. Data in `data/devLogData.js`.
+- **Code review:** medium-effort review over the Batch 6–7 diff found **no confirmed correctness bugs** — the code is defensively written; the few low-confidence candidates were refuted against the actual code and seeds.
 
 **Latest (Batch 6, 3 Jul 2026 — 19 items, driven by Sana's Marketing review + resolved management decisions):**
 - **CRM:** companies get website / size / multi-select relationship tags (Client, Prospect, Subconsultant, Supplier, Partner, Government) / services, with tag + service filters; Subconsultant companies get a per-project "Project History" tab; "Keep in Mind" notes on companies + contacts and a Lessons tab on the project record (shared NotesList); Needs Follow-Up names now open the contact modal; new **Portfolio PDFs** view under Insights — category-grouped packs that Marketing manages in its Portfolio view.
@@ -101,6 +106,26 @@ Marketing + top management only, except **Branding** (brand asset library — lo
 - **Analytics** — proposal win rate live from CRM deals; LinkedIn/website panels are labelled mock feeds.
 - **Branding (overhauled Batch 6)** — "Quick guidelines" default view (logo/font/colour rules); Symbol/Primary/Vertical logos in full-colour + reversed (Arabic logo removed), English + Arabic fonts, Brand Guidelines + Platform & Narrative Guide docs. Still visible to every employee.
 - Deliberately out of scope: media/photo storage (Sana's call — likely unnecessary).
+
+### ✅ Financials & Accounting module — LIVE (new in Batch 7, first pass — demo-grade)
+
+Management/Admin only (`FINANCE_VIEW_ROLES`; the whole module is sensitive — other roles get a
+"Restricted module" screen). Home tile is hidden for non-privileged roles. A deliberately basic
+but coherent first pass for requirements gathering — **not real accounting**. `data/financeData.js`.
+
+- **Overview** — cash position (mock bank + petty cash), receivables outstanding, payables
+  (approved + pending expenses), overdue total, revenue by project type (invoices joined to
+  projects), cash accounts breakdown, recent invoices.
+- **Invoices** — client invoices billed against project **consultancy fees** (design/supervision),
+  linked to projects (and a couple to won CRM deals). Status flow draft → sent → partially paid →
+  paid → overdue, 5% UAE VAT, outstanding tracking, status filter, send / mark-paid actions.
+- **Expenses** — categories (software, subconsultants, rent, travel, gov fees…), approval status
+  (pending → approved / rejected / reimbursed), category + status filters, approve/reject, optional
+  project job-costing link.
+- **P&L summary** — H1 2026 monthly breakdown (revenue / direct costs / payroll / overhead / net) +
+  income statement + net-profit trend + margin.
+- Everything is clearly marked mock/Phase 2: real ledger, VAT returns, bank feed, WPS→P&L
+  integration and reconciliation are Phase 2. **Scope needs a proper conversation with Sana/Finance.**
 
 ### ✅ Projects module — LIVE (dashboard + portfolio + record)
 

@@ -59,6 +59,8 @@ export const MODULES = [
   { key: 'hr', icon: '👥', label: 'HR', description: 'Onboarding, policies & more', path: '/hr', status: 'live' },
   { key: 'it', icon: '🖥️', label: 'IT & Assets', description: 'Hardware requests, assets & licenses', path: '/it', status: 'live' },
   { key: 'marketing', icon: '📈', label: 'Marketing', description: 'Content, portfolio, branding & analytics', path: '/marketing', status: 'live' },
+  // Finance tile is gated — only shown to FINANCE_VIEW_ROLES (see roles below). HomePage filters on `roles`.
+  { key: 'finance', icon: '💰', label: 'Financials', description: 'Invoices, expenses, cash & P&L', path: '/finance', status: 'live', roles: ['admin', 'management'] },
   { key: 'admin', icon: '⚙️', label: 'Admin Center', description: 'Users, roles & permissions', path: '/admin', status: 'soon' },
 ]
 
@@ -101,3 +103,8 @@ export const IT_VIEW_ROLES = ['it', 'admin', 'management']
 // Marketing workspace (inbox, content calendar, portfolio, proposals, analytics):
 // marketing + top management only. Branding materials are visible to everyone.
 export const MARKETING_VIEW_ROLES = ['marketing', 'management', 'admin']
+
+// Financials & Accounting module (invoices, expenses, cash position, P&L):
+// the whole module is sensitive — restricted to top management + system admin.
+// (A dedicated `finance` role can be added here later once Finance is scoped with Sana.)
+export const FINANCE_VIEW_ROLES = ['management', 'admin']
