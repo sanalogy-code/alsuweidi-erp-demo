@@ -2,7 +2,7 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-05 (Batch 8 shipped — Admin Center module: users, roles & permissions, activity log)
+**Last updated:** 2026-07-05 (Batch 8 shipped — Admin Center module. Batch 9 planned: full Project Management module, spec complete in PM_RESEARCH.md, build deferred to next week)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed. **Financials and the Admin Center are gated to Management/Admin** — log in as `Management` to see them.
 
@@ -145,7 +145,10 @@ Financials). Demo-grade user management to agree the workflows before Phase 2 au
 - **Activity log** — filterable mock audit trail (user / module / action kind) across modules.
 - On-screen caveat: the login page is still password-less, so none of this gates sign-in yet.
 
-### ✅ Projects module — LIVE (dashboard + portfolio + record)
+### ✅ Projects module — LIVE (dashboard + portfolio + record) + Phase 1 PM expansion SPEC'D
+
+**Current:** basic project portfolio (12 seeds, 9-stage pipeline, design/supervision tabs, stage controls, DPM/CPM links). 
+**Spec'd for expansion (Batch 9):** full project controls module — [PM_RESEARCH.md](PM_RESEARCH.md) documents best practices from industry tools (Aconex, Procore, Deltek, P6, PMWeb), FIDIC claims/EOT with UAE-civil-law nuances, Abu Dhabi authority workflows (DMT/Binaa, ADCD fire approval with new Sept 2026 CFPE gate, utility NOC ladders, Estidama/Pearl rating), WIR/MIR inspection registers, design-stage 30-60-90% reviews, deliverable/claims/fee registers with monthly progress reporting. Ready to build once token budget resets.
 
 **New in Batch 2:** "New project" button for direct awards/tenders (LOA attachment still required — same rule as the won-deal path), an Edit modal on the record (financial fields visible only to sensitive roles), stage back/advance controls under the pipeline strip, and inline supervision approved/actual % updates.
 

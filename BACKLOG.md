@@ -22,7 +22,22 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
-## Next batch (UI demo work, ready to build)
+## Batch 9 — Projects Module (Phase 1) — SPEC COMPLETE, ready to build
+
+- [ ] **Full project management / project controls module** — comprehensive research pass (5 Jul 2026)
+  completed and documented in [PM_RESEARCH.md](PM_RESEARCH.md): Abu Dhabi authority workflows
+  (DMT/Binaa, ADCD fire approval, utility NOC ladders, Estidama/Pearl rating), FIDIC claims/EOT with
+  28-day notice deadlines, WIR/MIR inspection workflows, design-stage 30-60-90% gate reviews,
+  deliverable registers, fee tracking (cost vs billing rates, % complete, EAC). Feature map: 
+  **essential** (deliverables register, design stages, WIR/MIR/NCR/site instructions, schedule baseline,
+  fees by stage, claims/EOT register, FIDIC progress reports, authority workflows, project team)
+  **nice-to-have** (risk register, meeting minutes + actions, resource utilization, payment certificates,
+  snagging/handover, cash-flow forecast). Build decision: standard FIDIC 1999 per-project setting,
+  Abu Dhabi-first authority profile (Dubai secondary), standard resource-allocation pattern to validate
+  on screen. Planned for Batch 9 once weekly token budget resets. **Standing action:** verify ALSUWEIDI's
+  fire-safety classification and CFPE certification status (ADCD hard gate takes effect 1 Sept 2026).
+
+## Next batch (UI demo work, ready to build — post-Batch 9)
 
 - [x] ~~Confidential flag hardening~~ — **Shipped Batch 5 (3 Jul):** required Confidentiality
   decision on both create paths (direct + won-deal), stage advance blocked while undecided
