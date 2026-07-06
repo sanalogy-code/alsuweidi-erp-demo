@@ -11,7 +11,7 @@ If you're a developer, an AI agent, or anyone picking this project up cold: read
 ## 1. Architecture
 
 - **Frontend**: React 18 + Vite + Tailwind CSS + React Router. No backend, no API calls, no database.
-- **State**: all data lives in `useState` at the page level (`pages/CRM.jsx`, `pages/HR.jsx`, `pages/Projects.jsx`, `pages/IT.jsx`, `pages/Marketing.jsx`, `pages/Finance.jsx`, `pages/Admin.jsx`; public holidays, projects, deals, and **marketing tasks** are lifted to `App.jsx` — the last because other modules feed Marketing's inbox) and is passed down as props. Two exceptions: portfolio packs live in a tiny `useSyncExternalStore` module store (`data/portfolioPacksStore.js` — shared between the Marketing and CRM route trees), and the timesheet reminder/lockout gate (`components/TimesheetGate.jsx`) wraps the whole app. Refreshing the page resets everything to the seed data in `data/*.js`. This is intentional for now — see §5.
+- **State**: all data lives in `useState` at the page level (`pages/CRM.jsx`, `pages/HR.jsx`, `pages/Projects.jsx`, `pages/IT.jsx`, `pages/Marketing.jsx`, `pages/Finance.jsx`, `pages/Admin.jsx`, `pages/ProjectWorkspace.jsx` (per-project PM registers at `/projects/:id`); public holidays, projects, deals, and **marketing tasks** are lifted to `App.jsx` — the last because other modules feed Marketing's inbox) and is passed down as props. Two exceptions: portfolio packs live in a tiny `useSyncExternalStore` module store (`data/portfolioPacksStore.js` — shared between the Marketing and CRM route trees), and the timesheet reminder/lockout gate (`components/TimesheetGate.jsx`) wraps the whole app. Refreshing the page resets everything to the seed data in `data/*.js`. This is intentional for now — see §5.
 - **Auth**: cosmetic only. Login is a name + role dropdown, no password, nothing sent anywhere. The `role` field **does** drive what renders (sensitive tabs, HR workspace, project financials — see role groups in §2), but purely client-side; anyone can pick any role — see §5.
 - **Hosting**: [github.com/sanalogy-code/alsuweidi-erp-demo](https://github.com/sanalogy-code/alsuweidi-erp-demo) → Cloudflare Pages, auto-deploys on push to `master`.
 - **Dependencies of note**: `lucide-react` (icons), `xlsx` (Excel/CSV export, lazy-loaded via dynamic `import()` so it doesn't bloat the main bundle — installed from SheetJS's own CDN build, not the npm registry package, which has two unpatched CVEs that don't apply to write-only usage but aren't worth shipping anyway).
@@ -175,6 +175,31 @@ Modeled on the column structure of the company's existing ERP export (140 projec
 | Portfolio fields (Batch 6, replaced the Proposal Builder) | `yearStarted` / `yearCompleted` (overridable; `yearStartedOf()` / `yearCompletedOf()` derive from design/supervision sub-records when unset), `images` (file-name-only list, Phase 2 storage placeholder), `specialFeatures` (free-form list), `lessons` (NotesList shape — Lessons tab on the record) |
 | `photoWorkflow` (Batch 6) | `{ step: 0–3 index into PHOTO_WORKFLOW_STEPS (marketingData), photographer, notes }` — the 4-step photo task state: arrange photographer (external/in-house) → coordinate with Supervision → photos taken → review/approve/upload. Only the final step sets `photosApproved`. Seed: project 6 mid-flow |
 
+### Project Management / project controls model (`frontend/src/data/pmData.js`, Batch 9)
+
+Per-project PM registers keyed by `PROJECTS` id (`PM_RECORDS`; `getPmRecord()` returns an empty
+skeleton for unseeded projects so every project opens a workspace). Built from PM_RESEARCH.md's
+three verified pillars: document-centric review workflows (Aconex model), field & cost controls
+(Procore model), and FIDIC contract administration. Seeds: projects 1 (full D+S, richest), 8
+(supervision-only with an urgent claim-notice countdown), 5 (D+S), 2 (design-only, FIDIC 2017).
+
+| Piece | Shape / notes |
+|---|---|
+| `fidicEdition` | per-project setting, `'1999'` default (Sana's decision) — drives claim cadences via `FIDIC_EDITIONS` (notice 28d both; detailed claim 42d/84d) |
+| `team` | `[{ role (TEAM_ROLES: PD, DPM, CPM, RE, leads, inspectors…), employeeId (FK → EMPLOYEES, null = external/site staff), name }]` |
+| `deliverables` | register: `{ docNo, title, discipline, rev (A/B/C…), status (draft → internal_review → issued → comments → revising → resubmit loop → approved/approved_as_noted, transitions in DELIVERABLE_NEXT), dueDate, history[] }` — resubmission bumps the rev, history preserved |
+| `designStages` | 30-60-90-final gate reviews: `{ key, label, status (not_started/in_progress/passed), gateDate, notes }` — passing a gate opens the next |
+| `wirs` / `mirs` | work/material inspection requests: WIR lifecycle contractor → RE → trade engineer → Approved / Approved-as-Noted / Resubmit, resubmitted under the **same WIR** with rev history |
+| `ncrs` | `{ ref, date, priority, location, description, correctiveAction, status (open → ca_proposed → ca_approved → closed) }` — **closure requires an approved corrective action first** |
+| `siteInstructions` | numbered SI register with cost/time impact flags (feed variations/claims) |
+| `dailyReports` | manpower, plant, weather, work done, delays, HSE |
+| `milestones` / `progressCurve` | baseline vs forecast/actual milestone bars with slip flags; monthly planned/actual % → S-curve + `spiOf()` (SPI = EV/PV at latest reported month) |
+| `tasks` | project task list: assignee, due, overdue flags |
+| `fees` | `{ manhourBudget, stages: [{ stage, fee, pctComplete }], variations: [{ ref, description, amount, status }] }` — earned = Σ fee × %; manhour actuals summed live from `TIMESHEETS` entries coded to the project; invoiced-vs-fee joined live from `INVOICES` |
+| `claims` | FIDIC claims/EOT register: `{ ref, title, party, eventDate, awarenessDate, noticeDate, status (event_logged → notice_served → detailed_submitted → engineer_response → determined; time_barred), timeImpactDays, costImpact, records: [{ date, type: formal\|informal\|correspondence, note }] }` — `claimDeadlines()` computes the 28-day notice countdown from **awareness** (condition precedent) and the 42/84-day detailed-claim deadline from the notice; informal records logged deliberately (UAE Civil Code awareness evidence) |
+| `reports` | monthly FIDIC 4.21 progress reports: due 7 days after month end, `REPORT_CHECKLIST_ITEMS` (progress/photos/personnel/QA/claims/safety/planned-vs-actual) must all be checked before "Mark submitted" |
+| `authorities` | parallel authority workflows: `{ authority, type, portal (data, not code — Binaa/MEPS/TAMM keep changing), stages: [{ key, status (not_started → submitted → comments → resubmitted → approved), date }], cycles[] (submission history), notes }` — `AUTHORITY_TEMPLATES` provides Abu Dhabi-first profiles (DMT permit, ADCD fire track → Certificate of Conformity, 4-step utility NOC ladders, Estidama Pearl Design + Construction ratings, completion cert) and a Dubai secondary profile (BPS/DCD/DEWA/RTA/BCC). Timelines are user-entered, never hardcoded |
+
 ### Marketing model (`frontend/src/data/marketingData.js`, Batch 3)
 
 | Entity | Shape / notes |
@@ -267,6 +292,9 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
 
 ### Projects (`pages/Projects.jsx`)
 
+Sidebar: Dashboard, Portfolio, **Resources** (Batch 9). Each project record now links into a
+full **Project Workspace** (see below).
+
 1. **Portfolio** (`ProjectList`) — deliberately the anti-CSV: seven columns (no, name + client, type, scope, current stage, DPM/CPM, status) with type/scope/status/location filters, search, and a "My projects" toggle (matches the logged-in name against DPM/CPM). Everything else lives in the drill-in.
 2. **Project record** (`ProjectDetailModal`) — header with status chip and the 9-stage pipeline as a visual strip (`StagePipeline`; out-of-scope stages muted). Tabs render conditionally:
    - **Overview** — always; description, function, contract type, fund, sector/plot/area, contract & LOA state, contractor. **Batch 3:** a "Marketing sign-off" panel shows the marketing description (read-only here — Marketing owns it) and the description/photos gate status. **Batch 6:** years started/completed (derived or overridden), images (file-name-only) and special features — all editable in the Edit modal
@@ -282,6 +310,27 @@ Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, w
    - **Edit** (`EditProjectModal`, header button on the record) — core fields, status, DPM/CPM, contract-signed flag; contract value and construction cost only render for `SENSITIVE_VIEW_ROLES`. Scope/stage structure is deliberately not editable here. **Batch 3 completion gate:** setting status to Completed is blocked unless the project has a marketing description AND approved photos — the blocked attempt explains why and auto-queues the missing tasks in Marketing's inbox.
    - **Stage advance** — back/forward controls under the pipeline strip, constrained to `stagesInvolved`. **Batch 3:** advancing into the final stage auto-queues a `project_photos` task for Marketing (photography blocks completion later).
    - **Supervision progress** — "Update" on the Supervision tab edits approved/actual % inline (clamped 0–100); behind-plan flag recalculates.
+5. **Resources** (`ResourcesView`, Batch 9) — portfolio-level person × project allocation: assignments derived from PM team panels + DPM/CPM links on active projects, load % illustrative (green <80%, amber 80–100%, red over-allocated). Standard pattern per Sana's decision — she corrects against real staffing practice on screen.
+
+### Project Workspace (`pages/ProjectWorkspace.jsx` at `/projects/:id`, Batch 9, data in `data/pmData.js`)
+
+The full project-controls module from PM_RESEARCH.md — opened via the "Project workspace" button
+on the project record modal. Header: project identity + status + the 9-stage pipeline strip.
+Sidebar sections render by scope (design-only projects get no Site section; supervision-only get
+no Design stages) with live badges (open site items, open tasks, claim-deadline alerts, reports
+due). Registers live in page state seeded per project from `PM_RECORDS`; edits last the session.
+
+1. **Overview** (`PmOverview`) — claim-deadline alert banners (28-day notice / detailed-claim countdowns — red when overdue, amber ≤10 days), monthly-report due banner, and stat cards jumping to each register: SPI, open inspections (WIRs + NCRs), deliverables in flight, open tasks, claims, fee-invoiced % (live from `INVOICES`), authority workflows awaiting response, FIDIC edition.
+2. **Deliverables** (`DeliverablesView`) — the register with per-revision history and the review workflow (internal QA → issue → client comments → revise → resubmit as next rev → approved / approved-as-noted); register new deliverables inline.
+3. **Design stages** (`DesignStagesView`) — 30-60-90-final gate list with pass-gate action (opens the next gate); design-scope projects only.
+4. **Site** (`SiteView`) — five tabs: **WIRs** (RE → trade-engineer decisions, resubmit keeps the same reference with rev history), **MIRs** (approve/reject), **NCRs** (propose corrective action → approve CA → verify & close — closure blocked without an approved CA), **Site instructions** (issue with cost/time-impact flags, mark actioned), **Daily reports** (read-only log).
+5. **Schedule** (`ScheduleView`) — planned-vs-actual S-curve (SVG) with SPI chip, milestone bars baseline-vs-forecast/actual with slip flags. Full CPM deliberately out of scope.
+6. **Tasks** (`PmTasksView`) — per-project task list, assignee datalist from the team panel, overdue flags.
+7. **Fees & cost** (`FeesView`, `SENSITIVE_VIEW_ROLES` only) — fee by stage with editable % complete + EAC, earned vs invoiced, manhour budget vs live timesheet actuals (entries coded to the project), variations register, and the project's invoices joined from Financials.
+8. **Claims & EOT** (`ClaimsView`) — the FIDIC register: per-claim deadline countdowns, status chain actions ("Mark notice served today" → detailed claim → engineer response → determined), contemporary-records log with formal/informal/correspondence typing, log-event form (starts the notice clock from the awareness date), per-project FIDIC edition selector.
+9. **Progress reports** (`ReportsView`) — monthly FIDIC 4.21 checklist; submission blocked until all required contents are checked; 7-days-after-month-end due tracking.
+10. **Authorities** (`AuthoritiesView`) — parallel authority workflows with sequential stage actions (submit → comments → resubmit → approved) and a submission-cycle history; add-workflow picker from the Abu Dhabi / Dubai emirate template profiles.
+11. **Team** (`TeamView`) — role-tagged team panel; HR-linked members open `EmployeeDetailModal`, external/site staff are name-only; add/remove inline.
 
 ### IT & Assets (`pages/IT.jsx`, Batch 2, data in `data/itData.js`)
 
@@ -385,7 +434,7 @@ This is the honest risk list, not just a TODO.
 - **Payroll offboarding/catch-up math is illustrative.** The Batch 6 pro-rating (final month, joining-month deferral, end-of-service settlement) is computed client-side against seed data — the formulas are the spec, but real WPS/SIF output and gratuity edge cases need Finance review in Phase 2.
 - **Marketing analytics are mock feeds** (LinkedIn, website) except the win rate, which is live from CRM deals. Welcome emails are design-only by decision (HR checks and sends — but sending itself needs the Phase 2 email capability). Media/photo storage was **deliberately scoped out** of the Marketing module (Sana's call, 3 Jul — probably not necessary at all).
 - **Appraisals not started** — waiting on a specification (cycle, reviewers, rating model).
-- **Project Management module not built.** Tasks, dates, assignments, late flags, and workflows within projects are specced-by-requirement but not implemented. (Backlog → Phase 2 scope decision pending.)
+- **PM workspace registers are page-local and demo-depth.** The Batch 9 project-controls module (deliverables, WIR/MIR/NCR, claims, authorities…) keeps its state inside `ProjectWorkspace` — navigating away resets edits, and only 4 of 12 projects have seeded registers. The claim-deadline countdowns are the spec for Phase 2 notifications (missing a FIDIC 28-day notice extinguishes a claim — this is the module's highest-value alert to make real). Resource-allocation load % is illustrative pending real allocations + timesheet integration. IPC/payment-certificate linkage from approved WIRs is Phase 2 wiring.
 - **No email sending / notifications.** Structurally can't be done client-side — needs serverless function + provider (Resend recommended). Increasingly relevant now that there are approval flows people would expect to be notified about.
 - **Leaked credential in git history — RESOLVED.** Supabase `service_role` key in `backend/populate_db.py` (commit `6985c30`) was neutralized: the entire Supabase project was deleted on 3 July 2026. The key still appears in git history but is now inert (points to deleted project).
 - **No global search**, no charts beyond Overview's bar breakdowns.

@@ -22,20 +22,24 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
-## Batch 9 — Projects Module (Phase 1) — SPEC COMPLETE, ready to build
+## Shipped — Batch 9 (6 Jul 2026): Project Management module
 
-- [ ] **Full project management / project controls module** — comprehensive research pass (5 Jul 2026)
-  completed and documented in [PM_RESEARCH.md](PM_RESEARCH.md): Abu Dhabi authority workflows
-  (DMT/Binaa, ADCD fire approval, utility NOC ladders, Estidama/Pearl rating), FIDIC claims/EOT with
-  28-day notice deadlines, WIR/MIR inspection workflows, design-stage 30-60-90% gate reviews,
-  deliverable registers, fee tracking (cost vs billing rates, % complete, EAC). Feature map: 
-  **essential** (deliverables register, design stages, WIR/MIR/NCR/site instructions, schedule baseline,
-  fees by stage, claims/EOT register, FIDIC progress reports, authority workflows, project team)
-  **nice-to-have** (risk register, meeting minutes + actions, resource utilization, payment certificates,
-  snagging/handover, cash-flow forecast). Build decision: standard FIDIC 1999 per-project setting,
-  Abu Dhabi-first authority profile (Dubai secondary), standard resource-allocation pattern to validate
-  on screen. Planned for Batch 9 once weekly token budget resets. **Standing action:** verify ALSUWEIDI's
-  fire-safety classification and CFPE certification status (ADCD hard gate takes effect 1 Sept 2026).
+- [x] ~~Full project management / project controls module~~ — **Shipped Batch 9 (6 Jul):** the whole
+  essential feature map from [PM_RESEARCH.md](PM_RESEARCH.md) — per-project workspace at
+  `/projects/:id` ("Project workspace" button on the record, scope-aware sidebar): deliverables
+  register (rev history, internal QA → issue → comments → resubmit), 30-60-90 design gates,
+  WIR/MIR/NCR/site-instructions/daily-reports registers (NCR closure gated on approved corrective
+  action; WIR resubmits under the same ref), schedule S-curve + SPI + milestone slip flags, tasks,
+  fees by stage (% complete, EAC, manhours vs timesheet actuals, invoiced-vs-fee from Financials,
+  variations), FIDIC claims/EOT register (28-day-notice countdown from awareness, 42/84-day detailed
+  claim per 1999/2017, contemporary-records log incl. informal notices), FIDIC 4.21 monthly report
+  checklists, Abu Dhabi-first authority workflows (DMT permit, ADCD fire track, NOC ladders,
+  Estidama; Dubai profile secondary), team panel, and a portfolio-level Resources allocation view.
+  Data in `data/pmData.js`; seeds on projects 1, 2, 5, 8. Nice-to-haves deferred: risk register,
+  meeting minutes, IPC/payment-certificate register (WIR-linked), snagging/handover (TOC → DLP →
+  Performance Certificate), cash-flow forecast.
+  **Standing action still open:** verify ALSUWEIDI's fire-safety classification and CFPE
+  certification status (ADCD hard gate takes effect 1 Sept 2026).
 
 ## Next batch (UI demo work, ready to build — post-Batch 9)
 
@@ -286,8 +290,10 @@ the naming question still open — folded into it below.
 
 ## Phase 2 (needs the real backend — don't attempt client-side)
 
-- [ ] **Project Management module** — full projects with tasks, dates, assignments, late-flag,
-  workflows. Depends on the PM role and project structure in the real system. (Mentioned 3 Jul.)
+- [x] ~~Project Management module~~ — **superseded: the UI demo shipped in Batch 9 (6 Jul)**; what
+  remains Phase 2 is persistence for the registers, deadline notifications (FIDIC notice windows
+  especially), cross-org portals (contractor submitting WIRs directly), IPC linkage, real CDE
+  file storage, and EVM from real timesheet costs.
 - [ ] **Marketing module** — branding materials library (downloadable), portfolio management (projects
   with last-updated dates), project picker for proposals (auto-selected + manually curated),
   confidentiality flagging (mark projects as confidential → hide from portfolio or redact details),

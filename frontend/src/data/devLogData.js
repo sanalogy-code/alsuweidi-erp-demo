@@ -12,9 +12,9 @@
 //   goodtohave   — fresh ideas noticed while reviewing (not yet agreed)
 //   phase2       — needs the real backend
 //
-// Last reviewed: 2026-07-05 (Batch 8 — Admin Center).
+// Last reviewed: 2026-07-06 (Batch 9 — Project Management module).
 
-export const DEV_LOG_UPDATED = '2026-07-05'
+export const DEV_LOG_UPDATED = '2026-07-06'
 
 export const DEV_LOG = [
   {
@@ -23,6 +23,7 @@ export const DEV_LOG = [
     accent: 'emerald',
     blurb: 'Shipped and live on the demo. Built in fast batches on real management feedback.',
     items: [
+      { title: 'Batch 9 — Project Management module', detail: 'Per-project controls workspace: deliverables register with revision-tracked review workflows, design stage gates, WIR/MIR/NCR/site-instruction/daily-report registers, schedule S-curve + SPI, fee-by-stage tracking wired to timesheets and invoices, FIDIC claims/EOT register with notice-deadline countdowns, FIDIC 4.21 monthly report checklists, Abu Dhabi-first authority workflow tracking, team panels, and a cross-project resource view. Built from a verified research pass (PM_RESEARCH.md).', meta: '6 Jul 2026', status: 'shipped' },
       { title: 'Batch 8 — Admin Center', detail: 'Users (add / edit role / disable / delete, mock invitation flow), role × module permissions matrix mirroring the real app gating (the Phase 2 RBAC spec, visualized), filterable audit-trail mock, usage dashboards. Last "Coming Soon" tile gone.', meta: '4 Jul 2026', status: 'shipped' },
       { title: 'Batch 7 — Financials & Accounting (first pass)', detail: 'New gated module: overview (cash, receivables, revenue by project type), invoices linked to projects, expenses with approvals, P&L summary. Demo-grade conversation starter.', meta: '4 Jul 2026', status: 'shipped' },
       { title: 'Batch 7 — Dashboard work log', detail: 'This presentable log, data-driven from devLogData.js.', meta: '4 Jul 2026', status: 'shipped' },
@@ -85,7 +86,8 @@ export const DEV_LOG = [
       { title: 'Document & media storage', detail: 'Uploads are file-name-only today (documents, project images, portfolio PDFs, brand assets).', meta: 'Q4 2026', status: 'backend' },
       { title: 'Real accounting integration', detail: 'Ledger, VAT returns, bank feed, WPS→P&L, reconciliation behind the Financials UI.', meta: 'Q4 2026', status: 'backend' },
       { title: 'Attendance device feed', detail: 'Fingerprint / card-reader integration + timesheet validation and real payroll blocking.', meta: 'Q4 2026', status: 'backend' },
-      { title: 'Appraisals & Project Management modules', detail: 'Appraisals await a spec (cycle, reviewers, rating model); PM needs tasks/dates/assignments in the real system.', meta: 'Q4 2026+', status: 'backend' },
+      { title: 'Appraisals module', detail: 'Awaits a spec (cycle, reviewers, rating model).', meta: 'Q4 2026+', status: 'backend' },
+      { title: 'PM module persistence & notifications', detail: 'The Batch 9 registers reset per session; FIDIC notice-deadline alerts, contractor portals for WIR submission, IPC linkage, and real CDE file storage need the backend.', meta: 'Q4 2026', status: 'backend' },
     ],
   },
 ]

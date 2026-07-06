@@ -2,13 +2,17 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-05 (Batch 8 shipped — Admin Center module. Batch 9 planned: full Project Management module, spec complete in PM_RESEARCH.md, build deferred to next week)
+**Last updated:** 2026-07-06 (Batch 9 shipped — full Project Management / project controls module per PM_RESEARCH.md: per-project workspace at `/projects/:id` + portfolio Resources view)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed. **Financials and the Admin Center are gated to Management/Admin** — log in as `Management` to see them.
 
-**Phase 1 Status:** Seven modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), Projects (dashboard + portfolio + record), IT & Assets, Marketing, Financials (first-pass, demo-grade), and **Admin Center (new)**. Every home tile is now live — no "Coming Soon" left. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
+**Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (Batch 8, 4 Jul 2026 evening):**
+**Latest (Batch 9, 6 Jul 2026):**
+- **Project Management module (new):** every project record now opens a **Project Workspace** (`/projects/:id`, "Project workspace" button on the record) with scope-aware sidebar sections: **Overview** (claim-deadline + report-due alert banners, SPI, register stat cards), **Deliverables** (doc register with rev history + internal QA → issue → comments → resubmit workflow), **Design stages** (30-60-90-final gates), **Site** (WIR/MIR/NCR/site-instruction/daily-report registers — NCR closure requires an approved corrective action; WIR resubmits under the same ref with rev history), **Schedule** (S-curve + SPI, milestone baseline-vs-actual bars), **Tasks**, **Fees & cost** (fee by stage + % complete + EAC, manhours vs live timesheet actuals, invoiced-vs-fee from Financials, variations — sensitive roles only), **Claims & EOT** (FIDIC register with the 28-day-notice countdown from awareness, 42/84-day detailed-claim tracking per 1999/2017 edition, contemporary-records log incl. informal notices), **Progress reports** (FIDIC 4.21 checklist, 7-day deadline), **Authorities** (Abu Dhabi-first: DMT permit, ADCD fire track, utility NOC ladders, Estidama Pearl; Dubai secondary; submit→comments→resubmit cycles), **Team**. Plus a portfolio-level **Resources** view (person × project allocation). Seeds: projects 1, 2, 5, 8 — demo the claims countdown on **P-2650 Pump Station Upgrade** (notice due in days). Data in `data/pmData.js`, built from [PM_RESEARCH.md](PM_RESEARCH.md).
+- Also committed: six module gap-analysis research docs (`CRM/HR/FINANCE/IT/MARKETING/ADMIN_RESEARCH.md` + `OPPORTUNITIES_RESEARCH.md`) produced by a parallel research session on 6 Jul.
+
+**Earlier (Batch 8, 4 Jul 2026 evening):**
 - **Admin Center (new module):** `/admin`, gated to Management/Admin (`ADMIN_VIEW_ROLES` in `data/adminData.js`), sidebar nav — **Overview** (account stats, active users by role, mock 30-day module usage, needs-attention list, recent activity), **Users** (accounts mirroring the HR seeds — add user with mock invitation email, edit role, password reset, disable/enable, delete with "disable instead" advice), **Roles & permissions** (the role × module access matrix mirroring the app's real client-side gates — click-to-cycle, reset button; doubles as the Phase 2 RBAC spec), **Activity log** (filterable mock audit trail incl. an access-denied event). Honest caveat shown on-screen: login is still password-less, so accounts are display-only until Phase 2 auth. The unused ComingSoon page was deleted.
 
 **Earlier (Batch 7, 4 Jul 2026):**
@@ -145,10 +149,9 @@ Financials). Demo-grade user management to agree the workflows before Phase 2 au
 - **Activity log** — filterable mock audit trail (user / module / action kind) across modules.
 - On-screen caveat: the login page is still password-less, so none of this gates sign-in yet.
 
-### ✅ Projects module — LIVE (dashboard + portfolio + record) + Phase 1 PM expansion SPEC'D
+### ✅ Projects module — LIVE (dashboard + portfolio + record + **full PM workspace, Batch 9**)
 
-**Current:** basic project portfolio (12 seeds, 9-stage pipeline, design/supervision tabs, stage controls, DPM/CPM links). 
-**Spec'd for expansion (Batch 9):** full project controls module — [PM_RESEARCH.md](PM_RESEARCH.md) documents best practices from industry tools (Aconex, Procore, Deltek, P6, PMWeb), FIDIC claims/EOT with UAE-civil-law nuances, Abu Dhabi authority workflows (DMT/Binaa, ADCD fire approval with new Sept 2026 CFPE gate, utility NOC ladders, Estidama/Pearl rating), WIR/MIR inspection registers, design-stage 30-60-90% reviews, deliverable/claims/fee registers with monthly progress reporting. Ready to build once token budget resets.
+**Batch 9 (6 Jul):** the full project-controls module from [PM_RESEARCH.md](PM_RESEARCH.md) is live — see "Latest" above for the section-by-section rundown (deliverables register, design gates, WIR/MIR/NCR/SI/daily logs, schedule + SPI, tasks, fees & variations, FIDIC claims/EOT with deadline countdowns, 4.21 progress reports, Abu Dhabi-first authority workflows, team panel, portfolio Resources view). Registers are page-local demo state; 4 of 12 projects seeded. **Standing action from the research:** verify ALSUWEIDI's fire-safety classification and CFPE certification before ADCD's 1 Sept 2026 hard gate.
 
 **New in Batch 2:** "New project" button for direct awards/tenders (LOA attachment still required — same rule as the won-deal path), an Edit modal on the record (financial fields visible only to sensitive roles), stage back/advance controls under the pipeline strip, and inline supervision approved/actual % updates.
 

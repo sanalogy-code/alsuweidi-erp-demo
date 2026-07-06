@@ -2,18 +2,18 @@
 
 The "how long did this actually take" log — numbers pulled from git history, for sharing with management. Refreshed on each docs sync.
 
-**As of:** 5 July 2026, 9:45 PM
+**As of:** 6 July 2026, 10:35 PM
 
 ## The headline
 
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Latest (5 Jul: PM module research + spec complete)** | 5 July 2026, 9:45 PM |
-| **Elapsed time** | ~114 hours, across **5 working days** |
-| **Commits** | 116 |
-| **Deploys to the live site** | every push auto-deploys — ~109 |
-| **App code** | ~14,872 lines across 70 components + 10 pages |
+| **Latest (6 Jul: Batch 9 — full Project Management module)** | 6 July 2026, 10:32 PM |
+| **Elapsed time** | ~135 hours, across **6 working days** |
+| **Commits** | 118 |
+| **Deploys to the live site** | every push auto-deploys — ~111 |
+| **App code** | ~18,293 lines across 82 components + 11 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 4 days
@@ -36,6 +36,7 @@ The "how long did this actually take" log — numbers pulled from git history, f
 - **Batch 6** (day 3 evening, 19 backlog items from Sana's Marketing review + resolved management decisions) — CRM company relationship tags/website/size/services with filters, subconsultant project history, "Keep in Mind" notes + project lessons, downloadable category portfolio PDFs (Marketing-managed, CRM-consumed); Proposal Builder removed in favour of richer project records (years, images, special features) ; 4-step photo workflow; content calendar rework (Website/LinkedIn/Email, copy+media primary); branding overhaul; business card requests; per-document review statuses with re-upload; payroll offboarding cutoff + end-of-service settlement and mid-month-hire catch-up; two-step leave approval (manager → HR); new IT + Admin-staff roles and an add-license form
 - **Financials & Accounting** (day 4, Batch 7) — first-pass gated module: cash/receivables overview, invoices linked to projects and won deals, expenses with approvals, H1 P&L summary; deliberately demo-grade to start the scoping conversation with Finance
 - **Admin Center** (day 4, Batch 8) — user accounts with add/edit/disable/delete and mock invitation flow, a role × module permissions matrix mirroring the app's real gating (the written Phase 2 RBAC spec, now visualized), a filterable audit-trail mock, and usage dashboards; the last "Coming Soon" tile is gone
+- **Project Management module** (day 6, Batch 9 — built from a 209-agent verified research pass, PM_RESEARCH.md) — per-project controls workspace: deliverables register with revision-tracked review workflows, 30-60-90 design gates, WIR/MIR/NCR/site-instruction/daily-report field registers, schedule S-curve with SPI + milestone slip flags, fee-by-stage tracking wired to HR timesheets and Financials invoices, FIDIC claims/EOT register with 28-day-notice countdowns (1999/2017 editions), FIDIC 4.21 monthly report checklists, Abu Dhabi-first authority workflow tracking (DMT/ADCD/utility NOC ladders/Estidama), project team panels, and a cross-project resource-allocation view
 - **Role-based views** — employees, HR, management, marketing, IT, admin staff, and PRO company each see different navigation and data
 - **Home dashboard** — module launcher, announcements, holidays tile, build-number card; day 3 added probation-ending-soon card
 
