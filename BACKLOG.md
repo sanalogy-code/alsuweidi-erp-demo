@@ -22,6 +22,18 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
+## Shipped — Batch 14 (6 Jul 2026, night): four current-ERP screens absorbed
+
+- [x] ~~CMR / attendance report / RFP management / CDM allocation plan~~ — **Shipped Batch 14
+  (6 Jul):** Sana shared four more screenshots of the current ERP with the instruction "pick up
+  the information, not the design; name and place things sensibly." Result: **Project reviews**
+  (Design weekly + Construction monthly lenses — CMR facts live in `phase.cmr`, everything else
+  displayed from registers, not re-entered); **HR Attendance Period report** (summary row per
+  person vs the 40-column punch grid); **CRM Proposals (RFPs)** register (linked to companies +
+  delivery projects, go/win scores, bid workflow, win rate; `data/rfpData.js`); **Resources
+  Months toggle** (monthly utilization from the same weekly allocations). Phase 2: punch-level
+  drill-down, RFP document attachments + "repeat proposal from", per-person cost rates.
+
 ## Shipped — Batch 13 (6 Jul 2026, night): DMR — Design Management Report
 
 - [x] ~~DMR equivalent~~ — **Shipped Batch 13 (6 Jul):** weekly Design Management Report view
