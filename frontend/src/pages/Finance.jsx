@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { LayoutDashboard, FileText, ReceiptText, TrendingUp, Lock } from 'lucide-react'
+import { LayoutDashboard, FileText, ReceiptText, TrendingUp, Lock, CalendarRange } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import FinanceOverview from '../components/finance/FinanceOverview'
 import InvoicesView from '../components/finance/InvoicesView'
 import ExpensesView from '../components/finance/ExpensesView'
 import ProfitLossView from '../components/finance/ProfitLossView'
+import RevenueReportsView from '../components/finance/RevenueReportsView'
 import { INVOICES, EXPENSES } from '../data/financeData'
 import { FINANCE_VIEW_ROLES } from '../data/dashboardData'
 
@@ -30,6 +31,7 @@ export default function Finance({ user, onLogout }) {
     { key: 'invoices', label: 'Invoices', icon: FileText, badge: outstandingCount },
     { key: 'expenses', label: 'Expenses', icon: ReceiptText, badge: pendingExpenses },
     { key: 'pl', label: 'P&L summary', icon: TrendingUp },
+    { key: 'revenue', label: 'Revenue reports', icon: CalendarRange },
   ]
 
   const navButton = (item) => {
@@ -102,6 +104,9 @@ export default function Finance({ user, onLogout }) {
           )}
           {view === 'pl' && (
             <ProfitLossView invoices={invoices} expenses={expenses} />
+          )}
+          {view === 'revenue' && (
+            <RevenueReportsView invoices={invoices} />
           )}
         </main>
       </div>

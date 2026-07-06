@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock } from 'lucide-react'
+import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, BadgeCheck } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AdminOverview from '../components/admin/AdminOverview'
 import UsersView from '../components/admin/UsersView'
 import RolesPermissionsView from '../components/admin/RolesPermissionsView'
 import AuditLogView from '../components/admin/AuditLogView'
+import LicensesView from '../components/admin/LicensesView'
 import {
   ADMIN_VIEW_ROLES, USER_ACCOUNTS, DEFAULT_PERMISSIONS, AUDIT_LOG,
 } from '../data/adminData'
@@ -26,6 +27,7 @@ export default function Admin({ user, onLogout }) {
     { key: 'overview', label: 'Overview', icon: LayoutDashboard },
     { key: 'users', label: 'Users', icon: Users, badge: invitedCount },
     { key: 'roles', label: 'Roles & permissions', icon: ShieldCheck },
+    { key: 'licenses', label: 'Registrations & licenses', icon: BadgeCheck },
     { key: 'log', label: 'Activity log', icon: ScrollText },
   ]
 
@@ -91,6 +93,7 @@ export default function Admin({ user, onLogout }) {
           {view === 'roles' && (
             <RolesPermissionsView permissions={permissions} onChange={setPermissions} users={users} />
           )}
+          {view === 'licenses' && <LicensesView />}
           {view === 'log' && (
             <AuditLogView log={AUDIT_LOG} users={users} />
           )}

@@ -26,6 +26,7 @@ import PayrollTab from '../components/hr/PayrollTab'
 import HolidaysTab from '../components/hr/HolidaysTab'
 import CareersTab from '../components/hr/CareersTab'
 import AttendanceTab from '../components/hr/AttendanceTab'
+import TimesheetInsights from '../components/hr/TimesheetInsights'
 import NewJoinerWizard from '../components/hr/NewJoinerWizard'
 import NewJoinerReviewModal from '../components/hr/NewJoinerReviewModal'
 import AddEmployeeModal from '../components/hr/AddEmployeeModal'
@@ -150,6 +151,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
       { key: 'leaveplanner', label: 'Leave planner', icon: CalendarRange },
       { key: 'renewals', label: 'Renewals', icon: CalendarClock, badge: overdueCount },
       { key: 'timesheets', label: 'Timesheets', icon: ClipboardCheck, badge: submittedTimesheets },
+      { key: 'tsinsights', label: 'Timesheet insights', icon: LineChart },
       { key: 'attendance', label: 'Attendance', icon: Fingerprint },
       { key: 'payroll', label: 'Payroll', icon: Banknote },
       { key: 'staffplan', label: 'Staff planning', icon: LineChart },
@@ -653,6 +655,10 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
               projects={projects}
               onAction={actionTimesheet}
             />
+          )}
+
+          {view === 'tsinsights' && canViewSensitive && (
+            <TimesheetInsights timesheets={timesheets} employees={employees} projects={projects} />
           )}
 
           {view === 'attendance' && canViewSensitive && <AttendanceTab employees={employees} />}
