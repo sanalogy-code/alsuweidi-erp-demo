@@ -178,6 +178,66 @@ export const TEAM_ROLES = [
   'Inspector', 'Document Controller',
 ]
 
+// --- Risk register (Batch 12) -------------------------------------------------------
+export const RISK_LEVELS = [
+  { key: 'low', label: 'Low', score: 1, chip: 'bg-green-100 text-green-700' },
+  { key: 'medium', label: 'Medium', score: 2, chip: 'bg-amber-100 text-amber-700' },
+  { key: 'high', label: 'High', score: 3, chip: 'bg-red-100 text-red-700' },
+]
+export const riskLevelMeta = (k) => RISK_LEVELS.find((l) => l.key === k) || RISK_LEVELS[1]
+export const RISK_STATUSES = [
+  { key: 'open', label: 'Open', chip: 'bg-red-100 text-red-700' },
+  { key: 'mitigating', label: 'Mitigating', chip: 'bg-amber-100 text-amber-700' },
+  { key: 'closed', label: 'Closed', chip: 'bg-green-100 text-green-700' },
+  { key: 'realized', label: 'Realized', chip: 'bg-purple-100 text-purple-700' },
+]
+export const riskStatusMeta = (k) => RISK_STATUSES.find((s) => s.key === k) || RISK_STATUSES[0]
+
+// --- Payment certificates / IPC (Batch 12) ------------------------------------------
+export const IPC_STATUSES = [
+  { key: 'draft', label: 'Draft', chip: 'bg-gray-100 text-gray-600' },
+  { key: 'submitted', label: 'Submitted', chip: 'bg-blue-100 text-blue-700' },
+  { key: 'under_review', label: 'Under review', chip: 'bg-purple-100 text-purple-700' },
+  { key: 'certified', label: 'Certified', chip: 'bg-green-100 text-green-700' },
+  { key: 'paid', label: 'Paid', chip: 'bg-teal-100 text-teal-700' },
+]
+export const ipcStatusMeta = (k) => IPC_STATUSES.find((s) => s.key === k) || IPC_STATUSES[0]
+
+// --- Resource planning (Batch 12): person × week planned hours ----------------------
+// Planned allocations per person per project per week. Capacity is flat 40h/week
+// for the demo (per-person work-week patterns refine this in Phase 2).
+export const CAPACITY_HOURS_PER_WEEK = 40
+
+export const INITIAL_ALLOCATIONS = [
+  // Week of 2026-07-05 (current demo week)
+  { id: 1, name: 'Samir Al Mazrouei', employeeId: 10, projectId: 8, weekStart: '2026-07-05', hours: 24 },
+  { id: 2, name: 'Samir Al Mazrouei', employeeId: 10, projectId: 1, weekStart: '2026-07-05', hours: 12 },
+  { id: 3, name: 'Samir Al Mazrouei', employeeId: 10, projectId: 5, weekStart: '2026-07-05', hours: 8 },
+  { id: 4, name: 'Fatima Al Mansouri', employeeId: 7, projectId: 1, weekStart: '2026-07-05', hours: 16 },
+  { id: 5, name: 'Fatima Al Mansouri', employeeId: 7, projectId: 5, weekStart: '2026-07-05', hours: 12 },
+  { id: 6, name: 'Mohammad Kubba', employeeId: 3, projectId: 2, weekStart: '2026-07-05', hours: 32 },
+  { id: 7, name: 'Mohammad Kubba', employeeId: 3, projectId: 1, weekStart: '2026-07-05', hours: 10 },
+  { id: 8, name: 'Naseeb Shaheen', employeeId: 2, projectId: 2, weekStart: '2026-07-05', hours: 20 },
+  { id: 9, name: 'Naseeb Shaheen', employeeId: 2, projectId: 7, weekStart: '2026-07-05', hours: 12 },
+  { id: 10, name: 'Dina Haddad (traffic)', employeeId: null, projectId: 7, weekStart: '2026-07-05', hours: 36 },
+  // Week of 2026-07-12
+  { id: 11, name: 'Samir Al Mazrouei', employeeId: 10, projectId: 8, weekStart: '2026-07-12', hours: 20 },
+  { id: 12, name: 'Samir Al Mazrouei', employeeId: 10, projectId: 1, weekStart: '2026-07-12', hours: 16 },
+  { id: 13, name: 'Fatima Al Mansouri', employeeId: 7, projectId: 5, weekStart: '2026-07-12', hours: 20 },
+  { id: 14, name: 'Mohammad Kubba', employeeId: 3, projectId: 2, weekStart: '2026-07-12', hours: 40 },
+  { id: 15, name: 'Mohammad Kubba', employeeId: 3, projectId: 1, weekStart: '2026-07-12', hours: 8 },
+  { id: 16, name: 'Naseeb Shaheen', employeeId: 2, projectId: 2, weekStart: '2026-07-12', hours: 24 },
+  { id: 17, name: 'Dina Haddad (traffic)', employeeId: null, projectId: 7, weekStart: '2026-07-12', hours: 24 },
+  // Week of 2026-07-19
+  { id: 18, name: 'Samir Al Mazrouei', employeeId: 10, projectId: 8, weekStart: '2026-07-19', hours: 24 },
+  { id: 19, name: 'Fatima Al Mansouri', employeeId: 7, projectId: 5, weekStart: '2026-07-19', hours: 12 },
+  { id: 20, name: 'Mohammad Kubba', employeeId: 3, projectId: 2, weekStart: '2026-07-19', hours: 36 },
+  { id: 21, name: 'Naseeb Shaheen', employeeId: 2, projectId: 7, weekStart: '2026-07-19', hours: 16 },
+  // Week of 2026-07-26 — deliberately light: forward capacity to plan into
+  { id: 22, name: 'Samir Al Mazrouei', employeeId: 10, projectId: 8, weekStart: '2026-07-26', hours: 16 },
+  { id: 23, name: 'Mohammad Kubba', employeeId: 3, projectId: 2, weekStart: '2026-07-26', hours: 20 },
+]
+
 // --- Empty shells -------------------------------------------------------------------
 export const emptyPhase = (key, label) => ({
   key, label: label || PHASE_META[key]?.label || key,
@@ -204,6 +264,7 @@ export const emptyPmRecord = (project) => ({
   method: 'waterfall', sprints: [],
   phases: (project ? phaseKeysFor(project) : []).map((k) => emptyPhase(k)),
   claims: [], reports: [], authorities: [],
+  risks: [], meetings: [], ipcs: [], handover: null,
 })
 
 // --- Progress / lateness rollups (Batch 11: management dashboard) ------------------
@@ -271,6 +332,24 @@ export const PM_RECORDS = {
   // Harbour Point Medical Centre — D+S in Construction: both phases, richest record.
   1: {
     projectId: 1, fidicEdition: '1999', method: 'waterfall', sprints: [],
+    risks: [
+      { id: 1, ref: 'R-01', description: 'Medical equipment vendor drawings arrive late for remaining departments (radiology next)', probability: 'high', impact: 'high', owner: 'Samir Al Mazrouei', mitigation: 'Vendor coordination tracker; escalate through client PMO monthly; CLM-01 already covers the first occurrence.', status: 'mitigating', reviewDate: '2026-07-20' },
+      { id: 2, ref: 'R-02', description: 'ADCD smoke-control comments delay shop-drawing approval past envelope milestone', probability: 'medium', impact: 'medium', owner: 'Mohammad Kubba', mitigation: 'Fan duty clarification submitted; pre-review meeting requested with ADCD.', status: 'open', reviewDate: '2026-07-15' },
+      { id: 3, ref: 'R-03', description: 'Summer heat-stress restrictions cut concrete pour windows', probability: 'medium', impact: 'low', owner: 'George Matta (site)', mitigation: 'Night pours agreed with contractor from 15 Jun; monitored in daily reports.', status: 'closed', reviewDate: null },
+    ],
+    meetings: [
+      { id: 1, ref: 'PM-59', date: '2026-07-02', title: 'Weekly progress meeting #59', attendees: 'Samir, George, EBC (contractor), client rep',
+        actions: [
+          { id: 1, text: 'Contractor to submit labour histogram recovery plan', owner: 'EBC (contractor)', due: '2026-07-09', status: 'open' },
+          { id: 2, text: 'Chase radiology vendor drawings via client PMO', owner: 'Samir Al Mazrouei', due: '2026-07-08', status: 'open' },
+          { id: 3, text: 'Issue SI for terrazzo protection', owner: 'George Matta (site)', due: '2026-07-03', status: 'done' },
+        ] },
+    ],
+    ipcs: [
+      { id: 1, ref: 'IPC-14', period: '2026-05', amountClaimed: 8200000, amountCertified: 7850000, status: 'paid', note: 'Deductions: uncertified materials on site (MIR pending at cutoff).' },
+      { id: 2, ref: 'IPC-15', period: '2026-06', amountClaimed: 9100000, amountCertified: null, status: 'under_review', note: 'Verification against approved WIRs in progress — WIR-0139 batch included.' },
+    ],
+    handover: null,
     claims: [
       { id: 1, ref: 'CLM-01', title: 'EOT — late free issue of medical equipment vendor drawings', party: 'Contractor', eventDate: '2026-05-28', awarenessDate: '2026-06-02', noticeDate: '2026-06-18', status: 'notice_served', timeImpactDays: 21, costImpact: 450000,
         records: [
@@ -456,6 +535,22 @@ export const PM_RECORDS = {
   // Pump Station Upgrade — supervision-only, behind plan, urgent claim countdown.
   8: {
     projectId: 8, fidicEdition: '1999', method: 'waterfall', sprints: [],
+    risks: [
+      { id: 1, ref: 'R-01', description: 'Employer-supplied pumps delivered late', probability: 'high', impact: 'high', owner: 'Samir Al Mazrouei', mitigation: 'Realized — now running as CLM-02 (EOT + prolongation). Recovery programme rev 2 under review.', status: 'realized', reviewDate: null },
+      { id: 2, ref: 'R-02', description: 'Bay 2 anchor bolt rework pushes mechanical completion past Q4 shutdown window', probability: 'medium', impact: 'high', owner: 'Tariq Aziz (site)', mitigation: 'Survey verification underway (WIR-0067); shutdown-window fallback agreed with ADNOC ops.', status: 'mitigating', reviewDate: '2026-07-14' },
+    ],
+    meetings: [
+      { id: 1, ref: 'PM-14', date: '2026-06-15', title: 'Progress meeting #14', attendees: 'Samir, Tariq, contractor PM, ADNOC PMO',
+        actions: [
+          { id: 1, text: 'Quantify standing plant costs for claim record', owner: 'Samir Al Mazrouei', due: '2026-06-22', status: 'done' },
+          { id: 2, text: 'Contractor to resubmit bay 2 anchor bolt survey', owner: 'Contractor PM', due: '2026-07-04', status: 'open' },
+        ] },
+    ],
+    ipcs: [
+      { id: 1, ref: 'IPC-07', period: '2026-05', amountClaimed: 3400000, amountCertified: 3400000, status: 'paid', note: '' },
+      { id: 2, ref: 'IPC-08', period: '2026-06', amountClaimed: 2900000, amountCertified: 2450000, status: 'certified', note: 'Bay 2 works excluded pending WIR-0067 acceptance — approved WIRs are the certification basis.' },
+    ],
+    handover: null,
     claims: [
       { id: 1, ref: 'CLM-02', title: 'EOT + prolongation — employer-supplied pumps delivered 7 weeks late', party: 'Contractor', eventDate: '2026-04-15', awarenessDate: '2026-06-15', noticeDate: null, status: 'event_logged', timeImpactDays: 49, costImpact: 1200000,
         records: [
@@ -845,6 +940,13 @@ export const myWorkFor = (name, projects, pmRecords) => {
           if (d.status === 'internal_review') approvals.push({ project, phase: ph, kind: 'QA', ref: d.docNo, title: `Internal QA — ${d.title}`, since: d.history[d.history.length - 1]?.date })
         })
       }
+    })
+    ;(pm.meetings || []).forEach((mt) => {
+      mt.actions.forEach((a) => {
+        if (a.status !== 'done' && a.owner.toLowerCase() === lower) {
+          tasks.push({ project, phase: { key: 'meeting', label: `Action — ${mt.ref}` }, task: { ...a, title: a.text, assignee: a.owner, priority: 'normal', status: 'open', checklist: [], comments: [] } })
+        }
+      })
     })
     if (onTeam) {
       pm.claims.forEach((c) => {

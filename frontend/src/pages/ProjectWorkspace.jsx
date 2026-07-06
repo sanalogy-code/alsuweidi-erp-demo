@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, Layers, HardHat, CalendarRange, ListTodo,
   Banknote, Scale, ClipboardList, Landmark, Users, ArrowLeft, CalendarCheck2, Info,
+  ShieldAlert, MessagesSquare, Receipt, PackageCheck,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import PmOverview from '../components/projects/pm/PmOverview'
@@ -17,6 +18,7 @@ import ClaimsView from '../components/projects/pm/ClaimsView'
 import ReportsView from '../components/projects/pm/ReportsView'
 import AuthoritiesView from '../components/projects/pm/AuthoritiesView'
 import TeamView from '../components/projects/pm/TeamView'
+import { RisksView, MeetingsView, PaymentsView, HandoverView } from '../components/projects/pm/GovernanceViews'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import StagePipeline from '../components/projects/StagePipeline'
@@ -84,10 +86,20 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
   }).length
   const reportsDue = pm.reports.filter((r) => !r.submittedDate).length
 
+  const hasSupervision = pm.phases.some((ph) => ph.key === 'supervision')
+  const openActions = (pm.meetings || []).reduce((s, m) => s + m.actions.filter((a) => a.status !== 'done').length, 0)
+  const openRisks = (pm.risks || []).filter((r) => r.status === 'open' || r.status === 'mitigating').length
+
   const contractSections = [
     { key: 'claims', label: 'Claims & EOT', icon: Scale, badge: claimAlertCount },
     { key: 'reports', label: 'Progress reports', icon: ClipboardList, badge: reportsDue },
     { key: 'authorities', label: 'Authorities', icon: Landmark },
+    { key: 'risks', label: 'Risks', icon: ShieldAlert, badge: openRisks },
+    { key: 'meetings', label: 'Meetings & actions', icon: MessagesSquare, badge: openActions },
+    ...(hasSupervision ? [
+      { key: 'payments', label: 'Payments (IPC)', icon: Receipt },
+      { key: 'handover', label: 'Handover', icon: PackageCheck },
+    ] : []),
   ]
 
   const activePhase = sel.phase ? pm.phases.find((ph) => ph.key === sel.phase) : null
@@ -183,6 +195,10 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
             {sel.view === 'claims' && !sel.phase && <ClaimsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
             {sel.view === 'reports' && !sel.phase && <ReportsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
             {sel.view === 'authorities' && !sel.phase && <AuthoritiesView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
+            {sel.view === 'risks' && !sel.phase && <RisksView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
+            {sel.view === 'meetings' && !sel.phase && <MeetingsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
+            {sel.view === 'payments' && !sel.phase && <PaymentsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
+            {sel.view === 'handover' && !sel.phase && <HandoverView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
           </main>
         </div>
       </div>

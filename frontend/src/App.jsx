@@ -15,7 +15,7 @@ import TimesheetGate from './components/TimesheetGate'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
 import { TIMESHEETS } from './data/timesheetData'
 import { PROJECTS } from './data/projectsData'
-import { getPmRecord, emptyPmRecord } from './data/pmData'
+import { getPmRecord, emptyPmRecord, INITIAL_ALLOCATIONS } from './data/pmData'
 import { INITIAL_DEALS } from './data/crmData'
 import { MARKETING_TASKS } from './data/marketingData'
 
@@ -32,6 +32,8 @@ export default function App() {
   // the cross-project "My Work" view sees one consistent state.
   const [pmRecords, setPmRecords] = useState(() => Object.fromEntries(PROJECTS.map((p) => [p.id, getPmRecord(p)])))
   const updatePmRecord = (projectId, next) => setPmRecords((prev) => ({ ...prev, [projectId]: next }))
+  // Cross-project planned resource allocations (Batch 12 resource planner).
+  const [allocations, setAllocations] = useState(INITIAL_ALLOCATIONS)
   // Lifted so deal ids never reset and get reused across CRM remounts — a reused id
   // would make the won-deal card link to another session's project via dealId
   const [deals, setDeals] = useState(INITIAL_DEALS)
@@ -123,7 +125,7 @@ export default function App() {
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
-      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
+      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} allocations={allocations} onUpdateAllocations={setAllocations} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
       <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} />} />
       <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />

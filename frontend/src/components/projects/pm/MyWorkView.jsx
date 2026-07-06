@@ -54,7 +54,7 @@ export default function MyWorkView({ user, projects, pmRecords, onOpenWorkspace 
           const d = task.due ? daysUntil(task.due) : null
           const pMeta = taskPriorityMeta(task.priority)
           return (
-            <button key={i} onClick={() => onOpenWorkspace(project, { phase: phase.key, view: 'tasks' })} className="w-full bg-white rounded-lg border border-gray-200 px-4 py-3 flex items-center gap-3 text-left hover:border-brand/40 transition">
+            <button key={i} onClick={() => onOpenWorkspace(project, phase.key === 'meeting' ? { view: 'meetings' } : { phase: phase.key, view: 'tasks' })} className="w-full bg-white rounded-lg border border-gray-200 px-4 py-3 flex items-center gap-3 text-left hover:border-brand/40 transition">
               <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${pMeta.chip}`}>{pMeta.label}</span>
               <span className="flex-1 min-w-0">
                 <span className="block text-sm text-gray-800 truncate">{task.title}</span>

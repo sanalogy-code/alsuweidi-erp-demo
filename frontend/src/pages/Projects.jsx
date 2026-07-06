@@ -6,7 +6,7 @@ import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import ProjectsDashboard from '../components/projects/ProjectsDashboard'
 import NewProjectModal from '../components/projects/NewProjectModal'
-import ResourcesView from '../components/projects/pm/ResourcesView'
+import ResourcePlannerView from '../components/projects/pm/ResourcePlannerView'
 import MyWorkView from '../components/projects/pm/MyWorkView'
 import PmDashboard from '../components/projects/pm/PmDashboard'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
@@ -28,7 +28,7 @@ const NAV_GROUPS = [
   ] },
 ]
 
-export default function Projects({ user, onLogout, projects = [], pmRecords = {}, onUpdateProject, onAddProject, onAddMarketingTask }) {
+export default function Projects({ user, onLogout, projects = [], pmRecords = {}, allocations = [], onUpdateAllocations, onUpdateProject, onAddProject, onAddMarketingTask }) {
   const location = useLocation()
   const navigate = useNavigate()
   // My Work is the daily-driver landing view (Batch 10) — the first thing a PM
@@ -98,7 +98,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
             <ProjectList projects={projects} employees={EMPLOYEES} user={user} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'resources' && (
-            <ResourcesView projects={projects} pmRecords={pmRecords} employees={EMPLOYEES} onViewProject={(p) => openWorkspace(p)} />
+            <ResourcePlannerView projects={projects} pmRecords={pmRecords} employees={EMPLOYEES} allocations={allocations} onUpdateAllocations={onUpdateAllocations} onOpenWorkspace={openWorkspace} />
           )}
         </main>
       </div>
