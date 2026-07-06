@@ -1,5 +1,6 @@
 import { FolderKanban, PauseCircle, CheckCircle2, AlertTriangle, Banknote, HardHat } from 'lucide-react'
 import { PROJECT_STAGES } from '../../data/projectsData'
+import { claimDeadlines, daysUntil } from '../../data/pmData'
 
 const fmtM = (n) => `${(n / 1000000).toFixed(1)}M`
 
@@ -23,7 +24,7 @@ function BarBreakdown({ title, rows }) {
   )
 }
 
-export default function ProjectsDashboard({ projects, canViewSensitive, onViewProject }) {
+export default function ProjectsDashboard({ projects, pmRecords = {}, canViewSensitive, onViewProject, onOpenWorkspace }) {
   const byStatus = (s) => projects.filter((p) => p.generalStatus === s)
 
   const behind = projects.filter((p) => p.supervision && p.supervision.approvedPct > 0 && p.supervision.actualPct < p.supervision.approvedPct)
@@ -38,13 +39,38 @@ export default function ProjectsDashboard({ projects, canViewSensitive, onViewPr
   const typeRows = [...new Set(projects.map((p) => p.type))].map((t) => ({ label: t, count: projects.filter((p) => p.type === t).length })).sort((a, b) => b.count - a.count)
   const stageRows = PROJECT_STAGES.map((s) => ({ label: s, count: projects.filter((p) => p.currentStage === s).length })).filter((r) => r.count > 0)
 
+  // Project-controls alerts from the PM registers (Batch 9): FIDIC claim
+  // deadlines within 14 days and monthly progress reports due. These open the
+  // project workspace directly — deadline misses are the costly kind.
+  const pmAlerts = projects.flatMap((p) => {
+    const pm = pmRecords[p.id]
+    if (!pm) return []
+    const claims = pm.claims.flatMap((c) => {
+      const { noticeDue, detailedDue } = claimDeadlines(c, pm.fidicEdition)
+      const due = c.status === 'event_logged' ? noticeDue : c.status === 'notice_served' ? detailedDue : null
+      if (!due) return []
+      const d = daysUntil(due)
+      if (d > 14) return []
+      const what = c.status === 'event_logged' ? '28-day claim notice' : 'detailed claim'
+      return [{ p, kind: 'claim', text: `${c.ref}: ${what} ${d < 0 ? `${-d}d OVERDUE` : `due in ${d}d`} (${due})` }]
+    })
+    const reports = pm.reports.filter((r) => !r.submittedDate).map((r) => {
+      const d = daysUntil(r.dueDate)
+      return { p, kind: 'report', text: `${r.month} progress report ${d < 0 ? `${-d}d overdue` : `due in ${d}d`} (FIDIC 4.21)` }
+    })
+    return [...claims, ...reports]
+  })
+
   const attention = [
+    ...pmAlerts,
     ...behind.map((p) => ({ p, kind: 'behind', text: `${p.supervision.approvedPct - p.supervision.actualPct} pts behind plan (${p.supervision.actualPct}% vs ${p.supervision.approvedPct}%)` })),
     ...(canViewSensitive ? disputes.map((p) => ({ p, kind: 'dispute', text: p.design?.financialStatus?.startsWith('Open - Dispute') ? 'Design fees in dispute — with Finance/Contracts' : 'Supervision invoices unsettled' })) : []),
     ...onHold.map((p) => ({ p, kind: 'hold', text: `On hold at ${p.currentStage} stage` })),
   ]
 
   const KIND_CHIP = {
+    claim: { label: 'Claim', cls: 'bg-red-100 text-red-700' },
+    report: { label: 'Report', cls: 'bg-blue-100 text-blue-700' },
     behind: { label: 'Behind', cls: 'bg-red-100 text-red-700' },
     dispute: { label: 'Fees', cls: 'bg-amber-100 text-amber-700' },
     hold: { label: 'On Hold', cls: 'bg-yellow-100 text-yellow-700' },
@@ -99,11 +125,11 @@ export default function ProjectsDashboard({ projects, canViewSensitive, onViewPr
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-sm font-semibold text-gray-800">Needs attention</h3>
-            <p className="text-xs text-gray-500">Behind-plan supervision, {canViewSensitive ? 'fee disputes, ' : ''}and projects on hold. Click to open.</p>
+            <p className="text-xs text-gray-500">Claim/report deadlines, behind-plan supervision, {canViewSensitive ? 'fee disputes, ' : ''}and projects on hold. Click to open.</p>
           </div>
           <div className="divide-y divide-gray-100">
             {attention.map(({ p, kind, text }, i) => (
-              <button key={`${p.id}-${kind}-${i}`} onClick={() => onViewProject(p)} className="w-full px-4 py-2.5 flex items-center justify-between gap-4 hover:bg-gray-50 text-left transition">
+              <button key={`${p.id}-${kind}-${i}`} onClick={() => ((kind === 'claim' || kind === 'report') && onOpenWorkspace ? onOpenWorkspace(p, { view: kind === 'claim' ? 'claims' : 'reports' }) : onViewProject(p))} className="w-full px-4 py-2.5 flex items-center justify-between gap-4 hover:bg-gray-50 text-left transition">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${KIND_CHIP[kind].cls}`}>{KIND_CHIP[kind].label}</span>
                   <div className="min-w-0">

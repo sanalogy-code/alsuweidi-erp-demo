@@ -12,7 +12,12 @@ export const MAIN_FUNCTIONS = [
   'Residential Communities', 'Non-Building',
 ]
 
-export const PROJECT_SCOPES = ['Design + Supervision', 'Design only', 'Supervision only', 'Secondment Services']
+export const PROJECT_SCOPES = ['Design + Supervision', 'Design only', 'Supervision only', 'Study / Advisory', 'Secondment Services']
+
+// Study/Advisory sub-types (Batch 10, Sana's feedback): TIS, surveying, and other
+// study-shaped engagements aren't design or supervision — they get deliverables,
+// tasks, schedule, and fees but no site registers or design gates.
+export const STUDY_TYPES = ['Traffic Impact Study (TIS)', 'Surveying', 'Feasibility Study', 'Condition Assessment', 'Other Study']
 
 // Seed projects predate the explicit `scope` field — derive it from the
 // design/supervision sub-records where absent. New projects store it directly.
@@ -61,6 +66,7 @@ export const STAGES_BY_SCOPE = {
   'Design + Supervision': PROJECT_STAGES,
   'Design only': ['Data Collection', 'Concept', 'Schematic', 'Detailed', 'Tender Docs', 'IFC'],
   'Supervision only': ['Tendering', 'Construction', 'D&L'],
+  'Study / Advisory': ['Data Collection', 'Concept', 'Detailed'],
   'Secondment Services': ['Construction'],
 }
 
@@ -183,6 +189,7 @@ export const PROJECTS = [
   {
     id: 7, projectNo: 'P-2725', name: 'TIS — Khalifa City School Cluster', employer: 'Department of Municipalities and Transport', companyId: null, owner: 'Department of Municipalities and Transport',
     type: 'Transportation', mainFunction: 'Educational', location: 'Abu Dhabi', sector: 'Khalifa City', plot: null, builtupArea: 0,
+    scope: 'Study / Advisory', studyType: 'Traffic Impact Study (TIS)',
     description: 'Traffic impact study and access design review for a three-school cluster.',
     generalStatus: 'In Progress', fund: 'Government', contractType: 'Call-off / Framework Agreement', contractSigned: true, loaObtained: false,
     contractValue: 240000, constructionCost: null, contractorName: null,

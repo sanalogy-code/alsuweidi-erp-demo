@@ -1,26 +1,31 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Plus, UsersRound } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import ProjectsDashboard from '../components/projects/ProjectsDashboard'
 import NewProjectModal from '../components/projects/NewProjectModal'
 import ResourcesView from '../components/projects/pm/ResourcesView'
+import MyWorkView from '../components/projects/pm/MyWorkView'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { EMPLOYEES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 
 const NAV = [
+  { key: 'mywork', label: 'My Work', icon: Inbox },
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'portfolio', label: 'Portfolio', icon: FolderKanban },
   { key: 'resources', label: 'Resources', icon: UsersRound },
 ]
 
-export default function Projects({ user, onLogout, projects = [], onUpdateProject, onAddProject, onAddMarketingTask }) {
+export default function Projects({ user, onLogout, projects = [], pmRecords = {}, onUpdateProject, onAddProject, onAddMarketingTask }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const [view, setView] = useState('dashboard')
+  // My Work is the daily-driver landing view (Batch 10) — the first thing a PM
+  // or engineer sees is what's waiting on them, not a stats page.
+  const [view, setView] = useState('mywork')
+  const openWorkspace = (p, target) => navigate(`/projects/${p.id}`, target ? { state: target } : undefined)
   // CRM's "view project" / "open in Projects" hands over a project id via router state
   const [selectedProject, setSelectedProject] = useState(
     () => projects.find((p) => p.id === location.state?.openProjectId) || null
@@ -64,14 +69,17 @@ export default function Projects({ user, onLogout, projects = [], onUpdateProjec
         </aside>
 
         <main className="flex-1 min-w-0 w-full">
+          {view === 'mywork' && (
+            <MyWorkView user={user} projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
+          )}
           {view === 'dashboard' && (
-            <ProjectsDashboard projects={projects} canViewSensitive={canViewSensitive} onViewProject={setSelectedProject} />
+            <ProjectsDashboard projects={projects} pmRecords={pmRecords} canViewSensitive={canViewSensitive} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'portfolio' && (
-            <ProjectList projects={projects} employees={EMPLOYEES} user={user} onViewProject={setSelectedProject} />
+            <ProjectList projects={projects} employees={EMPLOYEES} user={user} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'resources' && (
-            <ResourcesView projects={projects} employees={EMPLOYEES} onViewProject={setSelectedProject} />
+            <ResourcesView projects={projects} pmRecords={pmRecords} employees={EMPLOYEES} onViewProject={(p) => openWorkspace(p)} />
           )}
         </main>
       </div>

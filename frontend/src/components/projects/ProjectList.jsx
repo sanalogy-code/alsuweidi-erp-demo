@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Info } from 'lucide-react'
 import { PROJECT_TYPES, PROJECT_SCOPES, GENERAL_STATUS, PROJECT_LOCATIONS, scopeOf } from '../../data/projectsData'
 
 const STATUS_CHIP = {
@@ -9,7 +9,7 @@ const STATUS_CHIP = {
 }
 
 // The anti-CSV: seven columns, everything else in the drill-in.
-export default function ProjectList({ projects, employees, user, onViewProject }) {
+export default function ProjectList({ projects, employees, user, onViewProject, onOpenWorkspace }) {
   const [search, setSearch] = useState('')
   const [type, setType] = useState('')
   const [scope, setScope] = useState('')
@@ -39,7 +39,7 @@ export default function ProjectList({ projects, employees, user, onViewProject }
         <div className="flex justify-between items-center flex-wrap gap-2">
           <div>
             <h2 className="text-sm font-semibold text-gray-800">Portfolio ({rows.length})</h2>
-            <p className="text-xs text-gray-500">Click a project for the full record — design, supervision, financials, team.</p>
+            <p className="text-xs text-gray-500">Click a project to open its workspace — tasks, deliverables, inspections, schedule, claims. <span className="font-medium text-gray-600">Details</span> opens the record card.</p>
           </div>
           <div className="relative">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -89,11 +89,12 @@ export default function ProjectList({ projects, employees, user, onViewProject }
                 <th className="text-left px-4 py-2">Stage</th>
                 <th className="text-left px-4 py-2">DPM / CPM</th>
                 <th className="text-left px-4 py-2">Status</th>
+                {onOpenWorkspace && <th className="px-4 py-2" />}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {rows.map((p) => (
-                <tr key={p.id} className="hover:bg-blue-50 cursor-pointer transition" onClick={() => onViewProject(p)}>
+                <tr key={p.id} className="hover:bg-blue-50 cursor-pointer transition" onClick={() => (onOpenWorkspace ? onOpenWorkspace(p) : onViewProject(p))}>
                   <td className="px-4 py-2.5 text-xs text-gray-500 whitespace-nowrap">{p.projectNo}</td>
                   <td className="px-4 py-2.5">
                     <div className="font-medium text-brand hover:underline">{p.name}</div>
@@ -108,6 +109,16 @@ export default function ProjectList({ projects, employees, user, onViewProject }
                   <td className="px-4 py-2.5">
                     <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${STATUS_CHIP[p.generalStatus]}`}>{p.generalStatus}</span>
                   </td>
+                  {onOpenWorkspace && (
+                    <td className="px-4 py-2.5 text-right">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onViewProject(p) }}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-gray-500 border border-gray-200 hover:border-brand hover:text-brand transition whitespace-nowrap"
+                      >
+                        <Info size={12} /> Details
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

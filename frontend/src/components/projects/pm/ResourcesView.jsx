@@ -1,15 +1,13 @@
-import { PM_RECORDS } from '../../../data/pmData'
-
 // Portfolio-level resource allocation — the standard person × project pattern
 // (per Sana's 5 Jul decision: build it, she corrects against real staffing
-// practice on screen). Assignments come from PM team panels plus the DPM/CPM
+// practice on screen). Assignments come from phase team panels plus the DPM/CPM
 // links on every project record; load % is illustrative until real allocations
 // exist in Phase 2.
 
 // Deterministic mock load so the heatmap is stable across renders.
 const mockLoad = (personKey, projectId) => 20 + ((personKey.length * 7 + projectId * 13) % 61)
 
-export default function ResourcesView({ projects, employees, onViewProject }) {
+export default function ResourcesView({ projects, pmRecords = {}, employees, onViewProject }) {
   const active = projects.filter((p) => p.generalStatus === 'In Progress')
 
   // person → { name, assignments: [{ project, role, load }] }
@@ -28,8 +26,8 @@ export default function ResourcesView({ projects, employees, onViewProject }) {
     const cpm = employees.find((e) => e.id === p.cpmId)
     if (dpm) assign(dpm.name, dpm.id, p, 'DPM')
     if (cpm) assign(cpm.name, cpm.id, p, 'CPM')
-    const pm = PM_RECORDS[p.id]
-    pm?.team.forEach((m) => assign(m.name, m.employeeId, p, m.role))
+    const pm = pmRecords[p.id]
+    pm?.phases.forEach((ph) => ph.team.forEach((m) => assign(m.name, m.employeeId, p, m.role)))
   })
 
   const rows = [...people.values()].sort((a, b) => b.assignments.length - a.assignments.length)
