@@ -19,13 +19,15 @@ const TABS = [
 function WirRegister({ pm, onUpdate }) {
   const [expanded, setExpanded] = useState(null)
   const decide = (w, status, remark) => {
-    const bumped = status === 'resubmit'
+    // The rev bumps when the CONTRACTOR RESUBMITS (resubmit → pending_re), matching
+    // the button's "resubmits (Rev X)" promise — not at rejection time.
+    const bumped = w.status === 'resubmit' && status === 'pending_re'
+    const rev = bumped ? String.fromCharCode(w.rev.charCodeAt(0) + 1) : w.rev
     onUpdate({
       ...pm,
       wirs: pm.wirs.map((x) => x.id === w.id ? {
-        ...x, status,
-        rev: bumped ? String.fromCharCode(x.rev.charCodeAt(0) + 1) : x.rev,
-        history: [...x.history, { rev: x.rev, date: todayISO(), event: remark }],
+        ...x, status, rev,
+        history: [...x.history, { rev, date: todayISO(), event: remark }],
       } : x),
     })
   }

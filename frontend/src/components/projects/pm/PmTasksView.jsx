@@ -125,13 +125,14 @@ export function TaskCard({ t, patch, currentUserName }) {
 export default function PmTasksView({ phase, onUpdate, currentUserName }) {
   const [showAdd, setShowAdd] = useState(false)
   const teamNames = phase.team.map((m) => m.name)
-  const [form, setForm] = useState({ title: '', assignee: teamNames[0] || '', due: '', priority: 'normal' })
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const [form, setForm] = useState({ title: '', assignee: teamNames[0] || '', startDate: todayIso, due: '', priority: 'normal' })
 
   const patchTask = (id, changes) => onUpdate({ ...phase, tasks: phase.tasks.map((t) => t.id === id ? { ...t, ...changes } : t) })
   const add = () => {
     if (!form.title.trim()) return
-    onUpdate({ ...phase, tasks: [...phase.tasks, { id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1, ...form, status: 'open', checklist: [], comments: [] }] })
-    setForm({ title: '', assignee: teamNames[0] || '', due: '', priority: 'normal' }); setShowAdd(false)
+    onUpdate({ ...phase, tasks: [...phase.tasks, { id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1, ...form, effortHours: 0, pctComplete: 0, sprintId: null, status: 'open', checklist: [], comments: [] }] })
+    setForm({ title: '', assignee: teamNames[0] || '', startDate: todayIso, due: '', priority: 'normal' }); setShowAdd(false)
   }
 
   const groups = TASK_STATUSES.map((s) => ({
@@ -153,7 +154,8 @@ export default function PmTasksView({ phase, onUpdate, currentUserName }) {
           <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Task…" className="flex-1 min-w-[200px] border rounded-md px-2 py-1.5" />
           <input value={form.assignee} onChange={(e) => setForm({ ...form, assignee: e.target.value })} list="pm-team-names" placeholder="Assignee" className="w-44 border rounded-md px-2 py-1.5" />
           <datalist id="pm-team-names">{teamNames.map((n) => <option key={n} value={n} />)}</datalist>
-          <input type="date" value={form.due} onChange={(e) => setForm({ ...form, due: e.target.value })} className="border rounded-md px-2 py-1.5" />
+          <label className="flex items-center gap-1 text-gray-500">Start<input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} className="border rounded-md px-2 py-1.5" /></label>
+          <label className="flex items-center gap-1 text-gray-500">Due<input type="date" value={form.due} onChange={(e) => setForm({ ...form, due: e.target.value })} className="border rounded-md px-2 py-1.5" /></label>
           <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })} className="border rounded-md px-2 py-1.5">
             {TASK_PRIORITIES.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
           </select>

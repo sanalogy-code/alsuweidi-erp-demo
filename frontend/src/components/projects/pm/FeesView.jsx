@@ -4,7 +4,7 @@ import { fmtAED, invoiceStatusMeta } from '../../../data/financeData'
 // % complete and EAC, manhour budget vs timesheet actuals (hooked to HR
 // timesheets), invoiced-vs-fee (hooked to Financials), and a variations register.
 
-export default function FeesView({ pm, project, invoices, timesheets, canViewSensitive, onUpdate }) {
+export default function FeesView({ pm, project, invoices, timesheets, totalManhourBudget, canViewSensitive, onUpdate }) {
   if (!canViewSensitive) {
     return <div className="bg-white rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400">Fee and cost data is limited to HR/Admin/Management roles.</div>
   }
@@ -31,7 +31,7 @@ export default function FeesView({ pm, project, invoices, timesheets, canViewSen
         <Stat label="Contract fee" value={fmtAED(totalFee || project.contractValue, { compact: true })} sub={approvedVars ? `+ ${fmtAED(approvedVars, { compact: true })} approved VOs` : 'incl. stages below'} />
         <Stat label="Earned (% complete)" value={fmtAED(earned, { compact: true })} sub={totalFee ? `${Math.round((earned / totalFee) * 100)}% of fee` : ''} />
         <Stat label="Invoiced" value={fmtAED(invoiced, { compact: true })} sub={`${projInvoices.length} invoice${projInvoices.length === 1 ? '' : 's'} in Financials`} />
-        <Stat label="Manhours" value={`${actualHours}h`} sub={pm.fees.manhourBudget ? `of ${pm.fees.manhourBudget.toLocaleString()}h budget (this session's timesheet seeds)` : 'no budget set'} />
+        <Stat label="Manhours (project-wide)" value={`${actualHours}h`} sub={totalManhourBudget ? `of ${totalManhourBudget.toLocaleString()}h across all phases — timesheet codes are per project, not per phase` : 'no budget set'} />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

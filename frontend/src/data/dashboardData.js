@@ -60,7 +60,7 @@ export const MODULES = [
   { key: 'it', icon: '🖥️', label: 'IT & Assets', description: 'Hardware requests, assets & licenses', path: '/it', status: 'live' },
   { key: 'marketing', icon: '📈', label: 'Marketing', description: 'Content, portfolio, branding & analytics', path: '/marketing', status: 'live' },
   // Finance tile is gated — only shown to FINANCE_VIEW_ROLES (see roles below). HomePage filters on `roles`.
-  { key: 'finance', icon: '💰', label: 'Financials', description: 'Invoices, expenses, cash & P&L', path: '/finance', status: 'live', roles: ['admin', 'management'] },
+  { key: 'finance', icon: '💰', label: 'Financials', description: 'Invoices, expenses, cash & P&L', path: '/finance', status: 'live', roles: ['admin', 'management', 'finance'] },
   // Admin tile is gated like Finance — only shown to ADMIN_VIEW_ROLES (adminData.js).
   { key: 'admin', icon: '⚙️', label: 'Admin Center', description: 'Users, roles & permissions', path: '/admin', status: 'live', roles: ['admin', 'management'] },
 ]
@@ -72,6 +72,7 @@ export const ROLES = [
   { value: 'hr', label: 'HR' },
   { value: 'it', label: 'IT' },
   { value: 'adminstaff', label: 'Admin Staff (office administration)' },
+  { value: 'finance', label: 'Finance / Accountant' },
   { value: 'management', label: 'Management' },
   { value: 'admin', label: 'Admin (system)' },
   { value: 'pro', label: 'PRO / Government Services (external)' },
@@ -106,6 +107,7 @@ export const IT_VIEW_ROLES = ['it', 'admin', 'management']
 export const MARKETING_VIEW_ROLES = ['marketing', 'management', 'admin']
 
 // Financials & Accounting module (invoices, expenses, cash position, P&L):
-// the whole module is sensitive — restricted to top management + system admin.
-// (A dedicated `finance` role can be added here later once Finance is scoped with Sana.)
-export const FINANCE_VIEW_ROLES = ['management', 'admin']
+// the whole module is sensitive — top management, system admin, and the dedicated
+// `finance` role (added 7 Jul per Sana: the accountant needs full working control —
+// create invoices, record payments, log expenses with receipt attachments).
+export const FINANCE_VIEW_ROLES = ['management', 'admin', 'finance']

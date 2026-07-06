@@ -3,14 +3,13 @@ import {
   projectProgress, projectHealth, lateTasksOf, nextMilestoneOf, worstSpiOf,
   hoursUsedOn, manhourBudgetOf, daysUntil, PM_METHODS,
 } from '../../../data/pmData'
-import { TIMESHEETS } from '../../../data/timesheetData'
 import { scopeOf } from '../../../data/projectsData'
 
 // Management dashboard (Batch 11): one row per active project — health (RAG),
 // % complete, late tasks, next milestone, SPI, hours used vs manhour budget.
 // The answer to "how are my projects doing?" in one screen.
 
-export default function PmDashboard({ projects, pmRecords, onOpenWorkspace }) {
+export default function PmDashboard({ projects, pmRecords, timesheets = [], onOpenWorkspace }) {
   const rows = projects
     .filter((p) => p.generalStatus === 'In Progress' && pmRecords[p.id])
     .map((p) => {
@@ -22,7 +21,7 @@ export default function PmDashboard({ projects, pmRecords, onOpenWorkspace }) {
         late: lateTasksOf(pm).length,
         milestone: nextMilestoneOf(pm),
         spi: worstSpiOf(pm),
-        hours: hoursUsedOn(TIMESHEETS, p.id),
+        hours: hoursUsedOn(timesheets, p.id),
         hoursBudget: manhourBudgetOf(pm),
       }
     })

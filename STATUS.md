@@ -8,7 +8,13 @@ Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.
 
 **Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (7 Jul 2026, after the review — the accountant pass):**
+**Latest (7 Jul 2026, closing goal sweep — "become every employee"):**
+- **All 8 code-review findings fixed** (fee-data leak gated, blank-pane jump fixed, PM module now reads live timesheet state, phase hour double-count clarified, draft-invoice forecast skew fixed, WIR rev bump aligned to the resubmit button, Add-task collects start dates, licenses state survives tab switches, dead file deleted).
+- **The accountant can now DO things**: `finance` role added (login dropdown + module gate + home tile); **New invoice** (project link, auto 5% VAT, issue/due dates, attachment file-name for the PDF/scan), **Record payment** (partial receipts → partially-paid/paid), **Add expense** (category, project job-costing, receipt/invoice photo file-name). Attachments show on the rows.
+- **System feedback loop**: floating **Feedback** button on every page (something broken / feature request / question, per module) → **Admin Center → System feedback** queue with triage statuses. Every employee's direct line into the system's backlog — how requirements-gathering continues once real staff touch the demo.
+- **The EVERYTHING list**: full persona sweep (accountant, HR, marketing, BD/bidding, admin/ODC, IT, PMs, site, management, every-employee, platform/access) logged in [BACKLOG.md](BACKLOG.md) — notifications center, per-user access overrides, correspondence register, receipts/credit notes, evaluations & training, workflow engine, and ~40 more, each placed under its persona.
+
+**Earlier (7 Jul 2026, after the review — the accountant pass):**
 - **Financials → Accountant** — the three reports an accountant actually runs monthly, live from the existing invoice/expense data with CSV export on each: **Receivables aging** (Not due / 1–30 / 31–60 / 61–90 / 90+ per client — the chase list), **Client statements of account** (invoice / paid / balance per client, exportable to send out), and the **VAT return working paper** (output VAT from invoices, input VAT estimated at 5% of expenses pending per-line VAT, net payable per quarter). Receipts register, per-line VAT, GL/double-entry, and the real FTA filing calendar are the Phase 2 accounting scope — these views define the report shapes to agree with the accountant.
 
 **Earlier (Batch 15, 6 Jul 2026 night — five more current-ERP screens absorbed):**

@@ -6,7 +6,7 @@ import { fmtAED } from '../../../data/financeData'
 // on top, then a health card per phase — each phase is its own engagement with
 // its own %, SPI, team, and open work.
 
-export default function PmOverview({ pm, project, invoices, onJump }) {
+export default function PmOverview({ pm, project, invoices, onJump, canViewSensitive = false }) {
   const claimAlerts = pm.claims.flatMap((c) => {
     const { noticeDue, detailedDue } = claimDeadlines(c, pm.fidicEdition)
     const alerts = []
@@ -95,9 +95,11 @@ export default function PmOverview({ pm, project, invoices, onJump }) {
         <Card icon={Scale} label="Claims / EOT" value={pm.claims.length}
           sub={pm.claims.length ? `${pm.claims.filter((c) => c.status !== 'determined' && c.status !== 'time_barred').length} active · ${pm.fidicEdition} cadence` : `None registered · FIDIC ${pm.fidicEdition}`}
           onClick={() => onJump({ view: 'claims' })} />
-        <Card icon={TrendingUp} label="Fee invoiced" value={totalFee ? `${Math.round((invoiced / totalFee) * 100)}%` : '—'}
-          sub={totalFee ? `${fmtAED(invoiced, { compact: true })} of ${fmtAED(totalFee, { compact: true })}` : 'No fee breakdown'}
-          onClick={() => onJump({ view: 'fees' })} />
+        {canViewSensitive && (
+          <Card icon={TrendingUp} label="Fee invoiced" value={totalFee ? `${Math.round((invoiced / totalFee) * 100)}%` : '—'}
+            sub={totalFee ? `${fmtAED(invoiced, { compact: true })} of ${fmtAED(totalFee, { compact: true })}` : 'No fee breakdown'}
+            onClick={() => onJump({ phase: pm.phases[0]?.key ?? null, view: pm.phases.length ? 'fees' : 'overview' })} />
+        )}
         <Card icon={Landmark} label="Authority workflows" value={pm.authorities.length}
           sub={authoritiesWaiting ? `${authoritiesWaiting} awaiting a response` : 'Nothing pending'}
           onClick={() => onJump({ view: 'authorities' })} />

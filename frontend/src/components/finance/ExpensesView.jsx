@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, X, ReceiptText } from 'lucide-react'
+import { Check, X, ReceiptText, Plus, Paperclip } from 'lucide-react'
 import { PROJECTS } from '../../data/projectsData'
 import { parseLocalDate } from '../../utils/date'
 import {
@@ -8,10 +8,27 @@ import {
 
 const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
 
-export default function ExpensesView({ expenses, onUpdate }) {
+export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserName }) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [showAdd, setShowAdd] = useState(false)
+  const [form, setForm] = useState({ date: new Date().toISOString().slice(0, 10), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', projectId: '', attachment: '' })
   const projectOf = (id) => PROJECTS.find((p) => p.id === id)
+
+  // Accountant action (7 Jul): log an expense with the receipt/invoice scan attached
+  // (file-name only until Phase 2 storage).
+  const addExpense = () => {
+    if (!form.vendor.trim() || !Number(form.amount)) return
+    onAdd({
+      date: form.date, category: form.category, vendor: form.vendor.trim(),
+      description: form.description.trim() || form.category, amount: Number(form.amount),
+      status: 'pending', submittedBy: currentUserName || 'Finance',
+      projectId: form.projectId ? Number(form.projectId) : null,
+      attachment: form.attachment.trim() || null,
+    })
+    setForm({ date: new Date().toISOString().slice(0, 10), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', projectId: '', attachment: '' })
+    setShowAdd(false)
+  }
 
   const shown = expenses
     .filter((e) => statusFilter === 'all' || e.status === statusFilter)
@@ -32,6 +49,11 @@ export default function ExpensesView({ expenses, onUpdate }) {
           <p className="text-sm text-gray-500">Operating costs and project reimbursables, with approval status. Demo data.</p>
         </div>
         <div className="flex items-center gap-2">
+          {onAdd && (
+            <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium bg-brand text-white px-2.5 py-1.5 rounded-md hover:bg-brand-dark transition">
+              <Plus size={13} /> Add expense
+            </button>
+          )}
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white">
             <option value="all">All categories</option>
             {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -42,6 +64,30 @@ export default function ExpensesView({ expenses, onUpdate }) {
           </select>
         </div>
       </div>
+
+      {showAdd && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-2 text-xs">
+          <div className="grid sm:grid-cols-3 gap-2">
+            <input value={form.vendor} onChange={(e) => setForm({ ...form, vendor: e.target.value })} placeholder="Vendor / payee *" className="border rounded-md px-2.5 py-1.5" />
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="border rounded-md px-2 py-1.5">
+              {EXPENSE_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+            </select>
+            <select value={form.projectId} onChange={(e) => setForm({ ...form, projectId: e.target.value })} className="border rounded-md px-2 py-1.5">
+              <option value="">Job-cost to project (optional)…</option>
+              {PROJECTS.map((p) => <option key={p.id} value={p.id}>{p.projectNo} — {p.name}</option>)}
+            </select>
+            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" className="border rounded-md px-2.5 py-1.5 sm:col-span-3" />
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <label className="text-gray-500">AED <input type="number" min="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-28 border rounded-md px-2 py-1 ml-1 text-right" /></label>
+            <label className="text-gray-500">Date <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border rounded-md px-2 py-1 ml-1" /></label>
+            <label className="flex items-center gap-1 text-gray-500"><Paperclip size={11} /><input value={form.attachment} onChange={(e) => setForm({ ...form, attachment: e.target.value })} placeholder="Receipt / invoice photo (file name)" className="w-64 border rounded-md px-2 py-1" /></label>
+            <div className="flex-1" />
+            <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 rounded-md border text-gray-600">Cancel</button>
+            <button onClick={addExpense} className="px-3 py-1.5 rounded-md bg-brand text-white">Log expense</button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="bg-white rounded-lg border border-gray-200 p-3">
@@ -86,6 +132,7 @@ export default function ExpensesView({ expenses, onUpdate }) {
                       <div className="text-gray-700 max-w-[240px]">{e.description}</div>
                       {proj && <div className="text-[11px] text-brand mt-0.5">{proj.projectNo} · {proj.name}</div>}
                       {e.note && <div className="text-[11px] text-gray-400 mt-0.5">{e.note}</div>}
+                      {e.attachment && <div className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-0.5"><Paperclip size={9} /> {e.attachment}</div>}
                     </td>
                     <td className="px-4 py-3 align-top text-right tabular-nums text-gray-900 whitespace-nowrap">{fmtAED(e.amount)}</td>
                     <td className="px-4 py-3 align-top">

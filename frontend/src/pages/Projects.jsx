@@ -31,7 +31,7 @@ const NAV_GROUPS = [
   ] },
 ]
 
-export default function Projects({ user, onLogout, projects = [], pmRecords = {}, allocations = [], onUpdateAllocations, onUpdateProject, onAddProject, onAddMarketingTask }) {
+export default function Projects({ user, onLogout, projects = [], pmRecords = {}, timesheets = [], allocations = [], onUpdateAllocations, onUpdateProject, onAddProject, onAddMarketingTask }) {
   const location = useLocation()
   const navigate = useNavigate()
   // My Work is the daily-driver landing view (Batch 10) — the first thing a PM
@@ -94,7 +94,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
             <MyWorkView user={user} projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'pmdash' && (
-            <PmDashboard projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
+            <PmDashboard projects={projects} pmRecords={pmRecords} timesheets={timesheets} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'reviews' && (
             <div className="space-y-3">
@@ -114,7 +114,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
             <ProjectList projects={projects} employees={EMPLOYEES} user={user} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'resources' && (
-            <ResourcePlannerView projects={projects} pmRecords={pmRecords} employees={EMPLOYEES} allocations={allocations} onUpdateAllocations={onUpdateAllocations} onOpenWorkspace={openWorkspace} />
+            <ResourcePlannerView projects={projects} pmRecords={pmRecords} employees={EMPLOYEES} timesheets={timesheets} allocations={allocations} onUpdateAllocations={onUpdateAllocations} onOpenWorkspace={openWorkspace} />
           )}
         </main>
       </div>

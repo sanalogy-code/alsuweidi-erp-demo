@@ -96,12 +96,15 @@ export default function Finance({ user, onLogout }) {
             <InvoicesView
               invoices={invoices}
               onUpdate={(inv) => setInvoices(invoices.map((x) => (x.id === inv.id ? inv : x)))}
+              onAdd={(inv) => setInvoices([{ ...inv, id: Math.max(0, ...invoices.map((x) => x.id)) + 1 }, ...invoices])}
             />
           )}
           {view === 'expenses' && (
             <ExpensesView
               expenses={expenses}
               onUpdate={(e) => setExpenses(expenses.map((x) => (x.id === e.id ? e : x)))}
+              onAdd={(e) => setExpenses([{ ...e, id: Math.max(0, ...expenses.map((x) => x.id)) + 1 }, ...expenses])}
+              currentUserName={user?.username}
             />
           )}
           {view === 'pl' && (

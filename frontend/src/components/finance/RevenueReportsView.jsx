@@ -22,7 +22,7 @@ export default function RevenueReportsView({ invoices }) {
       .forEach((i) => { const m = i.issueDate.slice(0, 7); if (monthly[m] != null) monthly[m] += i.amount })
     const earnedTotal = Object.values(monthly).reduce((s, v) => s + v, 0)
     // Forecast: remaining fee spread evenly over the months left in the year.
-    const remaining = Math.max(0, (p.contractValue || 0) - invoices.filter((i) => i.projectId === p.id).reduce((s, i) => s + i.amount, 0))
+    const remaining = Math.max(0, (p.contractValue || 0) - invoices.filter((i) => i.projectId === p.id && i.status !== 'draft').reduce((s, i) => s + i.amount, 0))
     const futureMonths = MONTHS.filter((m) => m > CURRENT)
     const forecast = Object.fromEntries(MONTHS.map((m) => [m, m <= CURRENT ? monthly[m] : (p.generalStatus === 'In Progress' ? remaining / futureMonths.length : 0)]))
     const forecastTotal = Object.values(forecast).reduce((s, v) => s + v, 0)

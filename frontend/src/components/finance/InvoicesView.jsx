@@ -1,16 +1,48 @@
 import { useState } from 'react'
-import { Send, CheckCircle2, FileText } from 'lucide-react'
+import { Send, CheckCircle2, FileText, Plus, Banknote, Paperclip } from 'lucide-react'
 import { PROJECTS } from '../../data/projectsData'
 import { parseLocalDate } from '../../utils/date'
 import {
-  INVOICE_STATUSES, invoiceStatusMeta, invoiceTotal, invoiceOutstanding, fmtAED,
+  INVOICE_STATUSES, invoiceStatusMeta, invoiceTotal, invoiceOutstanding, fmtAED, VAT_RATE,
 } from '../../data/financeData'
 
 const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
 
-export default function InvoicesView({ invoices, onUpdate }) {
+export default function InvoicesView({ invoices, onUpdate, onAdd }) {
   const [statusFilter, setStatusFilter] = useState('all')
+  const [showAdd, setShowAdd] = useState(false)
+  const [payingId, setPayingId] = useState(null)
+  const [payAmount, setPayAmount] = useState('')
+  const [form, setForm] = useState({ clientName: '', projectId: '', description: '', amount: '', issueDate: '', dueDate: '', attachment: '' })
   const projectOf = (id) => PROJECTS.find((p) => p.id === id)
+
+  // Accountant actions (7 Jul: "the accountant can't even log anything"):
+  // create draft invoices (VAT auto at 5%, attachment file-name for the PDF/scan)
+  // and record partial receipts against an invoice.
+  const addInvoice = () => {
+    const net = Number(form.amount)
+    if (!form.clientName.trim() || !net) return
+    const proj = PROJECTS.find((p) => p.id === Number(form.projectId))
+    onAdd({
+      invoiceNo: `INV-2026-${String(Math.max(0, ...invoices.map((i) => Number(i.invoiceNo.split('-')[2]) || 0)) + 1).padStart(3, '0')}`,
+      projectId: proj?.id ?? null, companyId: proj?.companyId ?? null,
+      clientName: form.clientName.trim(), description: form.description.trim() || 'Consultancy fees',
+      issueDate: form.issueDate || new Date().toISOString().slice(0, 10),
+      dueDate: form.dueDate || null,
+      amount: net, vatAmount: Math.round(net * VAT_RATE), amountPaid: 0, status: 'draft', dealId: null,
+      attachment: form.attachment.trim() || null,
+    })
+    setForm({ clientName: '', projectId: '', description: '', amount: '', issueDate: '', dueDate: '', attachment: '' })
+    setShowAdd(false)
+  }
+
+  const recordPayment = (inv) => {
+    const amt = Number(payAmount)
+    if (!amt || amt <= 0) return
+    const newPaid = Math.min((inv.amountPaid ?? 0) + amt, invoiceTotal(inv))
+    onUpdate({ ...inv, amountPaid: newPaid, status: newPaid >= invoiceTotal(inv) ? 'paid' : 'partially_paid' })
+    setPayingId(null); setPayAmount('')
+  }
 
   const shown = invoices
     .filter((i) => statusFilter === 'all' || i.status === statusFilter)
@@ -32,6 +64,11 @@ export default function InvoicesView({ invoices, onUpdate }) {
           <p className="text-sm text-gray-500">Billed against project consultancy fees (design / supervision). Demo data.</p>
         </div>
         <div className="flex items-center gap-2">
+          {onAdd && (
+            <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium bg-brand text-white px-2.5 py-1.5 rounded-md hover:bg-brand-dark transition">
+              <Plus size={13} /> New invoice
+            </button>
+          )}
           <label className="text-xs text-gray-500">Status</label>
           <select
             value={statusFilter}
@@ -45,6 +82,30 @@ export default function InvoicesView({ invoices, onUpdate }) {
           </select>
         </div>
       </div>
+
+      {showAdd && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-2 text-xs">
+          <div className="grid sm:grid-cols-2 gap-2">
+            <input value={form.clientName} onChange={(e) => setForm({ ...form, clientName: e.target.value })} placeholder="Client name *" className="border rounded-md px-2.5 py-1.5" />
+            <select value={form.projectId} onChange={(e) => { const p = PROJECTS.find((x) => x.id === Number(e.target.value)); setForm({ ...form, projectId: e.target.value, clientName: form.clientName || p?.employer || '' }) }} className="border rounded-md px-2 py-1.5">
+              <option value="">Link to project (optional)…</option>
+              {PROJECTS.map((p) => <option key={p.id} value={p.id}>{p.projectNo} — {p.name}</option>)}
+            </select>
+            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description (e.g. design fee milestone — IFC)" className="border rounded-md px-2.5 py-1.5 sm:col-span-2" />
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <label className="text-gray-500">Net AED <input type="number" min="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-28 border rounded-md px-2 py-1 ml-1 text-right" /></label>
+            <span className="text-gray-400">+ 5% VAT = <span className="font-medium text-gray-700">{fmtAED((Number(form.amount) || 0) * (1 + VAT_RATE))}</span></span>
+            <label className="text-gray-500">Issue <input type="date" value={form.issueDate} onChange={(e) => setForm({ ...form, issueDate: e.target.value })} className="border rounded-md px-2 py-1 ml-1" /></label>
+            <label className="text-gray-500">Due <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className="border rounded-md px-2 py-1 ml-1" /></label>
+            <label className="flex items-center gap-1 text-gray-500"><Paperclip size={11} /><input value={form.attachment} onChange={(e) => setForm({ ...form, attachment: e.target.value })} placeholder="Attachment (invoice PDF/scan file name)" className="w-64 border rounded-md px-2 py-1" /></label>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 rounded-md border text-gray-600">Cancel</button>
+            <button onClick={addInvoice} className="px-3 py-1.5 rounded-md bg-brand text-white">Create draft invoice</button>
+          </div>
+        </div>
+      )}
 
       {/* Summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -86,6 +147,9 @@ export default function InvoicesView({ invoices, onUpdate }) {
                     <td className="px-4 py-3 align-top">
                       <div className="font-mono text-xs text-gray-700">{inv.invoiceNo}</div>
                       <div className="text-[11px] text-gray-400">{fmtDate(inv.issueDate)}</div>
+                      {inv.attachment && (
+                        <div className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-0.5"><Paperclip size={9} /> {inv.attachment}</div>
+                      )}
                     </td>
                     <td className="px-4 py-3 align-top">
                       <div className="text-gray-800">{inv.clientName}</div>
@@ -111,9 +175,22 @@ export default function InvoicesView({ invoices, onUpdate }) {
                         </button>
                       )}
                       {(inv.status === 'sent' || inv.status === 'partially_paid' || inv.status === 'overdue') && (
-                        <button onClick={() => markPaid(inv)} className="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium hover:underline">
-                          <CheckCircle2 size={12} /> Mark paid
-                        </button>
+                        payingId === inv.id ? (
+                          <span className="inline-flex items-center gap-1">
+                            <input type="number" min="0" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && recordPayment(inv)} placeholder={String(outstanding)} className="w-24 border rounded-md px-1.5 py-0.5 text-xs text-right" autoFocus />
+                            <button onClick={() => recordPayment(inv)} className="text-xs text-emerald-700 font-medium hover:underline">Save</button>
+                            <button onClick={() => { setPayingId(null); setPayAmount('') }} className="text-xs text-gray-400 hover:underline">✕</button>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <button onClick={() => { setPayingId(inv.id); setPayAmount(String(outstanding)) }} className="inline-flex items-center gap-1 text-xs text-emerald-700 font-medium hover:underline">
+                              <Banknote size={12} /> Record payment
+                            </button>
+                            <button onClick={() => markPaid(inv)} className="inline-flex items-center gap-1 text-xs text-gray-400 hover:underline" title="Settle in full">
+                              <CheckCircle2 size={12} /> Full
+                            </button>
+                          </span>
+                        )
                       )}
                       {inv.status === 'paid' && <span className="text-[11px] text-gray-300">—</span>}
                     </td>

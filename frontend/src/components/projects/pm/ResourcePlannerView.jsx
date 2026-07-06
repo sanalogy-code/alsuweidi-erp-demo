@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import { CAPACITY_HOURS_PER_WEEK } from '../../../data/pmData'
-import { TIMESHEETS, toLocalISO, weekStartOf, addDays } from '../../../data/timesheetData'
+import { toLocalISO, weekStartOf, addDays } from '../../../data/timesheetData'
 import { parseLocalDate } from '../../../utils/date'
 
 // Resource PLANNING (Batch 12) — the person × week capacity heatmap from
@@ -25,14 +25,15 @@ const cellTone = (h) => {
   return 'bg-blue-50 text-blue-600'
 }
 
-const loggedHours = (personName, projectId) => TIMESHEETS
+const loggedHoursIn = (timesheets, personName, projectId) => timesheets
   .filter((ts) => ts.employeeName === personName)
   .reduce((sum, ts) => sum + ts.entries.filter((e) => e.code === projectId)
     .reduce((s, e) => s + e.hours.reduce((a, b) => a + (Number(b) || 0), 0), 0), 0)
 
 const MONTHLY_CAPACITY = CAPACITY_HOURS_PER_WEEK * 4.33
 
-export default function ResourcePlannerView({ projects, pmRecords, employees, allocations, onUpdateAllocations, onOpenWorkspace }) {
+export default function ResourcePlannerView({ projects, pmRecords, employees, timesheets = [], allocations, onUpdateAllocations, onOpenWorkspace }) {
+  const loggedHours = (name, projectId) => loggedHoursIn(timesheets, name, projectId)
   const [expanded, setExpanded] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
   const [mode, setMode] = useState('weeks') // weeks (planning grid) | months (utilization outlook)

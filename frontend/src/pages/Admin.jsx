@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, BadgeCheck } from 'lucide-react'
+import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, BadgeCheck, MessageSquareWarning } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AdminOverview from '../components/admin/AdminOverview'
 import UsersView from '../components/admin/UsersView'
 import RolesPermissionsView from '../components/admin/RolesPermissionsView'
 import AuditLogView from '../components/admin/AuditLogView'
-import LicensesView from '../components/admin/LicensesView'
+import LicensesView, { OFFICE_LICENSES } from '../components/admin/LicensesView'
+import { FeedbackQueue } from '../components/SystemFeedback'
 import {
   ADMIN_VIEW_ROLES, USER_ACCOUNTS, DEFAULT_PERMISSIONS, AUDIT_LOG,
 } from '../data/adminData'
@@ -15,11 +16,13 @@ import {
 // login page stays password-less). The permissions matrix mirrors the app's
 // actual client-side gates and doubles as the Phase 2 RBAC spec.
 
-export default function Admin({ user, onLogout }) {
+export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback }) {
   const canView = ADMIN_VIEW_ROLES.includes(user?.role)
   const [view, setView] = useState('overview')
   const [users, setUsers] = useState(USER_ACCOUNTS)
   const [permissions, setPermissions] = useState(DEFAULT_PERMISSIONS)
+  // Owned here (not in the view) so added registrations survive tab switches — SPEC §4.
+  const [licenses, setLicenses] = useState(OFFICE_LICENSES)
 
   const invitedCount = users.filter((u) => u.status === 'invited').length
 
@@ -28,6 +31,7 @@ export default function Admin({ user, onLogout }) {
     { key: 'users', label: 'Users', icon: Users, badge: invitedCount },
     { key: 'roles', label: 'Roles & permissions', icon: ShieldCheck },
     { key: 'licenses', label: 'Registrations & licenses', icon: BadgeCheck },
+    { key: 'feedback', label: 'System feedback', icon: MessageSquareWarning, badge: feedback.filter((f) => f.status === 'new').length },
     { key: 'log', label: 'Activity log', icon: ScrollText },
   ]
 
@@ -93,7 +97,8 @@ export default function Admin({ user, onLogout }) {
           {view === 'roles' && (
             <RolesPermissionsView permissions={permissions} onChange={setPermissions} users={users} />
           )}
-          {view === 'licenses' && <LicensesView />}
+          {view === 'licenses' && <LicensesView items={licenses} onChange={setLicenses} />}
+          {view === 'feedback' && <FeedbackQueue items={feedback} onUpdate={onUpdateFeedback} />}
           {view === 'log' && (
             <AuditLogView log={AUDIT_LOG} users={users} />
           )}

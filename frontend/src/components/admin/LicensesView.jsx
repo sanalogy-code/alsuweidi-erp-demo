@@ -29,8 +29,8 @@ const expiryMeta = (iso) => {
   return { label: iso, chip: 'bg-green-100 text-green-700', bucket: 'ok' }
 }
 
-export default function LicensesView() {
-  const [items, setItems] = useState(OFFICE_LICENSES)
+export default function LicensesView({ items, onChange }) {
+  const setItems = onChange
   const [showAdd, setShowAdd] = useState(false)
   const [filter, setFilter] = useState('')
   const [form, setForm] = useState({ title: '', entity: '', expiryDate: '', owner: '', url: '', remarks: '' })

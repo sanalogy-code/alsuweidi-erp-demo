@@ -26,7 +26,6 @@ import { claimDeadlines, daysUntil, PHASE_META } from '../data/pmData'
 import { scopeOf } from '../data/projectsData'
 import { EMPLOYEES } from '../data/hrData'
 import { INVOICES } from '../data/financeData'
-import { TIMESHEETS } from '../data/timesheetData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 
 // Per-project project-controls workspace (Batch 9, restructured Batch 10).
@@ -35,7 +34,7 @@ import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 // Contract administration (claims, monthly reports, authorities) is project-level.
 // PM state lives in App.jsx so edits survive navigation and feed "My Work".
 
-export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, onUpdatePm, onUpdateProject, onAddMarketingTask }) {
+export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, timesheets = [], onUpdatePm, onUpdateProject, onAddMarketingTask }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -179,7 +178,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
           </aside>
 
           <main className="flex-1 min-w-0 w-full">
-            {sel.view === 'overview' && !sel.phase && <PmOverview pm={pm} project={project} invoices={INVOICES} onJump={jump} />}
+            {sel.view === 'overview' && !sel.phase && <PmOverview pm={pm} project={project} invoices={INVOICES} onJump={jump} canViewSensitive={canViewSensitive} />}
 
             {activePhase && (<>
               {sel.view === 'tasks' && <PlanView pm={pm} phase={activePhase} onUpdatePhase={(next) => updatePhase(activePhase.key, next)} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} />}
@@ -188,7 +187,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
               {sel.view === 'design' && activePhase.designStages && <DesignStagesView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
               {sel.view === 'site' && activePhase.wirs && <SiteView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
               {sel.view === 'schedule' && <ScheduleView pm={activePhase} />}
-              {sel.view === 'fees' && <FeesView pm={activePhase} project={project} invoices={INVOICES} timesheets={TIMESHEETS} canViewSensitive={canViewSensitive} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
+              {sel.view === 'fees' && <FeesView pm={activePhase} project={project} invoices={INVOICES} timesheets={timesheets} totalManhourBudget={pm.phases.reduce((s, ph) => s + (ph.fees.manhourBudget || 0), 0)} canViewSensitive={canViewSensitive} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
               {sel.view === 'team' && <TeamView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
             </>)}
 

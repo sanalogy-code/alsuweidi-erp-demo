@@ -12,6 +12,7 @@ import Marketing from './pages/Marketing'
 import Finance from './pages/Finance'
 import Admin from './pages/Admin'
 import TimesheetGate from './components/TimesheetGate'
+import FeedbackButton, { INITIAL_FEEDBACK } from './components/SystemFeedback'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
 import { TIMESHEETS } from './data/timesheetData'
 import { PROJECTS } from './data/projectsData'
@@ -34,6 +35,10 @@ export default function App() {
   const updatePmRecord = (projectId, next) => setPmRecords((prev) => ({ ...prev, [projectId]: next }))
   // Cross-project planned resource allocations (Batch 12 resource planner).
   const [allocations, setAllocations] = useState(INITIAL_ALLOCATIONS)
+  // System feedback (bugs/feature requests) — reported from anywhere via the
+  // floating button, triaged in the Admin Center.
+  const [systemFeedback, setSystemFeedback] = useState(INITIAL_FEEDBACK)
+  const addFeedback = (f) => setSystemFeedback((prev) => [{ ...f, id: Math.max(0, ...prev.map((x) => x.id)) + 1 }, ...prev])
   // Lifted so deal ids never reset and get reused across CRM remounts — a reused id
   // would make the won-deal card link to another session's project via dealId
   const [deals, setDeals] = useState(INITIAL_DEALS)
@@ -120,19 +125,20 @@ export default function App() {
   return (
     <>
       <TimesheetGate user={user} timesheets={timesheets} />
+      <FeedbackButton user={user} onSubmit={addFeedback} />
       <Routes>
       <Route path="/dev" element={<DevDashboard />} />
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
-      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} allocations={allocations} onUpdateAllocations={setAllocations} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
-      <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} />} />
+      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} onUpdateAllocations={setAllocations} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
+      <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} />} />
       <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />
       <Route path="/finance" element={<Finance user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/content" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
-      <Route path="/admin" element={<Admin user={user} onLogout={handleLogout} />} />
+      <Route path="/admin" element={<Admin user={user} onLogout={handleLogout} feedback={systemFeedback} onUpdateFeedback={setSystemFeedback} />} />
       <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       </Routes>
     </>

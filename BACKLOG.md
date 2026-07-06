@@ -22,9 +22,75 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
-## Code review findings — 7 Jul 2026 (medium effort over Batches 9–15; fix at the top of Batch 16)
+## THE EVERYTHING LIST — persona sweep (7 Jul 2026, Sana's closing goal)
 
-8 confirmed findings, severity order: (1) PmOverview shows fee/invoiced AED to ALL roles
+Sana's directive: *"become every employee of this company — everyone goes there to log, create,
+report, notify… THINK OF EVERYTHING. Add what you can, log the rest."* Built same night: the 8
+review-finding fixes, the accountant's working controls (create invoice + VAT + attachment,
+record partial payments, log expenses with receipt photos, dedicated `finance` role), and the
+global **Feedback button** (report a bug / request a feature from any page → Admin Center
+"System feedback" queue). Everything below is the logged remainder, by persona:
+
+**Accountant / Finance** — receipts register (payment date/reference/bank per receipt, allocate
+one receipt across invoices); credit notes; per-expense VAT + non-recoverable categories;
+petty-cash log with reconciliation; bank statement import + matching; supplier/payables ledger
+(subconsultant invoices IN, approval → payment run); retention invoicing; chart of accounts +
+journal entries (Phase 2 GL); month-end close checklist; audit trail on every financial edit.
+
+**HR** — evaluations/appraisals (cycle, self → manager → HR, rating model — spec pending since
+Batch 1); training & development (catalogue, enrollment, completion ↔ accomplishments); grades/
+salary bands on the employee record (management answer still open); employment-type-driven
+entitlements (probation/leave/EOS per type — partially exists in policy defaults); disciplinary/
+warning letters register; exit-interview analytics; org-wide headcount & attrition dashboard.
+
+**Marketing** — campaigns (still needs scoping); content approval chain with notifications;
+asset usage tracking (which portfolio PDF went to which client); event/exhibition tracker;
+award submissions register.
+
+**BD / Bidding (sales)** — bid/no-bid workflow with sign-off (go/win scores exist, no approval
+step); tender document checklist per RFP; bid cost tracking (hours via allocations + expenses);
+competitor register (who we lose to, at what fee level); client feedback/debrief log per lost
+RFP; pipeline staffing requests → HR Staff planning (already in Batch 16).
+
+**Admin staff / Office (ODC)** — correspondence register (incoming/outgoing letters with ref
+numbers — consultancies live by letter refs); meeting-room booking; office supplies requests;
+courier/dispatch log; company vehicle bookings + Salik/fines; document numbering standards.
+
+**IT** — incident SLA timers on the request queue; software deployment per asset (what's
+installed where); preventive-maintenance schedule for site equipment; access-request workflow
+tied to Admin roles (join/leave/move triggers); backup/system-status board.
+
+**PMs / Engineers** — construction feedback register + full task management + task-hours→
+timesheet (all Batch 16); drawing transmittal generation; RFI register (contractor questions,
+distinct from WIRs); coordination checklists per discipline gate; photo-report builder for 4.21.
+
+**Site / RE** — mobile-first daily report entry; offline capture (Phase 2); safety observation
+log feeding HSE stats in 4.21 reports; manpower/plant count quick-entry.
+
+**Management** — company-wide KPI home (utilization, win rate, receivables, project health in
+one screen — pieces exist, no single view); delegation-of-authority matrix (who signs what, up
+to what AED); board-pack export (PDF of the month's dashboards).
+
+**Every employee** — notifications center (the single biggest cross-cutting gap: approvals,
+mentions, deadlines — Phase 2 backend, but the in-app inbox UI could be Phase 1); global search;
+personal dashboard ("my week": tasks + approvals + timesheet state across all modules — My Work
+covers projects only); mobile layout audit.
+
+**Platform / access (system admin)** — per-user permission OVERRIDES on top of roles ("give one
+person special access" — the Admin matrix is role-level only); temporary/delegated access
+(covering someone's leave); access expiry dates; grade/employment-type-aware visibility rules;
+error logging + admin error console; usage analytics per module (mock exists); workflow builder
+(generic request→approve→fulfil engine — today each module hand-rolls its own chain).
+
+## Code review findings — 7 Jul 2026 — ✅ ALL 8 FIXED same night (goal sweep)
+
+Fixes shipped: PmOverview fee card now gated to sensitive roles and jumps to a real phase view;
+PM module reads live App timesheet state (PmDashboard, FeesView, resource planner); FeesView
+labels hours project-wide against the summed budget; revenue forecast excludes drafts; WIR rev
+bumps at resubmission (matching the button); Add-task collects a start date and full task shape;
+Licenses state lifted to Admin.jsx; dead ResourcesView.jsx deleted. Remaining cleanup items
+(shared todayISO/daysUntil helpers, memoization, shared bar/nav components) still open below.
+Original findings, severity order: (1) PmOverview shows fee/invoiced AED to ALL roles
 (gating leak — FeesView blocks the same data); (2) Overview "Fee invoiced" card jumps to a
 non-existent project-level 'fees' view → blank pane; (3) PM module reads static TIMESHEETS seed,
 not App's lifted state → session-submitted hours never reach Management/Fees/planner; (4)
