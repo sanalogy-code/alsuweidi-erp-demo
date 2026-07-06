@@ -2,13 +2,21 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-06 (Batch 9 shipped — full Project Management / project controls module per PM_RESEARCH.md: per-project workspace at `/projects/:id` + portfolio Resources view)
+**Last updated:** 2026-07-06 (Batch 10 shipped same evening — Sana's live review of Batch 9 drove a restructure: phase-split workspaces, My Work daily-driver home, real task management, weekly updates, Study/Advisory scope)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed. **Financials and the Admin Center are gated to Management/Admin** — log in as `Management` to see them.
 
 **Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (Batch 9, 6 Jul 2026):**
+**Latest (Batch 10, 6 Jul 2026 late evening — from Sana's review of Batch 9):**
+- **Phase-split workspaces:** a project is now delivered as one or more *phases* — Design, Supervision, and/or Study/Advisory — each a separate engagement with its own team, tasks, schedule, fees, and weekly updates (a DPM and CPM genuinely run them separately). Contract admin (FIDIC claims/EOT, 4.21 reports, authorities) stays project-level. Workspace sidebar groups by phase.
+- **My Work** — the new default Projects landing: everything assigned to or waiting on *you* across all projects — my tasks, approvals awaiting me (WIRs/MIRs/NCR corrective actions/deliverable QA), and contract deadlines. Demo as "Samir Al Mazrouei", "Fatima Al Mansouri", or "Mohammad Kubba".
+- **Real task management** per phase: assignment, due dates, priorities, checklists, progress notes, To do / In progress / Done grouping.
+- **Weekly progress updates** per phase (% complete + summary + blockers) — the latest one headlines the phase card on the project overview; raw material for the monthly 4.21 report.
+- **Study/Advisory scope** (new): TIS / surveying / feasibility projects get deliverables, tasks, schedule, fees — no site registers or design gates. Seed: P-2725 TIS — Khalifa City School Cluster.
+- **Discoverability:** clicking a project now opens its workspace directly ("Details" button opens the old record card); dashboard "Needs attention" includes claim/report deadlines; PM state lifted to App so edits survive navigation.
+
+**Earlier (Batch 9, 6 Jul 2026):**
 - **Project Management module (new):** every project record now opens a **Project Workspace** (`/projects/:id`, "Project workspace" button on the record) with scope-aware sidebar sections: **Overview** (claim-deadline + report-due alert banners, SPI, register stat cards), **Deliverables** (doc register with rev history + internal QA → issue → comments → resubmit workflow), **Design stages** (30-60-90-final gates), **Site** (WIR/MIR/NCR/site-instruction/daily-report registers — NCR closure requires an approved corrective action; WIR resubmits under the same ref with rev history), **Schedule** (S-curve + SPI, milestone baseline-vs-actual bars), **Tasks**, **Fees & cost** (fee by stage + % complete + EAC, manhours vs live timesheet actuals, invoiced-vs-fee from Financials, variations — sensitive roles only), **Claims & EOT** (FIDIC register with the 28-day-notice countdown from awareness, 42/84-day detailed-claim tracking per 1999/2017 edition, contemporary-records log incl. informal notices), **Progress reports** (FIDIC 4.21 checklist, 7-day deadline), **Authorities** (Abu Dhabi-first: DMT permit, ADCD fire track, utility NOC ladders, Estidama Pearl; Dubai secondary; submit→comments→resubmit cycles), **Team**. Plus a portfolio-level **Resources** view (person × project allocation). Seeds: projects 1, 2, 5, 8 — demo the claims countdown on **P-2650 Pump Station Upgrade** (notice due in days). Data in `data/pmData.js`, built from [PM_RESEARCH.md](PM_RESEARCH.md).
 - Also committed: six module gap-analysis research docs (`CRM/HR/FINANCE/IT/MARKETING/ADMIN_RESEARCH.md` + `OPPORTUNITIES_RESEARCH.md`) produced by a parallel research session on 6 Jul.
 

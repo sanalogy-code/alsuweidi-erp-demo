@@ -22,6 +22,17 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
+## Shipped — Batch 10 (6 Jul 2026, late evening): PM restructure from Sana's review
+
+- [x] ~~PM module restructure~~ — **Shipped Batch 10 (6 Jul):** Sana's review comments on Batch 9,
+  same evening: (1) **phase split** — design/supervision/study are separate engagements inside a
+  project, each with own team/tasks/schedule/fees/weekly updates; (2) **My Work** default landing
+  (my tasks + approvals waiting on me + deadlines, cross-project); (3) **real task management**
+  (assignment, priority, checklists, progress notes, status columns); (4) **weekly progress
+  updates** per phase; (5) **Study/Advisory scope** for TIS/surveying/feasibility (seed: P-2725);
+  (6) click-through: project row → workspace, record card behind a "Details" button; PM state
+  lifted to App.jsx.
+
 ## Shipped — Batch 9 (6 Jul 2026): Project Management module
 
 - [x] ~~Full project management / project controls module~~ — **Shipped Batch 9 (6 Jul):** the whole
