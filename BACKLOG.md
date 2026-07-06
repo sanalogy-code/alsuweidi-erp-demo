@@ -22,6 +22,17 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
+## Shipped — Batch 15 (6 Jul 2026, night): timesheet analytics, revenue reports, licensing
+
+- [x] ~~Timesheet cost dashboard / Employee Efforts Review / revenue reports / licensing tracker~~ —
+  **Shipped Batch 15 (6 Jul):** HR Timesheet insights (by project / person / overhead, hours-or-cost
+  toggle) + Workload review (single workload index, work-week aware); Finance Revenue reports
+  (earned × month from invoices, forecast spread, comparison bars — real forecasting needs
+  Phase 2 billing milestones); Admin Registrations & licenses (expiry radar with notified owners,
+  CFPE/ADCD 1-Sept gate + expired Dubai registration seeded; no passwords stored by design —
+  secrets vault is Phase 2). Carried-forward hour balances and per-person cost rates need the
+  Phase 2 backend/payroll link.
+
 ## Shipped — Batch 14 (6 Jul 2026, night): four current-ERP screens absorbed
 
 - [x] ~~CMR / attendance report / RFP management / CDM allocation plan~~ — **Shipped Batch 14
