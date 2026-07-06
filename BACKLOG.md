@@ -22,6 +22,17 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
+## Shipped — Batch 11 (6 Jul 2026, night): "proper project management" pass
+
+- [x] ~~Proper PM system~~ — **Shipped Batch 11 (6 Jul):** Sana's second review round ("how is this
+  anywhere near a full project management system?"): Projects split into **Project Management**
+  (My Work / Management dashboard / Resources) and **Database** (Portfolio / Record stats);
+  per-project **waterfall vs sprints** methodology — Gantt timeline (late-in-red bars, % fill,
+  milestone diamonds, today line) vs sprint boards (goals, columns, backlog, start/close sprint);
+  tasks carry start/due/effort-hours/% complete, all inline-editable; **management dashboard**
+  with RAG health, progress, late tasks, next milestone + slip, SPI, hours-vs-budget; resources
+  show real timesheet hours. Seeds: P-2688 runs design sprints, others waterfall.
+
 ## Shipped — Batch 10 (6 Jul 2026, late evening): PM restructure from Sana's review
 
 - [x] ~~PM module restructure~~ — **Shipped Batch 10 (6 Jul):** Sana's review comments on Batch 9,

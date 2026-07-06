@@ -2,13 +2,20 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-06 (Batch 10 shipped same evening — Sana's live review of Batch 9 drove a restructure: phase-split workspaces, My Work daily-driver home, real task management, weekly updates, Study/Advisory scope)
+**Last updated:** 2026-07-06 (Batches 9–11 all shipped the same day: PM module built, then twice restructured on Sana's live review. Batch 11 = the "proper PM" pass: PM-vs-Database split, waterfall/sprints, Gantt, management dashboard, hours.)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed. **Financials and the Admin Center are gated to Management/Admin** — log in as `Management` to see them.
 
 **Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (Batch 10, 6 Jul 2026 late evening — from Sana's review of Batch 9):**
+**Latest (Batch 11, 6 Jul 2026 night — "this isn't proper project management yet", Sana):**
+- **Projects now has two areas:** **Project Management** (My Work, Management dashboard, Resources) and **Database** (Portfolio list, Record stats) — the working tool vs the records.
+- **Management dashboard** — one row per active project: RAG health (red = overdue claim deadline / 3+ late tasks / SPI < 0.85), % complete, late-task count, next milestone with slip flag, SPI, **hours used vs manhour budget** (real timesheet actuals), methodology. Click-through to the workspace.
+- **Waterfall vs Sprints per project** — the "Plan & tasks" section renders a **Gantt timeline** (task bars with % complete fill, late-in-red, milestone diamonds, today line) for waterfall, or **sprint boards** (iterations with goals/dates, To do / In progress / Done columns, a backlog with "move to sprint", start/close sprint) for sprints. Demo: Crew Training Facility (P-2688) runs design sprints; Harbour Point is waterfall.
+- **Tasks are fully editable**: assignee, start/due dates, effort hours, % complete, priority, status, checklist, notes — inline on the card.
+- **Resources** show real logged timesheet hours per person per project alongside allocations.
+
+**Earlier (Batch 10, 6 Jul 2026 late evening — from Sana's review of Batch 9):**
 - **Phase-split workspaces:** a project is now delivered as one or more *phases* — Design, Supervision, and/or Study/Advisory — each a separate engagement with its own team, tasks, schedule, fees, and weekly updates (a DPM and CPM genuinely run them separately). Contract admin (FIDIC claims/EOT, 4.21 reports, authorities) stays project-level. Workspace sidebar groups by phase.
 - **My Work** — the new default Projects landing: everything assigned to or waiting on *you* across all projects — my tasks, approvals awaiting me (WIRs/MIRs/NCR corrective actions/deliverable QA), and contract deadlines. Demo as "Samir Al Mazrouei", "Fatima Al Mansouri", or "Mohammad Kubba".
 - **Real task management** per phase: assignment, due dates, priorities, checklists, progress notes, To do / In progress / Done grouping.
