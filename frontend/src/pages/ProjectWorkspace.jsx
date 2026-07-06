@@ -10,7 +10,7 @@ import DeliverablesView from '../components/projects/pm/DeliverablesView'
 import DesignStagesView from '../components/projects/pm/DesignStagesView'
 import SiteView from '../components/projects/pm/SiteView'
 import ScheduleView from '../components/projects/pm/ScheduleView'
-import PmTasksView from '../components/projects/pm/PmTasksView'
+import PlanView from '../components/projects/pm/PlanView'
 import WeeklyUpdatesView from '../components/projects/pm/WeeklyUpdatesView'
 import FeesView from '../components/projects/pm/FeesView'
 import ClaimsView from '../components/projects/pm/ClaimsView'
@@ -66,7 +66,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
 
   // Section list per phase, shaped by what that phase actually is.
   const phaseSections = (ph) => [
-    { key: 'tasks', label: 'Tasks', icon: ListTodo, badge: ph.tasks.filter((t) => t.status !== 'done').length },
+    { key: 'tasks', label: 'Plan & tasks', icon: ListTodo, badge: ph.tasks.filter((t) => t.status !== 'done').length },
     { key: 'updates', label: 'Weekly updates', icon: CalendarCheck2 },
     ...(ph.deliverables ? [{ key: 'deliverables', label: 'Deliverables', icon: FileText, badge: ph.deliverables.filter((d) => d.status === 'comments' || d.status === 'internal_review').length }] : []),
     ...(ph.designStages ? [{ key: 'design', label: 'Design gates', icon: Layers }] : []),
@@ -170,7 +170,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
             {sel.view === 'overview' && !sel.phase && <PmOverview pm={pm} project={project} invoices={INVOICES} onJump={jump} />}
 
             {activePhase && (<>
-              {sel.view === 'tasks' && <PmTasksView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
+              {sel.view === 'tasks' && <PlanView pm={pm} phase={activePhase} onUpdatePhase={(next) => updatePhase(activePhase.key, next)} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} />}
               {sel.view === 'updates' && <WeeklyUpdatesView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
               {sel.view === 'deliverables' && activePhase.deliverables && <DeliverablesView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
               {sel.view === 'design' && activePhase.designStages && <DesignStagesView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}

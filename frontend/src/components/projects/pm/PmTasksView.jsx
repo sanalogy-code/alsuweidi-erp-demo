@@ -8,7 +8,7 @@ import { daysUntil, taskPriorityMeta, taskStatusMeta, TASK_PRIORITIES, TASK_STAT
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 
-function TaskCard({ t, patch, currentUserName }) {
+export function TaskCard({ t, patch, currentUserName }) {
   const [open, setOpen] = useState(false)
   const [comment, setComment] = useState('')
   const [newItem, setNewItem] = useState('')
@@ -34,6 +34,12 @@ function TaskCard({ t, patch, currentUserName }) {
       <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center gap-3 px-4 py-3 text-left">
         <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${pMeta.chip}`}>{pMeta.label}</span>
         <span className="flex-1 min-w-0 text-sm text-gray-800 truncate">{t.title}</span>
+        {t.status !== 'done' && t.pctComplete > 0 && (
+          <span className="hidden sm:flex items-center gap-1 shrink-0 w-16">
+            <span className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden"><span className="block h-full bg-brand rounded-full" style={{ width: `${t.pctComplete}%` }} /></span>
+            <span className="text-[10px] text-gray-400">{t.pctComplete}%</span>
+          </span>
+        )}
         {t.checklist.length > 0 && <span className="text-[11px] text-gray-400 shrink-0">{doneCount}/{t.checklist.length}</span>}
         {t.comments.length > 0 && <span className="text-[11px] text-gray-400 shrink-0 flex items-center gap-0.5"><MessageSquare size={11} />{t.comments.length}</span>}
         <span className="hidden sm:block text-xs text-gray-400 w-36 truncate">{t.assignee}</span>
@@ -58,6 +64,24 @@ function TaskCard({ t, patch, currentUserName }) {
             <select value={t.priority} onChange={(e) => patch({ priority: e.target.value })} className="border rounded-md px-1.5 py-0.5">
               {TASK_PRIORITIES.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
             </select>
+          </div>
+
+          <div className="flex flex-wrap gap-3 items-center text-xs text-gray-500">
+            <label className="flex items-center gap-1">Assignee
+              <input value={t.assignee} onChange={(e) => patch({ assignee: e.target.value })} className="border rounded-md px-1.5 py-0.5 w-36" />
+            </label>
+            <label className="flex items-center gap-1">Start
+              <input type="date" value={t.startDate || ''} onChange={(e) => patch({ startDate: e.target.value || null })} className="border rounded-md px-1.5 py-0.5" />
+            </label>
+            <label className="flex items-center gap-1">Due
+              <input type="date" value={t.due || ''} onChange={(e) => patch({ due: e.target.value || null })} className="border rounded-md px-1.5 py-0.5" />
+            </label>
+            <label className="flex items-center gap-1">Effort
+              <input type="number" min="0" value={t.effortHours ?? ''} onChange={(e) => patch({ effortHours: Number(e.target.value) || 0 })} className="border rounded-md px-1.5 py-0.5 w-14 text-right" />h
+            </label>
+            <label className="flex items-center gap-1">% complete
+              <input type="number" min="0" max="100" value={t.pctComplete ?? 0} onChange={(e) => patch({ pctComplete: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })} className="border rounded-md px-1.5 py-0.5 w-14 text-right" />
+            </label>
           </div>
 
           <div>

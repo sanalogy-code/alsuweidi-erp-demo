@@ -90,6 +90,12 @@ export const REPORT_CHECKLIST_ITEMS = [
   { key: 'planned_actual', label: 'Planned vs actual comparison' },
 ]
 
+// --- Methodology (Batch 11): waterfall vs sprints, per project ---------------------
+export const PM_METHODS = [
+  { key: 'waterfall', label: 'Waterfall', hint: 'Phased plan on a timeline (Gantt)' },
+  { key: 'sprints', label: 'Sprints', hint: 'Iterations with a backlog and a board' },
+]
+
 // --- Task management (Batch 10: the daily-driver piece) ---------------------------
 export const TASK_PRIORITIES = [
   { key: 'high', label: 'High', chip: 'bg-red-100 text-red-700' },
@@ -195,9 +201,68 @@ export const phaseKeysFor = (project) => {
 
 export const emptyPmRecord = (project) => ({
   projectId: project?.id ?? null, fidicEdition: '1999',
+  method: 'waterfall', sprints: [],
   phases: (project ? phaseKeysFor(project) : []).map((k) => emptyPhase(k)),
   claims: [], reports: [], authorities: [],
 })
+
+// --- Progress / lateness rollups (Batch 11: management dashboard) ------------------
+export const taskIsLate = (t) => t.status !== 'done' && t.due && daysUntil(t.due) < 0
+
+export const lateTasksOf = (pm) => pm.phases.flatMap((ph) => ph.tasks.filter(taskIsLate))
+
+// % complete for a phase: latest weekly update wins; else average of task pctComplete.
+export const phaseProgress = (ph) => {
+  if (ph.weeklyUpdates?.length) return ph.weeklyUpdates[0].pctComplete
+  const withPct = ph.tasks.filter((t) => t.pctComplete != null || t.status === 'done')
+  if (!withPct.length) return null
+  return Math.round(withPct.reduce((s, t) => s + (t.status === 'done' ? 100 : t.pctComplete || 0), 0) / withPct.length)
+}
+
+export const projectProgress = (pm) => {
+  const vals = pm.phases.map(phaseProgress).filter((v) => v != null)
+  if (!vals.length) return null
+  return Math.round(vals.reduce((s, v) => s + v, 0) / vals.length)
+}
+
+// Next unmet milestone across phases, with an at-risk flag when the forecast slips.
+export const nextMilestoneOf = (pm) => {
+  const upcoming = pm.phases.flatMap((ph) => ph.milestones.filter((m) => !m.actual).map((m) => ({ ...m, phase: ph.label })))
+    .sort((a, b) => (a.forecast || a.baseline).localeCompare(b.forecast || b.baseline))
+  if (!upcoming.length) return null
+  const m = upcoming[0]
+  return { ...m, atRisk: !!(m.forecast && m.baseline && m.forecast > m.baseline) }
+}
+
+// Worst SPI across phases that report one.
+export const worstSpiOf = (pm) => {
+  const vals = pm.phases.map((ph) => spiOf(ph.progressCurve)).filter((v) => v != null)
+  return vals.length ? Math.min(...vals) : null
+}
+
+// Timesheet hours coded to a project (across the seeded weeks).
+export const hoursUsedOn = (timesheets, projectId) =>
+  timesheets.reduce((sum, ts) =>
+    sum + ts.entries.filter((e) => e.code === projectId).reduce((s, e) => s + e.hours.reduce((a, b) => a + (Number(b) || 0), 0), 0), 0)
+
+export const manhourBudgetOf = (pm) => pm.phases.reduce((s, ph) => s + (ph.fees.manhourBudget || 0), 0)
+
+// RAG health for the management dashboard. Red = a deadline/lateness problem you
+// act on today; amber = drifting; green = tracking.
+export const projectHealth = (pm) => {
+  const late = lateTasksOf(pm).length
+  const spi = worstSpiOf(pm)
+  const claimOverdue = pm.claims.some((c) => {
+    const { noticeDue, detailedDue } = claimDeadlines(c, pm.fidicEdition)
+    const due = c.status === 'event_logged' ? noticeDue : c.status === 'notice_served' ? detailedDue : null
+    return due && daysUntil(due) < 0
+  })
+  const reportOverdue = pm.reports.some((r) => !r.submittedDate && daysUntil(r.dueDate) < 0)
+  const ms = nextMilestoneOf(pm)
+  if (claimOverdue || late >= 3 || (spi != null && spi < 0.85)) return { key: 'red', label: 'At risk', chip: 'bg-red-100 text-red-700', dot: 'bg-red-500' }
+  if (reportOverdue || late > 0 || (spi != null && spi < 0.95) || ms?.atRisk) return { key: 'amber', label: 'Watch', chip: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' }
+  return { key: 'green', label: 'On track', chip: 'bg-green-100 text-green-700', dot: 'bg-green-500' }
+}
 
 // --- Per-project PM records ---------------------------------------------------------
 // Demo "today" ≈ 2026-07-06. employeeId references hrData EMPLOYEES; name-only
@@ -205,7 +270,7 @@ export const emptyPmRecord = (project) => ({
 export const PM_RECORDS = {
   // Harbour Point Medical Centre — D+S in Construction: both phases, richest record.
   1: {
-    projectId: 1, fidicEdition: '1999',
+    projectId: 1, fidicEdition: '1999', method: 'waterfall', sprints: [],
     claims: [
       { id: 1, ref: 'CLM-01', title: 'EOT — late free issue of medical equipment vendor drawings', party: 'Contractor', eventDate: '2026-05-28', awarenessDate: '2026-06-02', noticeDate: '2026-06-18', status: 'notice_served', timeImpactDays: 21, costImpact: 450000,
         records: [
@@ -303,14 +368,14 @@ export const PM_RECORDS = {
           ],
         },
         tasks: [
-          { id: 1, title: 'Respond to chiller access comments (HPM-MEP-DWG-032)', assignee: 'Mohammad Kubba', due: '2026-07-09', priority: 'high', status: 'in_progress',
+          { id: 1, title: 'Respond to chiller access comments (HPM-MEP-DWG-032)', assignee: 'Mohammad Kubba', startDate: '2026-06-29', due: '2026-07-09', effortHours: 24, pctComplete: 40, sprintId: null, priority: 'high', status: 'in_progress',
             checklist: [
               { id: 1, text: 'Get service clearance dims from chiller vendor', done: true },
               { id: 2, text: 'Revise plant room layout', done: false },
               { id: 3, text: 'Reissue as Rev C', done: false },
             ],
             comments: [{ id: 1, author: 'Fatima Al Mansouri', date: '2026-07-02', text: 'Client wants this closed before the next site progress meeting (12 Jul).' }] },
-          { id: 2, title: 'Estidama energy model — internal QA', assignee: 'Naseeb Shaheen', due: '2026-07-14', priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 2, title: 'Estidama energy model — internal QA', assignee: 'Naseeb Shaheen', startDate: '2026-07-06', due: '2026-07-14', effortHours: 16, pctComplete: 0, sprintId: null, priority: 'normal', status: 'open', checklist: [], comments: [] },
         ],
       },
       {
@@ -374,14 +439,15 @@ export const PM_RECORDS = {
           ],
         },
         tasks: [
-          { id: 1, title: 'Close out NCR-012 corrective action', assignee: 'George Matta (site)', due: '2026-07-12', priority: 'high', status: 'open',
+          { id: 1, title: 'Close out NCR-012 corrective action', assignee: 'George Matta (site)', startDate: '2026-07-02', due: '2026-07-12', effortHours: 12, pctComplete: 10, sprintId: null, priority: 'high', status: 'open',
             checklist: [
               { id: 1, text: 'Contractor CA proposal received', done: false },
               { id: 2, text: 'Approve corrective action', done: false },
               { id: 3, text: 'Witness repair + verify cover', done: false },
             ], comments: [] },
-          { id: 2, title: 'June progress report photos', assignee: 'Ramesh Pillai (site)', due: '2026-07-04', priority: 'normal', status: 'done', checklist: [], comments: [] },
-          { id: 3, title: 'Review contractor phased-handover VO pricing', assignee: 'Samir Al Mazrouei', due: '2026-07-15', priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 2, title: 'June progress report photos', assignee: 'Ramesh Pillai (site)', startDate: '2026-07-01', due: '2026-07-04', effortHours: 6, pctComplete: 100, sprintId: null, priority: 'normal', status: 'done', checklist: [], comments: [] },
+          { id: 3, title: 'Review contractor phased-handover VO pricing', assignee: 'Samir Al Mazrouei', startDate: '2026-07-08', due: '2026-07-15', effortHours: 10, pctComplete: 0, sprintId: null, priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 4, title: 'Witness rooftop waterproofing pre-work survey', assignee: 'Ramesh Pillai (site)', startDate: '2026-06-30', due: '2026-07-03', effortHours: 4, pctComplete: 30, sprintId: null, priority: 'normal', status: 'in_progress', checklist: [], comments: [] },
         ],
       },
     ],
@@ -389,7 +455,7 @@ export const PM_RECORDS = {
 
   // Pump Station Upgrade — supervision-only, behind plan, urgent claim countdown.
   8: {
-    projectId: 8, fidicEdition: '1999',
+    projectId: 8, fidicEdition: '1999', method: 'waterfall', sprints: [],
     claims: [
       { id: 1, ref: 'CLM-02', title: 'EOT + prolongation — employer-supplied pumps delivered 7 weeks late', party: 'Contractor', eventDate: '2026-04-15', awarenessDate: '2026-06-15', noticeDate: null, status: 'event_logged', timeImpactDays: 49, costImpact: 1200000,
         records: [
@@ -464,14 +530,15 @@ export const PM_RECORDS = {
           variations: [],
         },
         tasks: [
-          { id: 1, title: 'Serve SC 20.1 notice — pump delivery delay (CLM-02)', assignee: 'Samir Al Mazrouei', due: '2026-07-10', priority: 'high', status: 'in_progress',
+          { id: 1, title: 'Serve SC 20.1 notice — pump delivery delay (CLM-02)', assignee: 'Samir Al Mazrouei', startDate: '2026-07-01', due: '2026-07-10', effortHours: 14, pctComplete: 70, sprintId: null, priority: 'high', status: 'in_progress',
             checklist: [
               { id: 1, text: 'Compile contemporary records bundle', done: true },
               { id: 2, text: 'Draft notice letter', done: true },
               { id: 3, text: 'PD review + issue', done: false },
             ],
             comments: [{ id: 1, author: 'Osama Hussain', date: '2026-07-04', text: 'Notice deadline is 13 Jul — do not let this slip past PD review.' }] },
-          { id: 2, title: 'Review contractor recovery programme rev 2', assignee: 'Tariq Aziz (site)', due: '2026-07-14', priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 2, title: 'Review contractor recovery programme rev 2', assignee: 'Tariq Aziz (site)', startDate: '2026-07-07', due: '2026-07-14', effortHours: 8, pctComplete: 0, sprintId: null, priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 3, title: 'Anchor bolt survey verification — bay 2 (WIR-0067)', assignee: 'Noel Fernandes (site)', startDate: '2026-06-30', due: '2026-07-04', effortHours: 6, pctComplete: 50, sprintId: null, priority: 'high', status: 'in_progress', checklist: [], comments: [] },
         ],
       },
     ],
@@ -479,7 +546,7 @@ export const PM_RECORDS = {
 
   // Saadiyat Villas — D+S in construction.
   5: {
-    projectId: 5, fidicEdition: '1999',
+    projectId: 5, fidicEdition: '1999', method: 'waterfall', sprints: [],
     claims: [],
     reports: [
       { id: 1, month: '2026-06', dueDate: '2026-07-07', submittedDate: '2026-07-03', checklist: { progress: true, photos: true, personnel: true, qa: true, claims: true, safety: true, planned_actual: true } },
@@ -525,7 +592,7 @@ export const PM_RECORDS = {
           variations: [],
         },
         tasks: [
-          { id: 1, title: 'Landscape package rev B — chase client approval', assignee: 'Fatima Al Mansouri', due: '2026-07-16', priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 1, title: 'Landscape package rev B — chase client approval', assignee: 'Fatima Al Mansouri', startDate: '2026-07-06', due: '2026-07-16', effortHours: 4, pctComplete: 0, sprintId: null, priority: 'normal', status: 'open', checklist: [], comments: [] },
         ],
       },
       {
@@ -567,15 +634,21 @@ export const PM_RECORDS = {
           ],
         },
         tasks: [
-          { id: 1, title: 'Inspect villa P2-07 roof screed (WIR-0311)', assignee: 'Hani Boulos (site)', due: '2026-07-07', priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 1, title: 'Inspect villa P2-07 roof screed (WIR-0311)', assignee: 'Hani Boulos (site)', startDate: '2026-07-06', due: '2026-07-07', effortHours: 3, pctComplete: 0, sprintId: null, priority: 'normal', status: 'open', checklist: [], comments: [] },
         ],
       },
     ],
   },
 
   // Crew Training Facility — design-only at Detailed stage, FIDIC 2017.
+  // Runs design SPRINTS (2-week iterations toward the 90% gate) — the sprint demo.
   2: {
-    projectId: 2, fidicEdition: '2017',
+    projectId: 2, fidicEdition: '2017', method: 'sprints',
+    sprints: [
+      { id: 1, name: 'Sprint 5 — DD close-out', startDate: '2026-06-15', endDate: '2026-06-28', goal: 'Close detailed-design comments; issue parking deck GA.', status: 'done' },
+      { id: 2, name: 'Sprint 6 — 90% gate package', startDate: '2026-06-29', endDate: '2026-07-12', goal: 'Everything the 90% gate review needs: simulator hall revision, acoustic report, coordinated MEP set.', status: 'active' },
+      { id: 3, name: 'Sprint 7 — gate review & fixes', startDate: '2026-07-13', endDate: '2026-07-26', goal: 'Run the 90% gate; burn down review actions.', status: 'planned' },
+    ],
     claims: [],
     reports: [],
     authorities: [
@@ -652,13 +725,16 @@ export const PM_RECORDS = {
           variations: [],
         },
         tasks: [
-          { id: 1, title: 'Revise simulator hall drawings per vendor pit dims', assignee: 'Mohammad Kubba', due: '2026-07-15', priority: 'high', status: 'open',
+          { id: 1, title: 'Revise simulator hall drawings per vendor pit dims', assignee: 'Mohammad Kubba', startDate: '2026-06-29', due: '2026-07-15', effortHours: 40, pctComplete: 15, sprintId: 2, priority: 'high', status: 'open',
             checklist: [
               { id: 1, text: 'Receive vendor pit dimensions', done: false },
               { id: 2, text: 'Update plans & sections', done: false },
               { id: 3, text: 'Coordinate structural pit rebate', done: false },
             ], comments: [] },
-          { id: 2, title: 'Acoustic report internal QA', assignee: 'Naseeb Shaheen', due: '2026-07-10', priority: 'normal', status: 'in_progress', checklist: [], comments: [] },
+          { id: 2, title: 'Acoustic report internal QA', assignee: 'Naseeb Shaheen', startDate: '2026-07-03', due: '2026-07-10', effortHours: 12, pctComplete: 60, sprintId: 2, priority: 'normal', status: 'in_progress', checklist: [], comments: [] },
+          { id: 3, title: 'Coordinated MEP set for the 90% gate', assignee: 'Mohammad Kubba', startDate: '2026-07-01', due: '2026-07-11', effortHours: 30, pctComplete: 45, sprintId: 2, priority: 'high', status: 'in_progress', checklist: [], comments: [] },
+          { id: 4, title: 'Book 90% gate review — all disciplines + client', assignee: 'Mohammad Kubba', startDate: null, due: null, effortHours: 2, pctComplete: 0, sprintId: null, priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 5, title: 'Parking deck GA issued to client', assignee: 'Naseeb Shaheen', startDate: '2026-06-22', due: '2026-06-30', effortHours: 20, pctComplete: 100, sprintId: 1, priority: 'normal', status: 'done', checklist: [], comments: [] },
         ],
       },
     ],
@@ -666,7 +742,7 @@ export const PM_RECORDS = {
 
   // TIS — Khalifa City School Cluster: the Study/Advisory seed (Batch 10).
   7: {
-    projectId: 7, fidicEdition: '1999',
+    projectId: 7, fidicEdition: '1999', method: 'waterfall', sprints: [],
     claims: [], reports: [],
     authorities: [
       { id: 1, authority: 'DMT (ITC)', type: 'TIS approval', portal: 'TAMM', notes: 'Study submitted to the transport authority for review; access design review follows approval.', stages: [
@@ -720,13 +796,13 @@ export const PM_RECORDS = {
           variations: [],
         },
         tasks: [
-          { id: 1, title: 'Respond to ITC comments — AM peak / mosque overlap', assignee: 'Dina Haddad (traffic)', due: '2026-07-18', priority: 'high', status: 'in_progress',
+          { id: 1, title: 'Respond to ITC comments — AM peak / mosque overlap', assignee: 'Dina Haddad (traffic)', startDate: '2026-07-01', due: '2026-07-18', effortHours: 32, pctComplete: 35, sprintId: null, priority: 'high', status: 'in_progress',
             checklist: [
               { id: 1, text: 'Book Friday traffic counts (10 Jul)', done: true },
               { id: 2, text: 'Rerun junction models with overlap', done: false },
               { id: 3, text: 'Update draft TIS + resubmit', done: false },
             ], comments: [] },
-          { id: 2, title: 'Junction improvement sketches — internal QA', assignee: 'Naseeb Shaheen', due: '2026-07-11', priority: 'normal', status: 'open', checklist: [], comments: [] },
+          { id: 2, title: 'Junction improvement sketches — internal QA', assignee: 'Naseeb Shaheen', startDate: '2026-07-06', due: '2026-07-11', effortHours: 8, pctComplete: 0, sprintId: null, priority: 'normal', status: 'open', checklist: [], comments: [] },
         ],
       },
     ],

@@ -4,8 +4,16 @@
 // links on every project record; load % is illustrative until real allocations
 // exist in Phase 2.
 
+import { TIMESHEETS } from '../../../data/timesheetData'
+
 // Deterministic mock load so the heatmap is stable across renders.
 const mockLoad = (personKey, projectId) => 20 + ((personKey.length * 7 + projectId * 13) % 61)
+
+// Actual timesheet hours a person logged against a project (seeded weeks).
+const loggedHours = (personName, projectId) => TIMESHEETS
+  .filter((ts) => ts.employeeName === personName)
+  .reduce((sum, ts) => sum + ts.entries.filter((e) => e.code === projectId)
+    .reduce((s, e) => s + e.hours.reduce((a, b) => a + (Number(b) || 0), 0), 0), 0)
 
 export default function ResourcesView({ projects, pmRecords = {}, employees, onViewProject }) {
   const active = projects.filter((p) => p.generalStatus === 'In Progress')
@@ -50,14 +58,17 @@ export default function ResourcesView({ projects, pmRecords = {}, employees, onV
                 <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${loadCls(total)}`}>{total}%</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {person.assignments.map((a) => (
-                  <button key={a.project.id} onClick={() => onViewProject(a.project)}
-                    className="flex items-center gap-1.5 text-[11px] border border-gray-200 rounded-md px-2 py-1 text-gray-600 hover:border-brand hover:text-brand transition">
-                    <span className="font-mono text-gray-400">{a.project.projectNo}</span>
-                    <span className="max-w-[160px] truncate">{a.project.name}</span>
-                    <span className="text-gray-400">· {a.role} · {a.load}%</span>
-                  </button>
-                ))}
+                {person.assignments.map((a) => {
+                  const hrs = loggedHours(person.name, a.project.id)
+                  return (
+                    <button key={a.project.id} onClick={() => onViewProject(a.project)}
+                      className="flex items-center gap-1.5 text-[11px] border border-gray-200 rounded-md px-2 py-1 text-gray-600 hover:border-brand hover:text-brand transition">
+                      <span className="font-mono text-gray-400">{a.project.projectNo}</span>
+                      <span className="max-w-[160px] truncate">{a.project.name}</span>
+                      <span className="text-gray-400">· {a.role} · {a.load}%{hrs > 0 && ` · ${hrs}h logged`}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )
@@ -65,9 +76,9 @@ export default function ResourcesView({ projects, pmRecords = {}, employees, onV
         {rows.length === 0 && <div className="p-8 text-center text-sm text-gray-400">No assignments on active projects.</div>}
       </div>
       <p className="text-[11px] text-gray-400">
-        Assignments come from project team panels + DPM/CPM links; the load percentages are illustrative
-        (real allocations and utilization targets need the Phase 2 backend + timesheet integration).
-        Green &lt;80%, amber 80–100%, red over-allocated. Sana: correct this against how we actually staff projects.
+        Assignments come from phase team panels + DPM/CPM links; "h logged" is real timesheet hours coded
+        to that project (one seeded week in the demo). Load percentages are illustrative until real
+        allocations exist in Phase 2. Green &lt;80%, amber 80–100%, red over-allocated.
       </p>
     </div>
   )
