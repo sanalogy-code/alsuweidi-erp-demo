@@ -10,6 +10,7 @@ import ResourcePlannerView from '../components/projects/pm/ResourcePlannerView'
 import MyWorkView from '../components/projects/pm/MyWorkView'
 import PmDashboard from '../components/projects/pm/PmDashboard'
 import DmrView from '../components/projects/pm/DmrView'
+import CmrView from '../components/projects/pm/CmrView'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { EMPLOYEES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
@@ -21,7 +22,7 @@ const NAV_GROUPS = [
   { label: 'Project Management', items: [
     { key: 'mywork', label: 'My Work', icon: Inbox },
     { key: 'pmdash', label: 'Management', icon: Gauge },
-    { key: 'dmr', label: 'DMR (weekly)', icon: FileBarChart },
+    { key: 'reviews', label: 'Project reviews', icon: FileBarChart },
     { key: 'resources', label: 'Resources', icon: UsersRound },
   ] },
   { label: 'Database', items: [
@@ -36,6 +37,8 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
   // My Work is the daily-driver landing view (Batch 10) — the first thing a PM
   // or engineer sees is what's waiting on them, not a stats page.
   const [view, setView] = useState('mywork')
+  // Project reviews lens: design (weekly, the old DMR) vs construction (monthly, the old CMR)
+  const [reviewLens, setReviewLens] = useState('design')
   const openWorkspace = (p, target) => navigate(`/projects/${p.id}`, target ? { state: target } : undefined)
   // CRM's "view project" / "open in Projects" hands over a project id via router state
   const [selectedProject, setSelectedProject] = useState(
@@ -93,8 +96,16 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
           {view === 'pmdash' && (
             <PmDashboard projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}
-          {view === 'dmr' && (
-            <DmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
+          {view === 'reviews' && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs">
+                <button onClick={() => setReviewLens('design')} className={`px-3 py-1.5 rounded-md border font-medium transition ${reviewLens === 'design' ? 'border-brand text-brand bg-brand/5' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>Design review (weekly)</button>
+                <button onClick={() => setReviewLens('construction')} className={`px-3 py-1.5 rounded-md border font-medium transition ${reviewLens === 'construction' ? 'border-brand text-brand bg-brand/5' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>Construction review (monthly)</button>
+              </div>
+              {reviewLens === 'design'
+                ? <DmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
+                : <CmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} />}
+            </div>
           )}
           {view === 'dashboard' && (
             <ProjectsDashboard projects={projects} pmRecords={pmRecords} canViewSensitive={canViewSensitive} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />

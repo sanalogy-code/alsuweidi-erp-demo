@@ -30,9 +30,12 @@ const loggedHours = (personName, projectId) => TIMESHEETS
   .reduce((sum, ts) => sum + ts.entries.filter((e) => e.code === projectId)
     .reduce((s, e) => s + e.hours.reduce((a, b) => a + (Number(b) || 0), 0), 0), 0)
 
+const MONTHLY_CAPACITY = CAPACITY_HOURS_PER_WEEK * 4.33
+
 export default function ResourcePlannerView({ projects, pmRecords, employees, allocations, onUpdateAllocations, onOpenWorkspace }) {
   const [expanded, setExpanded] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [mode, setMode] = useState('weeks') // weeks (planning grid) | months (utilization outlook)
 
   // Weeks: current week + forward.
   const weeks = Array.from({ length: WEEKS_SHOWN }, (_, i) => toLocalISO(addDays(weekStartOf(new Date()), i * 7)))
@@ -82,12 +85,57 @@ export default function ResourcePlannerView({ projects, pmRecords, employees, al
     <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-gray-700">Resource planner — next {WEEKS_SHOWN} weeks</h2>
-          <p className="text-xs text-gray-500">Planned hours vs {CAPACITY_HOURS_PER_WEEK}h/week capacity. Click a row to edit per-project allocations.</p>
+          <h2 className="text-sm font-semibold text-gray-700">Resource planner</h2>
+          <p className="text-xs text-gray-500">{mode === 'weeks' ? `Planned hours vs ${CAPACITY_HOURS_PER_WEEK}h/week capacity over the next ${WEEKS_SHOWN} weeks. Click a row to edit per-project allocations.` : 'Monthly utilization outlook — same allocations rolled up per month.'}</p>
         </div>
-        <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Allocate</button>
+        <div className="flex items-center gap-2">
+          <div className="flex text-xs rounded-md border border-gray-200 overflow-hidden">
+            <button onClick={() => setMode('weeks')} className={`px-2.5 py-1.5 font-medium ${mode === 'weeks' ? 'bg-brand text-white' : 'bg-white text-gray-500'}`}>Weeks</button>
+            <button onClick={() => setMode('months')} className={`px-2.5 py-1.5 font-medium ${mode === 'months' ? 'bg-brand text-white' : 'bg-white text-gray-500'}`}>Months</button>
+          </div>
+          {mode === 'weeks' && <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Allocate</button>}
+        </div>
       </div>
 
+      {mode === 'months' && (() => {
+        const months = Array.from({ length: 6 }, (_, i) => {
+          const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + i)
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        })
+        const monthHours = (name, m) => allocations.filter((a) => a.name === name && a.weekStart.slice(0, 7) === m).reduce((s, a) => s + a.hours, 0)
+        return (
+          <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+            <table className="w-full text-sm min-w-[560px]">
+              <thead className="bg-gray-50 border-b border-gray-200 text-[11px] text-gray-500 uppercase">
+                <tr>
+                  <th className="text-left px-4 py-2">Person</th>
+                  {months.map((m) => <th key={m} className="text-center px-2 py-2">{m}</th>)}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {rows.map((person) => (
+                  <tr key={person.name}>
+                    <td className="px-4 py-2.5 font-medium text-gray-800">{person.name}</td>
+                    {months.map((m) => {
+                      const u = monthHours(person.name, m) / MONTHLY_CAPACITY
+                      return (
+                        <td key={m} className="px-2 py-2.5 text-center">
+                          <span className={`inline-block min-w-[48px] px-1.5 py-1 rounded text-xs ${u === 0 ? 'bg-gray-50 text-gray-300' : u > 1 ? 'bg-red-100 text-red-700 font-semibold' : u >= 0.85 ? 'bg-amber-100 text-amber-700' : u >= 0.5 ? 'bg-green-100 text-green-700' : 'bg-blue-50 text-blue-600'}`}>
+                            {u === 0 ? '—' : `${Math.round(u * 100)}%`}
+                          </span>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="text-[11px] text-gray-400 px-4 py-2">Rolled up from the weekly plan (allocated hours ÷ ~{Math.round(MONTHLY_CAPACITY)}h/month). Empty months = unplanned capacity, not absence.</p>
+          </div>
+        )
+      })()}
+
+      {mode === 'weeks' && (<>
       {showAdd && (
         <div className="bg-white rounded-lg border border-gray-200 p-3 flex flex-wrap gap-2 text-xs">
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} list="planner-people" placeholder="Person" className="w-44 border rounded-md px-2 py-1.5" />
@@ -183,6 +231,7 @@ export default function ResourcePlannerView({ projects, pmRecords, employees, al
         <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-100 inline-block" /> Over-allocated (&gt;{CAPACITY_HOURS_PER_WEEK}h)</span>
         <span>Capacity is a flat {CAPACITY_HOURS_PER_WEEK}h/week for the demo — per-person work weeks, leave, and holidays refine it in Phase 2.</span>
       </div>
+      </>)}
     </div>
   )
 }

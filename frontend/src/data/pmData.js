@@ -506,6 +506,18 @@ export const PM_RECORDS = {
           { id: 2, role: 'Resident Engineer', employeeId: null, name: 'George Matta (site)' },
           { id: 3, role: 'Inspector', employeeId: null, name: 'Ramesh Pillai (site)' },
         ],
+        // Construction review (CMR) facts not derivable from other registers.
+        cmr: {
+          approvedContractValue: 168400000, expectedAtCompletion: 171000000,
+          commencementDate: '2025-05-01', revisedCompletion: null,
+          lastSafetyReportDate: '2026-07-01', retention: '10% held, release at TOC + DLP',
+          deployment: [
+            { role: 'Resident Engineer', toDate: 14, lastMonth: 1 },
+            { role: 'Field supervision', toDate: 62, lastMonth: 5 },
+            { role: 'E&W inspectors', toDate: 28, lastMonth: 3 },
+          ],
+          sitePhotos: ['hpm-L3-zoneB-rebar-2026-07-05.jpg', 'hpm-roof-waterproofing-prep-2026-07-05.jpg', 'hpm-L2-blockwork-east-2026-07-04.jpg'],
+        },
         wirs: [
           { id: 1, ref: 'WIR-0142', title: 'Level 3 slab reinforcement — Zone B', location: 'L3 Zone B', drawingRef: 'HPM-STR-DWG-118', requestedFor: '2026-07-05', rev: 'A', status: 'pending_trade', remarks: 'RE walked the pour; with structures for sign-off.', history: [{ rev: 'A', date: '2026-07-03', event: 'Submitted by contractor' }] },
           { id: 2, ref: 'WIR-0139', title: 'Block walls — L2 east wing', location: 'L2 east', drawingRef: 'HPM-ARC-DWG-061', requestedFor: '2026-06-30', rev: 'B', status: 'approved', remarks: '', history: [
@@ -622,6 +634,16 @@ export const PM_RECORDS = {
           { id: 2, role: 'Resident Engineer', employeeId: null, name: 'Tariq Aziz (site)' },
           { id: 3, role: 'Inspector', employeeId: null, name: 'Noel Fernandes (site)' },
         ],
+        cmr: {
+          approvedContractValue: 48000000, expectedAtCompletion: 51200000,
+          commencementDate: '2025-11-01', revisedCompletion: '2027-01-20',
+          lastSafetyReportDate: '2026-06-28', retention: '5% held',
+          deployment: [
+            { role: 'Resident Engineer', toDate: 9, lastMonth: 1 },
+            { role: 'Field supervision', toDate: 21, lastMonth: 2 },
+          ],
+          sitePhotos: ['psu-bay2-anchor-survey-2026-07-05.jpg', 'psu-mcc-cable-trays-2026-07-04.jpg'],
+        },
         wirs: [
           { id: 1, ref: 'WIR-0067', title: 'Pump plinth anchor bolts — bay 2', location: 'Bay 2', drawingRef: 'PSU-CIV-DWG-021', requestedFor: '2026-07-04', rev: 'B', status: 'resubmit', remarks: 'Bolt projection out of tolerance; survey re-check required.', history: [
             { rev: 'A', date: '2026-06-30', event: 'Resubmit — anchor template misaligned' },
@@ -747,6 +769,17 @@ export const PM_RECORDS = {
           { id: 1, role: 'Construction PM (CPM)', employeeId: 10, name: 'Samir Al Mazrouei' },
           { id: 2, role: 'Resident Engineer', employeeId: null, name: 'Hani Boulos (site)' },
         ],
+        cmr: {
+          approvedContractValue: 211200000, expectedAtCompletion: 211200000,
+          commencementDate: '2025-09-15', revisedCompletion: null,
+          lastSafetyReportDate: '2026-07-03', retention: '10% held',
+          deployment: [
+            { role: 'Resident Engineer', toDate: 10, lastMonth: 1 },
+            { role: 'Field supervision', toDate: 40, lastMonth: 4 },
+            { role: 'E&W inspectors', toDate: 18, lastMonth: 2 },
+          ],
+          sitePhotos: ['sdv-prototypeA-blockwork-2026-07-05.jpg', 'sdv-pavilion-stonework-2026-07-03.jpg'],
+        },
         wirs: [
           { id: 1, ref: 'WIR-0311', title: 'Villa P2-07 roof screed to falls', location: 'Cluster 4, P2-07', drawingRef: 'SDV-ARC-DWG-144', requestedFor: '2026-07-06', rev: 'A', status: 'pending_re', remarks: '', history: [{ rev: 'A', date: '2026-07-04', event: 'Submitted by contractor' }] },
         ],

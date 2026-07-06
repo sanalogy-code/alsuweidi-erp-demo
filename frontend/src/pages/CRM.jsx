@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Home, TrendingUp, Building2, Users, CheckSquare, BarChart3, FileText } from 'lucide-react'
+import { Plus, Home, TrendingUp, Building2, Users, CheckSquare, BarChart3, FileText, FileSignature } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Modal from '../components/crm/Modal'
 import CreateProjectFromDealModal from '../components/projects/CreateProjectFromDealModal'
@@ -17,6 +17,8 @@ import CompanyEditModal from '../components/crm/CompanyEditModal'
 import DealEditModal from '../components/crm/DealEditModal'
 import ExportContactsModal from '../components/crm/ExportContactsModal'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
+import RfpView from '../components/crm/RfpView'
+import { INITIAL_RFPS } from '../data/rfpData'
 
 export default function CRM({ user, onLogout, projects = [], onAddProject, deals, setDeals }) {
   const navigate = useNavigate()
@@ -25,6 +27,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
   const [contacts, setContacts] = useState(INITIAL_CONTACTS)
   const [tasks, setTasks] = useState(INITIAL_TASKS)
   const [interactions, setInteractions] = useState(INITIAL_INTERACTIONS)
+  const [rfps, setRfps] = useState(INITIAL_RFPS)
 
   const [tab, setTab] = useState('overview')
   const [selectedCompany, setSelectedCompany] = useState(null)
@@ -186,6 +189,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
       label: 'Sales',
       items: [
         { key: 'pipeline', label: 'Pipeline', icon: TrendingUp },
+        { key: 'rfps', label: 'Proposals (RFPs)', icon: FileSignature, badge: rfps.filter((r) => r.status === 'invited' || r.status === 'preparing').length },
         { key: 'companies', label: 'Companies', icon: Building2 },
         { key: 'contacts', label: 'Contacts', icon: Users },
       ],
@@ -264,6 +268,10 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
             onLogInteraction={openLogInteraction} onToggleTask={toggleTask}
             onJumpToCompany={jumpToCompany} setTab={setTab} onViewContact={setViewContactId}
           />
+        )}
+
+        {tab === 'rfps' && (
+          <RfpView rfps={rfps} onUpdate={setRfps} companies={companies} />
         )}
 
         {tab === 'pipeline' && (
