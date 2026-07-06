@@ -347,11 +347,12 @@ build work moved into **Next batch** (or **Phase 2** where the decision itself d
 real backend). Individuals-as-clients (`kind: individual` company records) is the one piece of
 the naming question still open — folded into it below.
 
-- [ ] **Financials & Accounting scope** (4 Jul, new) — the Batch 7 module is a **first-pass UI
-  proof-of-concept / conversation starter only**. Needs proper scoping with Sana/Finance before
-  building further: chart of accounts, VAT-return handling, billing-milestone model, WPS/payroll
-  integration into the P&L, receivables/aging, and **who owns it** (add a dedicated `finance`
-  role, or keep it management/admin?). Decide the real requirements before investing more.
+- [ ] **Financials & Accounting scope** (4 Jul; narrowed 7 Jul) — receivables aging, client
+  statements, and the VAT working paper **shipped 7 Jul** ("Accountant" view) after Sana's
+  "doesn't work for an accountant" feedback — run these past the actual accountant. Still to
+  decide/scope: chart of accounts + GL, receipts register (payment dates/references),
+  per-expense VAT + non-recoverable categories, billing-milestone model, WPS/payroll → P&L,
+  FTA filing calendar, and **who owns the module** (dedicated `finance` role?).
 - [ ] **Individuals as CRM clients** (3 Jul, split off from "Companies" naming) — the naming
   half is resolved (see Next batch: relationship tags, multi-select). Still open: should an
   individual client be allowed as a company record flagged `kind: individual`, or handled some
