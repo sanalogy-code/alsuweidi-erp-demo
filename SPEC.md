@@ -338,6 +338,12 @@ full **Project Workspace** (see below).
 >   **Registrations & licenses** expiry radar (CFPE/ADCD 1-Sept-2026 gate seeded).
 > - Standing design rule from Sana: **absorb the current ERP's information, never its design**,
 >   and link data across modules instead of standalone screens.
+> - **7 Jul code review (medium) over the Batches 9–15 diff: 8 confirmed findings** — see
+>   BACKLOG.md "Code review findings" for the ranked list (top items: PmOverview leaks fee data
+>   to ungated roles; its "Fee invoiced" card jumps to a view that doesn't render; the PM module
+>   reads the static TIMESHEETS seed instead of App's lifted state). Fix before building Batch 16
+>   features. Known cleanup: UTC `todayISO` ×8, duplicate `daysUntil` semantics, dead
+>   ResourcesView.jsx.
 
 ### Project Workspace (`pages/ProjectWorkspace.jsx` at `/projects/:id`, Batch 9, data in `data/pmData.js`)
 

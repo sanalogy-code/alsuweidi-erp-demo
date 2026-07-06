@@ -2,7 +2,7 @@
 
 Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.md is the detailed technical reference; this is "what's true right now."
 
-**Last updated:** 2026-07-06 (Batches 9–11 all shipped the same day: PM module built, then twice restructured on Sana's live review. Batch 11 = the "proper PM" pass: PM-vs-Database split, waterfall/sprints, Gantt, management dashboard, hours.)
+**Last updated:** 2026-07-07, after midnight (Batches 9–15 all shipped 6 Jul: PM module built and iterated live against Sana's review + 9 screens of the current ERP absorbed. **7 Jul: medium-effort code review over the whole day's diff — 8 confirmed findings + a cleanup list, recorded in [BACKLOG.md](BACKLOG.md) to fix at the top of Batch 16.** Batch 16 itself is scoped there too: construction feedback register, full task management with dependencies/subtasks, task-hours→timesheet wiring, pipeline staffing requests → HR Staff planning, attendance punch drill-down, filters/date-pickers basics pass. Also decided: P6 stays the scheduling engine; Phase 2 imports its milestone/progress exports — don't rebuild CPM.)
 
 **Live**: https://alsuweidi-erp-demo.pages.dev — login with any name + a role from the dropdown (no password, nothing sent anywhere, purely local/dummy). The role and the "I'm a new hire" checkbox change what you see — try `HR`, `Management`, `IT`, and a plain `Sales` login to compare. The homepage shows a build number card so you can tell at a glance whether a deploy landed. **Financials and the Admin Center are gated to Management/Admin** — log in as `Management` to see them.
 

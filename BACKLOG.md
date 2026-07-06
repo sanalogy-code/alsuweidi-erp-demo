@@ -22,6 +22,51 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
+## Code review findings — 7 Jul 2026 (medium effort over Batches 9–15; fix at the top of Batch 16)
+
+8 confirmed findings, severity order: (1) PmOverview shows fee/invoiced AED to ALL roles
+(gating leak — FeesView blocks the same data); (2) Overview "Fee invoiced" card jumps to a
+non-existent project-level 'fees' view → blank pane; (3) PM module reads static TIMESHEETS seed,
+not App's lifted state → session-submitted hours never reach Management/Fees/planner; (4)
+FeesView counts project-wide hours against EACH phase's budget (double-count); (5) Revenue
+forecast subtracts draft invoices that earned excludes; (6) WIR resubmit button advertises a rev
+bump it doesn't perform; (7) waterfall Add-task omits startDate → invisible on the Gantt; (8)
+LicensesView owns its own state → additions lost on tab switch. Cleanup batch: UTC `todayISO`
+×8 copies (use a shared local-safe helper), duplicate `daysUntil` (UTC vs local semantics),
+delete dead ResourcesView.jsx + allPmEntries, planner fragment key warning, NewProjectModal
+missing studyType for Study/Advisory, memoize myWorkFor/dashboard/revenue rollups.
+
+## Batch 16 — NEXT (Sana's feedback, 6 Jul 2026 late night — agreed, not yet built)
+
+- [ ] **Construction feedback register** (screenshot: per-project "Feedback Required" screen) —
+  structured design-feedback from construction: issue type (Discrepancy / Missing Information /
+  Incorrect Information / Others), what it's in (e.g. approved materials list), impact measure
+  (e.g. D-Quality), description, issue reason, proposed improvement, reported by, status.
+  Feeds the Lessons tab / design QA. Place: project workspace, project-level section.
+- [ ] **Full task management** — Sana: "look at PMP and PM tools, stop keeping it simple."
+  Dependencies (`dependsOn` with blocked-until indicators, reflected on the Gantt), real
+  **subtasks** (parent/child, not just checklists), add/edit **milestones** from the Plan view
+  (currently seed-only).
+- [ ] **Task hours → timesheet** — "Log hours" on a task writes the hours into the assignee's
+  weekly timesheet under that project's code automatically (timesheet becomes a by-product of
+  task work). Timesheets state already lives in App.jsx, so this is wiring, not architecture.
+- [ ] **Staffing requests from the pipeline → HR Staff planning** (corrected by Sana 7 Jul: the
+  resource planner stays for hired employees ONLY — no allocating to RFPs). Instead: from a
+  pipeline deal/RFP, a PM or manager raises an expected staffing need (role, headcount,
+  needed-by date, contingent on award) that lands in HR's existing **Staff planning** tab as an
+  intake queue; on award it converts to a real hiring plan line. Today Staff planning has no
+  pipeline-side intake — HR types entries by hand.
+- [ ] **Attendance punch drill-down** — the Period report hid too much: expandable per-person
+  per-day rows with In / Break / Resume / Out / Total (the punch columns from the screenshot),
+  summary stays the default lens.
+- [ ] **Basics pass: filters + date pickers everywhere** — audit every register/list for search,
+  status filters, and date-range pickers (My Work, deliverables, WIRs, tasks, claims, dashboard,
+  reviews…). Sana: "many things are missing basics."
+- [ ] **Primavera P6 relationship (decided 7 Jul):** P6 stays the scheduling engine (client
+  `.xer` mandates + contractor programme audit); the ERP is everything around the schedule. Do
+  NOT rebuild CPM. Phase 2 integration: import P6 milestone/progress exports (.xer or Excel) to
+  feed the ERP's milestones and S-curves instead of manual entry.
+
 ## Shipped — Batch 15 (6 Jul 2026, night): timesheet analytics, revenue reports, licensing
 
 - [x] ~~Timesheet cost dashboard / Employee Efforts Review / revenue reports / licensing tracker~~ —
