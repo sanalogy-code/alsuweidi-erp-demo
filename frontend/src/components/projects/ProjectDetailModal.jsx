@@ -27,7 +27,7 @@ function Field({ label, children }) {
   )
 }
 
-export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee, onUpdateProject, onAddMarketingTask }) {
+export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee, onUpdateProject, onAddMarketingTask, onOpenWorkspace }) {
   const [tab, setTab] = useState('overview')
   const [editing, setEditing] = useState(false)
   const [editingProgress, setEditingProgress] = useState(false)
@@ -97,6 +97,14 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
       <div className="flex items-center justify-between gap-4 mb-4">
         <div className="text-xs text-gray-500">{project.employer} • {project.type} • {project.location}</div>
         <div className="flex items-center gap-2 shrink-0">
+          {onOpenWorkspace && (
+            <button
+              onClick={() => onOpenWorkspace(project)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-white bg-brand hover:bg-brand-dark transition"
+            >
+              <FolderOpen size={11} /> Project workspace
+            </button>
+          )}
           {canEdit && (
             <button
               onClick={() => setEditing(true)}

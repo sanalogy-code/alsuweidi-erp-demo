@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Plus } from 'lucide-react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, FolderKanban, Plus, UsersRound } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import ProjectsDashboard from '../components/projects/ProjectsDashboard'
 import NewProjectModal from '../components/projects/NewProjectModal'
+import ResourcesView from '../components/projects/pm/ResourcesView'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { EMPLOYEES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
@@ -13,10 +14,12 @@ import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 const NAV = [
   { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { key: 'portfolio', label: 'Portfolio', icon: FolderKanban },
+  { key: 'resources', label: 'Resources', icon: UsersRound },
 ]
 
 export default function Projects({ user, onLogout, projects = [], onUpdateProject, onAddProject, onAddMarketingTask }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [view, setView] = useState('dashboard')
   // CRM's "view project" / "open in Projects" hands over a project id via router state
   const [selectedProject, setSelectedProject] = useState(
@@ -67,6 +70,9 @@ export default function Projects({ user, onLogout, projects = [], onUpdateProjec
           {view === 'portfolio' && (
             <ProjectList projects={projects} employees={EMPLOYEES} user={user} onViewProject={setSelectedProject} />
           )}
+          {view === 'resources' && (
+            <ResourcesView projects={projects} employees={EMPLOYEES} onViewProject={setSelectedProject} />
+          )}
         </main>
       </div>
 
@@ -88,6 +94,7 @@ export default function Projects({ user, onLogout, projects = [], onUpdateProjec
           onViewEmployee={(emp) => setSelectedEmployee(emp)}
           onUpdateProject={(p) => { onUpdateProject?.(p); setSelectedProject(p) }}
           onAddMarketingTask={onAddMarketingTask}
+          onOpenWorkspace={(p) => navigate(`/projects/${p.id}`)}
         />
       )}
 

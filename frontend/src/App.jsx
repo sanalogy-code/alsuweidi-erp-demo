@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage'
 import CRM from './pages/CRM'
 import HR from './pages/HR'
 import Projects from './pages/Projects'
+import ProjectWorkspace from './pages/ProjectWorkspace'
 import IT from './pages/IT'
 import Marketing from './pages/Marketing'
 import Finance from './pages/Finance'
@@ -117,6 +118,7 @@ export default function App() {
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
       <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
+      <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} />} />
       <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />
       <Route path="/finance" element={<Finance user={user} onLogout={handleLogout} />} />
