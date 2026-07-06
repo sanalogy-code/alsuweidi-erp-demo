@@ -238,6 +238,32 @@ export const INITIAL_ALLOCATIONS = [
   { id: 23, name: 'Mohammad Kubba', employeeId: 3, projectId: 2, weekStart: '2026-07-26', hours: 20 },
 ]
 
+// --- DMR: design management report (Batch 13, modeled on the company's existing
+// DMR screen) --------------------------------------------------------------------
+// Discipline-level hour tracking per design/study phase: estimate at R0 vs hours
+// to date (red when over), plus last-2-weeks burn. Profitability derives salary
+// cost from hours × an average cost rate; sub-consultant accruals come from the
+// Financials EXPENSES seeds.
+export const SALARY_COST_PER_HOUR = 210 // AED, illustrative blended rate (real: contract salary / 196)
+
+export const dmrTotals = (hoursByDiscipline = []) => ({
+  estim: hoursByDiscipline.reduce((s, d) => s + (d.estim || 0), 0),
+  toDate: hoursByDiscipline.reduce((s, d) => s + (d.toDate || 0), 0),
+  twoWeeks: hoursByDiscipline.reduce((s, d) => s + (d.twoWeeks || 0), 0),
+})
+
+// Profitability per phase (the DMR A–G block):
+// A total hours to date · B salary cost (A × rate) · C accrued sub-consultants ·
+// E earned (fee × % complete) · F = E − B − C · G = F / E
+export const dmrProfitability = (phase, subConsultantCost = 0) => {
+  const A = dmrTotals(phase.hoursByDiscipline || []).toDate
+  const B = A * SALARY_COST_PER_HOUR
+  const C = subConsultantCost
+  const E = phase.fees.stages.reduce((s, st) => s + st.fee * (st.pctComplete / 100), 0)
+  const F = E - B - C
+  return { hours: A, salaryCost: B, subCost: C, earned: E, pnl: F, margin: E > 0 ? F / E : null }
+}
+
 // --- Empty shells -------------------------------------------------------------------
 export const emptyPhase = (key, label) => ({
   key, label: label || PHASE_META[key]?.label || key,
@@ -275,6 +301,10 @@ export const lateTasksOf = (pm) => pm.phases.flatMap((ph) => ph.tasks.filter(tas
 // % complete for a phase: latest weekly update wins; else average of task pctComplete.
 export const phaseProgress = (ph) => {
   if (ph.weeklyUpdates?.length) return ph.weeklyUpdates[0].pctComplete
+  // No weekly update yet — fall back to the fee-weighted stage completion,
+  // then to a plain average over task % complete.
+  const totalFee = ph.fees.stages.reduce((s, st) => s + st.fee, 0)
+  if (totalFee > 0) return Math.round(ph.fees.stages.reduce((s, st) => s + st.fee * (st.pctComplete / 100), 0) / totalFee * 100)
   const withPct = ph.tasks.filter((t) => t.pctComplete != null || t.status === 'done')
   if (!withPct.length) return null
   return Math.round(withPct.reduce((s, t) => s + (t.status === 'done' ? 100 : t.pctComplete || 0), 0) / withPct.length)
@@ -403,6 +433,18 @@ export const PM_RECORDS = {
           { id: 1, role: 'Design PM (DPM)', employeeId: 7, name: 'Fatima Al Mansouri' },
           { id: 2, role: 'MEP Lead', employeeId: 3, name: 'Mohammad Kubba' },
           { id: 3, role: 'Architecture Lead', employeeId: 2, name: 'Naseeb Shaheen' },
+        ],
+        // Design complete — hours landed close to estimate (healthy DMR).
+        hoursByDiscipline: [
+          { discipline: 'PM', estim: 700, toDate: 745, twoWeeks: 6 },
+          { discipline: 'Architecture', estim: 2600, toDate: 2680, twoWeeks: 12 },
+          { discipline: 'Structural', estim: 1800, toDate: 1750, twoWeeks: 0 },
+          { discipline: 'Mechanical', estim: 1500, toDate: 1620, twoWeeks: 18 },
+          { discipline: 'Electrical', estim: 1300, toDate: 1355, twoWeeks: 8 },
+          { discipline: 'Sustainability', estim: 500, toDate: 545, twoWeeks: 16 },
+          { discipline: 'QS / Cost', estim: 700, toDate: 690, twoWeeks: 0 },
+          { discipline: 'Permitting', estim: 400, toDate: 430, twoWeeks: 4 },
+          { discipline: 'Tendering', estim: 300, toDate: 310, twoWeeks: 0 },
         ],
         deliverables: [
           { id: 1, docNo: 'HPM-ARC-DWG-001', title: 'Ground floor plan', discipline: 'Architecture', rev: 'C', status: 'approved', dueDate: '2025-06-30', history: [
@@ -667,6 +709,15 @@ export const PM_RECORDS = {
         team: [
           { id: 1, role: 'Design PM (DPM)', employeeId: 7, name: 'Fatima Al Mansouri' },
         ],
+        hoursByDiscipline: [
+          { discipline: 'PM', estim: 900, toDate: 880, twoWeeks: 4 },
+          { discipline: 'Architecture', estim: 3400, toDate: 3350, twoWeeks: 6 },
+          { discipline: 'Structural', estim: 2200, toDate: 2260, twoWeeks: 0 },
+          { discipline: 'MEP', estim: 2600, toDate: 2540, twoWeeks: 0 },
+          { discipline: 'Landscape', estim: 1400, toDate: 1520, twoWeeks: 22 },
+          { discipline: 'QS / Cost', estim: 800, toDate: 815, twoWeeks: 0 },
+          { discipline: 'Permitting', estim: 500, toDate: 480, twoWeeks: 0 },
+        ],
         deliverables: [
           { id: 1, docNo: 'SDV-LSC-DWG-201', title: 'Community landscape package — rev after tender', discipline: 'Softscape Design', rev: 'B', status: 'issued', dueDate: '2026-07-15', history: [
             { rev: 'A', date: '2026-06-10', event: 'Issued to client' },
@@ -777,6 +828,20 @@ export const PM_RECORDS = {
           { id: 1, role: 'Design PM (DPM)', employeeId: 3, name: 'Mohammad Kubba' },
           { id: 2, role: 'Structural Lead', employeeId: 2, name: 'Naseeb Shaheen' },
         ],
+        // The loss-making DMR story: hours running well over the R0 estimate
+        // (client-driven rework + underestimated MEP), mirroring the real DMR's
+        // red-percentage rows. At 61% complete, to-date already exceeds estimate.
+        hoursByDiscipline: [
+          { discipline: 'PM', estim: 200, toDate: 295, twoWeeks: 8 },
+          { discipline: 'Architecture', estim: 750, toDate: 960, twoWeeks: 24 },
+          { discipline: 'BIM Management', estim: 100, toDate: 88, twoWeeks: 6 },
+          { discipline: 'Structural', estim: 400, toDate: 610, twoWeeks: 15 },
+          { discipline: 'Mechanical', estim: 500, toDate: 1290, twoWeeks: 36 },
+          { discipline: 'Electrical', estim: 500, toDate: 970, twoWeeks: 30 },
+          { discipline: 'Acoustics', estim: 120, toDate: 105, twoWeeks: 14 },
+          { discipline: 'Permitting', estim: 80, toDate: 82, twoWeeks: 5 },
+          { discipline: 'Cost Estimation', estim: 100, toDate: 34, twoWeeks: 0 },
+        ],
         deliverables: [
           { id: 1, docNo: 'CTF-ARC-DWG-010', title: 'Simulator hall — plans & sections', discipline: 'Architecture', rev: 'B', status: 'revising', dueDate: '2026-07-18', history: [
             { rev: 'A', date: '2026-05-28', event: 'Issued to client' },
@@ -854,6 +919,12 @@ export const PM_RECORDS = {
         team: [
           { id: 1, role: 'Study Lead', employeeId: 2, name: 'Naseeb Shaheen' },
           { id: 2, role: 'Traffic Engineer', employeeId: null, name: 'Dina Haddad (traffic)' },
+        ],
+        hoursByDiscipline: [
+          { discipline: 'Study Lead', estim: 120, toDate: 96, twoWeeks: 10 },
+          { discipline: 'Traffic Engineering', estim: 560, toDate: 470, twoWeeks: 48 },
+          { discipline: 'Surveys', estim: 140, toDate: 152, twoWeeks: 0 },
+          { discipline: 'Permitting / ITC', estim: 30, toDate: 24, twoWeeks: 6 },
         ],
         deliverables: [
           { id: 1, docNo: 'TIS-KCS-RPT-001', title: 'Traffic count & survey data report', discipline: 'Traffic Engineering', rev: 'A', status: 'approved', dueDate: '2026-05-15', history: [

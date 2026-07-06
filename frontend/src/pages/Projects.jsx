@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge, FileBarChart } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
@@ -9,6 +9,7 @@ import NewProjectModal from '../components/projects/NewProjectModal'
 import ResourcePlannerView from '../components/projects/pm/ResourcePlannerView'
 import MyWorkView from '../components/projects/pm/MyWorkView'
 import PmDashboard from '../components/projects/pm/PmDashboard'
+import DmrView from '../components/projects/pm/DmrView'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { EMPLOYEES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
@@ -20,6 +21,7 @@ const NAV_GROUPS = [
   { label: 'Project Management', items: [
     { key: 'mywork', label: 'My Work', icon: Inbox },
     { key: 'pmdash', label: 'Management', icon: Gauge },
+    { key: 'dmr', label: 'DMR (weekly)', icon: FileBarChart },
     { key: 'resources', label: 'Resources', icon: UsersRound },
   ] },
   { label: 'Database', items: [
@@ -90,6 +92,9 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
           )}
           {view === 'pmdash' && (
             <PmDashboard projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
+          )}
+          {view === 'dmr' && (
+            <DmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'dashboard' && (
             <ProjectsDashboard projects={projects} pmRecords={pmRecords} canViewSensitive={canViewSensitive} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />
