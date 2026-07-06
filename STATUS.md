@@ -8,7 +8,15 @@ Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.
 
 **Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (Batch 11, 6 Jul 2026 night — "this isn't proper project management yet", Sana):**
+**Latest (Batch 12, 6 Jul 2026 night — resource planning + the research nice-to-have tier):**
+- **Resource planner** (replaces the flat allocation list): person × week capacity heatmap over the next 6 weeks — planned hours per project vs 40h/week capacity, colour-coded (light/healthy/near-capacity/over-allocated), rows expand to per-project per-week editable inputs, "Allocate" form, logged timesheet hours shown alongside. State lifted to App.
+- **Risk register** per project: probability × impact scoring, owner, mitigation, open → mitigating → closed/realized (a realized risk points at its claim). Seeds on Harbour Point + Pump Station.
+- **Meetings & actions**: minutes log with action items (owner + due + done) — open actions land in the owner's **My Work** automatically.
+- **Payments (IPC)**: interim payment certificate register (claimed vs certified with deduction callouts, draft → submitted → under review → certified → paid); certified amounts reference approved WIRs.
+- **Handover** (supervision projects): snag list gating the Taking-Over Certificate → Defects Liability Period → Performance Certificate → retention release chain.
+- This closes out essentially the whole PM_RESEARCH.md feature map (essential + nice-to-have) except the cash-flow forecast and RACI matrix.
+
+**Earlier (Batch 11, 6 Jul 2026 night — "this isn't proper project management yet", Sana):**
 - **Projects now has two areas:** **Project Management** (My Work, Management dashboard, Resources) and **Database** (Portfolio list, Record stats) — the working tool vs the records.
 - **Management dashboard** — one row per active project: RAG health (red = overdue claim deadline / 3+ late tasks / SPI < 0.85), % complete, late-task count, next milestone with slip flag, SPI, **hours used vs manhour budget** (real timesheet actuals), methodology. Click-through to the workspace.
 - **Waterfall vs Sprints per project** — the "Plan & tasks" section renders a **Gantt timeline** (task bars with % complete fill, late-in-red, milestone diamonds, today line) for waterfall, or **sprint boards** (iterations with goals/dates, To do / In progress / Done columns, a backlog with "move to sprint", start/close sprint) for sprints. Demo: Crew Training Facility (P-2688) runs design sprints; Harbour Point is waterfall.

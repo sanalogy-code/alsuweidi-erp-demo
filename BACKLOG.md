@@ -22,6 +22,15 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
+## Shipped — Batch 12 (6 Jul 2026, night): resource planning + governance registers
+
+- [x] ~~Resource planning + nice-to-have tier~~ — **Shipped Batch 12 (6 Jul):** person × week
+  capacity heatmap (6 weeks forward, editable planned hours vs 40h capacity, over-allocation in
+  red, timesheet hours alongside); risk register (P×I, owner, mitigation, realized→claim);
+  meetings & actions (open actions feed My Work); IPC register (claimed vs certified, WIR basis);
+  FIDIC handover chain (snags gate TOC → DLP → Performance Cert → retention). Remaining from
+  PM_RESEARCH.md: cash-flow forecast, RACI matrix (both parked — build on request).
+
 ## Shipped — Batch 11 (6 Jul 2026, night): "proper project management" pass
 
 - [x] ~~Proper PM system~~ — **Shipped Batch 11 (6 Jul):** Sana's second review round ("how is this
