@@ -2,18 +2,18 @@
 
 The "how long did this actually take" log — numbers pulled from git history, for sharing with management. Refreshed on each docs sync.
 
-**As of:** 6 July 2026, 10:35 PM
+**As of:** 6 July 2026, late night
 
 ## The headline
 
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Latest (6 Jul: Batch 9 — full Project Management module)** | 6 July 2026, 10:32 PM |
-| **Elapsed time** | ~135 hours, across **6 working days** |
-| **Commits** | 118 |
-| **Deploys to the live site** | every push auto-deploys — ~111 |
-| **App code** | ~18,293 lines across 82 components + 11 pages |
+| **Latest (6 Jul: Batches 9–15 — PM module built + 9 current-ERP screens absorbed, all in one day)** | 6 July 2026, late night |
+| **Elapsed time** | ~140 hours, across **6 working days** |
+| **Commits** | 131 |
+| **Deploys to the live site** | every push auto-deploys — ~124 |
+| **App code** | ~21,355 lines across 94 components + 11 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 4 days
@@ -36,7 +36,8 @@ The "how long did this actually take" log — numbers pulled from git history, f
 - **Batch 6** (day 3 evening, 19 backlog items from Sana's Marketing review + resolved management decisions) — CRM company relationship tags/website/size/services with filters, subconsultant project history, "Keep in Mind" notes + project lessons, downloadable category portfolio PDFs (Marketing-managed, CRM-consumed); Proposal Builder removed in favour of richer project records (years, images, special features) ; 4-step photo workflow; content calendar rework (Website/LinkedIn/Email, copy+media primary); branding overhaul; business card requests; per-document review statuses with re-upload; payroll offboarding cutoff + end-of-service settlement and mid-month-hire catch-up; two-step leave approval (manager → HR); new IT + Admin-staff roles and an add-license form
 - **Financials & Accounting** (day 4, Batch 7) — first-pass gated module: cash/receivables overview, invoices linked to projects and won deals, expenses with approvals, H1 P&L summary; deliberately demo-grade to start the scoping conversation with Finance
 - **Admin Center** (day 4, Batch 8) — user accounts with add/edit/disable/delete and mock invitation flow, a role × module permissions matrix mirroring the app's real gating (the written Phase 2 RBAC spec, now visualized), a filterable audit-trail mock, and usage dashboards; the last "Coming Soon" tile is gone
-- **Project Management module** (day 6, Batch 9 — built from a 209-agent verified research pass, PM_RESEARCH.md) — per-project controls workspace: deliverables register with revision-tracked review workflows, 30-60-90 design gates, WIR/MIR/NCR/site-instruction/daily-report field registers, schedule S-curve with SPI + milestone slip flags, fee-by-stage tracking wired to HR timesheets and Financials invoices, FIDIC claims/EOT register with 28-day-notice countdowns (1999/2017 editions), FIDIC 4.21 monthly report checklists, Abu Dhabi-first authority workflow tracking (DMT/ADCD/utility NOC ladders/Estidama), project team panels, and a cross-project resource-allocation view
+- **Project Management module** (day 6, Batches 9–12 — built from a 209-agent verified research pass, then restructured twice the same evening on Sana's live review) — phase-split workspaces (design/supervision/study as separate engagements), My Work daily-driver home + approvals inbox, waterfall Gantt vs sprint boards per project, real task management (assignment/priority/checklists/% complete), weekly progress updates, management dashboard with RAG health and hours-vs-budget, person × week resource capacity planner, deliverables register with revision-tracked review workflows, design gates, WIR/MIR/NCR/site registers, FIDIC claims/EOT with 28-day-notice countdowns, 4.21 report checklists, Abu Dhabi-first authority tracking, risk register, meeting actions, IPC register, and the TOC → DLP → Performance Certificate handover chain
+- **Nine current-ERP screens absorbed in one evening** (day 6, Batches 13–15, from Sana's screenshots — information kept, design rethought, data linked): the DMR and CMR became composed *Project reviews* (discipline hours vs R0 with profitability P&L, construction facts + deployment + composed notes); the RFP form became a CRM *Proposals* register linked to companies and delivery projects; the CDM allocation plan became a Months rollup of the same weekly allocations; the attendance punch grid became a summarized *Period report*; the timesheet cost dashboard and Employee Efforts Review became *Timesheet insights* + a single workload index; the revenue report pages became one *Revenue reports* view; and the licensing tracker became an expiry radar that shipped already flagging the ADCD/CFPE 1-Sept-2026 hard gate
 - **Role-based views** — employees, HR, management, marketing, IT, admin staff, and PRO company each see different navigation and data
 - **Home dashboard** — module launcher, announcements, holidays tile, build-number card; day 3 added probation-ending-soon card
 

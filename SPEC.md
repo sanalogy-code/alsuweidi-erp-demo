@@ -312,6 +312,33 @@ full **Project Workspace** (see below).
    - **Supervision progress** — "Update" on the Supervision tab edits approved/actual % inline (clamped 0–100); behind-plan flag recalculates.
 5. **Resources** (`ResourcesView`, Batch 9) — portfolio-level person × project allocation: assignments derived from PM team panels + DPM/CPM links on active projects, load % illustrative (green <80%, amber 80–100%, red over-allocated). Standard pattern per Sana's decision — she corrects against real staffing practice on screen.
 
+### Project Management (Batches 9–15 — built in one day against Sana's live review of the current ERP)
+
+> **The authoritative quick description of Batches 10–15 lives in [STATUS.md](STATUS.md)** (each
+> batch has a dated entry). Summary of what changed after the §-below was written for Batch 9:
+> - **Phases (B10):** a PM record is now `phases: []` (design / supervision / study), each with own
+>   team, tasks, schedule, fees, weekly updates, and phase-appropriate registers; claims/reports/
+>   authorities stay project-level. `Study / Advisory` scope added (TIS/surveying; seed P-2725).
+> - **PM state lifted to `App.jsx`** (`pmRecords`, `allocations`) — edits survive navigation.
+> - **Projects page split (B11):** *Project Management* (My Work — default landing, Management
+>   dashboard with RAG health, Project reviews, Resources) vs *Database* (Portfolio, Record stats).
+>   Clicking a project opens its workspace; the record card is behind "Details".
+> - **Plan & tasks (B11):** per-project `method` — waterfall (Gantt timeline, late-in-red,
+>   milestone diamonds) or sprints (`pm.sprints`, board + backlog). Tasks carry
+>   start/due/effort/% complete/priority/checklist/comments.
+> - **Governance (B12):** `risks`, `meetings` (actions feed My Work), `ipcs`, `handover`
+>   (snags gate TOC → DLP → Performance Certificate) per project; person × week **resource
+>   planner** (`INITIAL_ALLOCATIONS`, 40h/wk capacity) with a Months utilization rollup (B14).
+> - **Project reviews (B13/14):** Design review (weekly, ex-DMR — `hoursByDiscipline` vs R0
+>   estimate, profitability A–G at blended AED 210/h, financial waterfall, notes composed from
+>   registers) + Construction review (monthly, ex-CMR — `phase.cmr` facts, deployment, photos).
+> - **Absorbed current-ERP screens elsewhere (B14/15):** CRM `Proposals (RFPs)` register
+>   (`data/rfpData.js`, linked to companies + delivery projects); HR Attendance **Period report**;
+>   HR **Timesheet insights** + Workload review; Finance **Revenue reports**; Admin
+>   **Registrations & licenses** expiry radar (CFPE/ADCD 1-Sept-2026 gate seeded).
+> - Standing design rule from Sana: **absorb the current ERP's information, never its design**,
+>   and link data across modules instead of standalone screens.
+
 ### Project Workspace (`pages/ProjectWorkspace.jsx` at `/projects/:id`, Batch 9, data in `data/pmData.js`)
 
 The full project-controls module from PM_RESEARCH.md — opened via the "Project workspace" button
