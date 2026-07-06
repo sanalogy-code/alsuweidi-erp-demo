@@ -22,6 +22,18 @@ of richer project fields + a real photo workflow, content calendar rework, CRM p
 downloads, branding overhaul, HR business card request, CRM Needs Follow-Up fix) and resolved
 six of the seven open decisions below.)
 
+## Shipped — Batch 13 (6 Jul 2026, night): DMR — Design Management Report
+
+- [x] ~~DMR equivalent~~ — **Shipped Batch 13 (6 Jul):** weekly Design Management Report view
+  under Project Management, modeled on the company's existing DMR screen (Sana shared a
+  screenshot): per-lead project rail with progress + HRS overrun flags, discipline hours vs R0
+  estimate with red overrun percentages, financial waterfall (fee/earned/invoiced/received),
+  profitability A–G block (salary cost from hours at an illustrative blended rate +
+  sub-consultant accruals → P&L and margin), structured notes 1–5 composed live from the
+  registers (weekly update / deliverables / permitting / risks+claims / fee stages & invoices).
+  Real per-person cost rates (contract salary ÷ 196) need the Phase 2 payroll link.
+  Demo: P-2688 runs 161% of estimated hours with margin squeezed to 8%.
+
 ## Shipped — Batch 12 (6 Jul 2026, night): resource planning + governance registers
 
 - [x] ~~Resource planning + nice-to-have tier~~ — **Shipped Batch 12 (6 Jul):** person × week

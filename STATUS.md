@@ -8,7 +8,10 @@ Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.
 
 **Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (Batch 12, 6 Jul 2026 night — resource planning + the research nice-to-have tier):**
+**Latest (Batch 13, 6 Jul 2026 night — the DMR):**
+- **DMR (weekly)** under Project Management — the equivalent of the company's existing Design Management Report screen: pick a design lead, walk their projects — **discipline hours vs R0 estimate** (red overrun %s, HRS flag on the rail), **financial waterfall** (fee → earned → invoiced → received), **profitability A–G** (salary cost from hours × blended rate + sub-consultant accruals from Financials → P&L + margin), and **structured notes 1–5** composed live from the registers (weekly update, deliverables in flight, permitting status, risks + claim deadlines, payment stages & invoices). Demo: P-2688 Crew Training runs **161% of estimated hours, margin 8%** — the real DMR's overrun story. Per-person cost rates need the Phase 2 payroll link.
+
+**Earlier (Batch 12, 6 Jul 2026 night — resource planning + the research nice-to-have tier):**
 - **Resource planner** (replaces the flat allocation list): person × week capacity heatmap over the next 6 weeks — planned hours per project vs 40h/week capacity, colour-coded (light/healthy/near-capacity/over-allocated), rows expand to per-project per-week editable inputs, "Allocate" form, logged timesheet hours shown alongside. State lifted to App.
 - **Risk register** per project: probability × impact scoring, owner, mitigation, open → mitigating → closed/realized (a realized risk points at its claim). Seeds on Harbour Point + Pump Station.
 - **Meetings & actions**: minutes log with action items (owner + due + done) — open actions land in the owner's **My Work** automatically.
