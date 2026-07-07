@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Plus, ChevronDown, ChevronUp, MessageSquare, Link2, CornerDownRight, Clock3, Lock } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, MessageSquare, Link2, CornerDownRight, Clock3, Lock, LayoutList, Table2 } from 'lucide-react'
+import TaskTable from './TaskTable'
 import {
   daysUntil, taskPriorityMeta, TASK_PRIORITIES, TASK_STATUSES,
   taskBlocked, subtasksOf, taskProgress,
@@ -13,8 +14,8 @@ import {
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
 
-export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, onLogHours, depth = 0 }) {
-  const [open, setOpen] = useState(false)
+export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, onLogHours, depth = 0, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen)
   const [comment, setComment] = useState('')
   const [newItem, setNewItem] = useState('')
   const [subTitle, setSubTitle] = useState('')
@@ -211,6 +212,9 @@ export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, on
 
 export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHours }) {
   const [showAdd, setShowAdd] = useState(false)
+  // Table is the default lens (Sana: "a CLEAR table with aligned columns");
+  // the grouped board stays one click away.
+  const [lens, setLens] = useState('table')
   const teamNames = phase.team.map((m) => m.name)
   const [form, setForm] = useState({ title: '', assignee: teamNames[0] || '', startDate: todayIso(), due: '', priority: 'normal' })
 
@@ -220,7 +224,7 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
       ...phase,
       tasks: [...phase.tasks, {
         id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1,
-        parentId: parent.id, title, assignee: parent.assignee,
+        parentId: parent.id, title, assignee: parent.assignee, createdBy: currentUserName || null,
         startDate: todayIso(), due: parent.due || null, effortHours: 0, pctComplete: 0,
         sprintId: parent.sprintId ?? null, priority: parent.priority, status: 'open',
         checklist: [], comments: [],
@@ -229,7 +233,7 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
   }
   const add = () => {
     if (!form.title.trim()) return
-    onUpdate({ ...phase, tasks: [...phase.tasks, { id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1, ...form, effortHours: 0, pctComplete: 0, sprintId: null, status: 'open', checklist: [], comments: [] }] })
+    onUpdate({ ...phase, tasks: [...phase.tasks, { id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1, ...form, createdBy: currentUserName || null, effortHours: 0, pctComplete: 0, sprintId: null, status: 'open', checklist: [], comments: [] }] })
     setForm({ title: '', assignee: teamNames[0] || '', startDate: todayIso(), due: '', priority: 'normal' }); setShowAdd(false)
   }
 
@@ -249,9 +253,15 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-sm font-semibold text-gray-700">{phase.label} tasks</h2>
-        <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Add task</button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-md border border-gray-200 overflow-hidden text-[11px]">
+            <button onClick={() => setLens('table')} className={`flex items-center gap-1 px-2 py-1 transition ${lens === 'table' ? 'bg-brand/10 text-brand font-semibold' : 'bg-white text-gray-500 hover:text-gray-700'}`}><Table2 size={12} /> Table</button>
+            <button onClick={() => setLens('board')} className={`flex items-center gap-1 px-2 py-1 border-l border-gray-200 transition ${lens === 'board' ? 'bg-brand/10 text-brand font-semibold' : 'bg-white text-gray-500 hover:text-gray-700'}`}><LayoutList size={12} /> Board</button>
+          </div>
+          <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Add task</button>
+        </div>
       </div>
 
       {showAdd && (
@@ -268,7 +278,15 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
         </div>
       )}
 
-      {groups.map((g) => (
+      {lens === 'table' ? (
+        <TaskTable
+          groups={[{
+            phaseKey: phase.key, phaseLabel: phase.label, tasks: phase.tasks,
+            patchTask, addSubtask, onLogHours, defaultAssigner: phase.team[0]?.name,
+          }]}
+          currentUserName={currentUserName}
+        />
+      ) : groups.map((g) => (
         <div key={g.key} className="space-y-2">
           <div className="flex items-center gap-2">
             <span className={`text-[11px] px-2 py-0.5 rounded-full ${g.chip}`}>{g.label}</span>

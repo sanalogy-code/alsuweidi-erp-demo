@@ -158,7 +158,7 @@ function SprintBoard({ pm, phase, onUpdatePhase, onUpdatePm, currentUserName, on
     ...phase,
     tasks: [...phase.tasks, {
       id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1,
-      parentId: parent.id, title, assignee: parent.assignee,
+      parentId: parent.id, title, assignee: parent.assignee, createdBy: currentUserName || null,
       startDate: new Date().toISOString().slice(0, 10), due: parent.due || null,
       effortHours: 0, pctComplete: 0, sprintId: parent.sprintId ?? null,
       priority: parent.priority, status: 'open', checklist: [], comments: [],
@@ -175,7 +175,7 @@ function SprintBoard({ pm, phase, onUpdatePhase, onUpdatePm, currentUserName, on
   }
   const addTask = () => {
     if (!taskTitle.trim()) return
-    onUpdatePhase({ ...phase, tasks: [...phase.tasks, { id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1, title: taskTitle.trim(), assignee: phase.team[0]?.name || '', startDate: null, due: sprint?.endDate || null, effortHours: 0, pctComplete: 0, sprintId, priority: 'normal', status: 'open', checklist: [], comments: [] }] })
+    onUpdatePhase({ ...phase, tasks: [...phase.tasks, { id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1, title: taskTitle.trim(), assignee: phase.team[0]?.name || '', createdBy: currentUserName || null, startDate: null, due: sprint?.endDate || null, effortHours: 0, pctComplete: 0, sprintId, priority: 'normal', status: 'open', checklist: [], comments: [] }] })
     setTaskTitle('')
   }
 

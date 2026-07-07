@@ -32,12 +32,29 @@ export function RisksView({ pm, onUpdate }) {
   }
   const score = (r) => riskLevelMeta(r.probability).score * riskLevelMeta(r.impact).score
 
+  // "What's going on, what's bad" at a glance before the register itself.
+  const live = risks.filter((r) => r.status === 'open' || r.status === 'mitigating')
+  const severe = live.filter((r) => score(r) >= 6)
+  const realized = risks.filter((r) => r.status === 'realized')
+  const worst = [...live].sort((a, b) => score(b) - score(a))[0]
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-700">Risk register</h2>
         <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Log risk</button>
       </div>
+
+      {risks.length > 0 && (
+        <div className={`rounded-lg border px-4 py-3 ${severe.length ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
+            <span className="text-gray-600"><span className="font-semibold text-gray-800">{live.length}</span> live</span>
+            <span className={severe.length ? 'text-red-700 font-semibold' : 'text-gray-500'}>{severe.length} high/critical</span>
+            {realized.length > 0 && <span className="text-purple-700 font-semibold">{realized.length} realized</span>}
+          </div>
+          {worst && <p className="text-xs text-gray-600 mt-1"><span className="text-gray-400">Biggest live risk:</span> {worst.description} <span className="text-gray-400">({worst.owner || 'no owner'})</span></p>}
+        </div>
+      )}
 
       {showAdd && (
         <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-2 text-xs">
@@ -91,14 +108,15 @@ export function RisksView({ pm, onUpdate }) {
 export function MeetingsView({ pm, onUpdate }) {
   const meetings = pm.meetings || []
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ title: '', date: todayISO(), attendees: '' })
+  const [form, setForm] = useState({ title: '', date: todayISO(), attendees: '', notes: '' })
   const [actionDrafts, setActionDrafts] = useState({})
+  const [editingNotes, setEditingNotes] = useState(null) // meeting id whose notes are being edited
 
   const patchMeeting = (id, changes) => onUpdate({ ...pm, meetings: meetings.map((m) => (m.id === id ? { ...m, ...changes } : m)) })
   const add = () => {
     if (!form.title.trim()) return
     onUpdate({ ...pm, meetings: [{ id: Math.max(0, ...meetings.map((m) => m.id)) + 1, ref: `MTG-${String(meetings.length + 1).padStart(2, '0')}`, ...form, actions: [] }, ...meetings] })
-    setForm({ title: '', date: todayISO(), attendees: '' }); setShowAdd(false)
+    setForm({ title: '', date: todayISO(), attendees: '', notes: '' }); setShowAdd(false)
   }
   const addAction = (m) => {
     const d = actionDrafts[m.id] || {}
@@ -124,6 +142,7 @@ export function MeetingsView({ pm, onUpdate }) {
           <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Meeting title" className="flex-1 min-w-[200px] border rounded-md px-2 py-1.5" />
           <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border rounded-md px-2 py-1.5" />
           <input value={form.attendees} onChange={(e) => setForm({ ...form, attendees: e.target.value })} placeholder="Attendees" className="flex-1 min-w-[160px] border rounded-md px-2 py-1.5" />
+          <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} placeholder="What was discussed — decisions, points raised, anything worth remembering (actions can be added after logging)…" className="w-full border rounded-md px-2 py-1.5" />
           <button onClick={add} className="px-2.5 py-1.5 rounded-md bg-brand text-white">Log</button>
         </div>
       )}
@@ -137,6 +156,23 @@ export function MeetingsView({ pm, onUpdate }) {
             <span className="text-xs text-gray-400">{m.date}</span>
           </div>
           {m.attendees && <div className="text-xs text-gray-500">Attendees: {m.attendees}</div>}
+          {editingNotes === m.id ? (
+            <div className="space-y-1.5">
+              <textarea autoFocus defaultValue={m.notes || ''} rows={3} id={`mtg-notes-${m.id}`} placeholder="What was discussed…" className="w-full border rounded-md px-2 py-1.5 text-xs" />
+              <div className="flex gap-2">
+                <button onClick={() => { patchMeeting(m.id, { notes: document.getElementById(`mtg-notes-${m.id}`).value.trim() }); setEditingNotes(null) }} className="px-2 py-0.5 text-[11px] rounded-md bg-brand text-white">Save</button>
+                <button onClick={() => setEditingNotes(null)} className="px-2 py-0.5 text-[11px] rounded-md border text-gray-500">Cancel</button>
+              </div>
+            </div>
+          ) : m.notes ? (
+            <div className="bg-gray-50 border border-gray-100 rounded-md px-3 py-2">
+              <div className="text-[10px] font-semibold text-gray-400 uppercase mb-0.5">Discussed</div>
+              <p className="text-xs text-gray-700 whitespace-pre-wrap">{m.notes}</p>
+              <button onClick={() => setEditingNotes(m.id)} className="text-[11px] text-brand hover:underline mt-1">Edit notes</button>
+            </div>
+          ) : (
+            <button onClick={() => setEditingNotes(m.id)} className="text-[11px] text-brand hover:underline">+ Add discussion notes</button>
+          )}
           <div className="space-y-1">
             {m.actions.map((a) => {
               const d = a.due ? daysUntil(a.due) : null

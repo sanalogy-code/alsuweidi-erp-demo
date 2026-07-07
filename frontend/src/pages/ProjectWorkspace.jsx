@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import PmOverview from '../components/projects/pm/PmOverview'
+import AllTasksView from '../components/projects/pm/AllTasksView'
 import DeliverablesView from '../components/projects/pm/DeliverablesView'
 import DesignStagesView from '../components/projects/pm/DesignStagesView'
 import SiteView from '../components/projects/pm/SiteView'
@@ -152,6 +153,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
           <aside className="w-full sm:w-52 shrink-0 sm:sticky sm:top-6 space-y-3">
             <div className="flex sm:flex-col flex-wrap gap-1">
               {navBtn({ key: 'overview', label: 'Overview', icon: LayoutDashboard })}
+              {navBtn({ key: 'alltasks', label: 'All tasks', icon: ListTodo, badge: pm.phases.reduce((s, ph) => s + ph.tasks.filter((t) => t.status !== 'done').length, 0) })}
             </div>
 
             {pm.phases.map((ph) => {
@@ -179,6 +181,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
           </aside>
 
           <main className="flex-1 min-w-0 w-full">
+            {sel.view === 'alltasks' && !sel.phase && <AllTasksView pm={pm} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} onLogHours={onLogTaskHours ? (assignee, hours, date) => onLogTaskHours(assignee, project.id, hours, date) : null} />}
             {sel.view === 'overview' && !sel.phase && <PmOverview pm={pm} project={project} invoices={INVOICES} onJump={jump} canViewSensitive={canViewSensitive} />}
 
             {activePhase && (<>

@@ -404,6 +404,7 @@ export const PM_RECORDS = {
     ],
     meetings: [
       { id: 1, ref: 'PM-59', date: '2026-07-02', title: 'Weekly progress meeting #59', attendees: 'Samir, George, EBC (contractor), client rep',
+        notes: 'Contractor reported 62% overall vs 66% planned — main slippage on L2 MEP first fix. Labour histogram down ~15% on plan; recovery plan requested (action below). Client rep confirmed radiology vendor drawings still with PMO. Terrazzo delivery accepted subject to protection method statement. Next meeting to review the recovery plan line by line.',
         actions: [
           { id: 1, text: 'Contractor to submit labour histogram recovery plan', owner: 'EBC (contractor)', due: '2026-07-09', status: 'open' },
           { id: 2, text: 'Chase radiology vendor drawings via client PMO', owner: 'Samir Al Mazrouei', due: '2026-07-08', status: 'open' },

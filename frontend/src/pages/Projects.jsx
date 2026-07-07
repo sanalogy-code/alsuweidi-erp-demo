@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge, FileBarChart } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge, FileBarChart, ShieldAlert } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
@@ -11,6 +11,7 @@ import MyWorkView from '../components/projects/pm/MyWorkView'
 import PmDashboard from '../components/projects/pm/PmDashboard'
 import DmrView from '../components/projects/pm/DmrView'
 import CmrView from '../components/projects/pm/CmrView'
+import RiskReportView from '../components/projects/pm/RiskReportView'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { EMPLOYEES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
@@ -23,6 +24,7 @@ const NAV_GROUPS = [
     { key: 'mywork', label: 'My Work', icon: Inbox },
     { key: 'pmdash', label: 'Management', icon: Gauge },
     { key: 'reviews', label: 'Project reviews', icon: FileBarChart },
+    { key: 'risks', label: 'Risk report', icon: ShieldAlert },
     { key: 'resources', label: 'Resources', icon: UsersRound },
   ] },
   { label: 'Database', items: [
@@ -106,6 +108,9 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
                 ? <DmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
                 : <CmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} />}
             </div>
+          )}
+          {view === 'risks' && (
+            <RiskReportView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'dashboard' && (
             <ProjectsDashboard projects={projects} pmRecords={pmRecords} canViewSensitive={canViewSensitive} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />
