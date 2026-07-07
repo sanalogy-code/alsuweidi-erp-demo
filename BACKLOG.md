@@ -4,7 +4,10 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-05 (Batch 8 shipped — Admin Center module: users, roles & permissions
+**Last updated:** 2026-07-07 evening (Batches 17a–b shipped — Sana's PM visibility pass: task
+table + All tasks + real kanban board, portfolio risk report, meeting notes, Gantt month scale,
+methodology-at-setup, dashboard costs, Samir/management default login. **PM is parked per Sana**
+— next: attendance punch drill-down, filters sweep, then THE EVERYTHING LIST. Earlier: Batch 8 shipped — Admin Center module: users, roles & permissions
 matrix, activity log. See "Shipped — Batch 8" below. Earlier: Batch 7 shipped — Financials &
 Accounting module first pass +
 Developer Dashboard work log. See "Shipped — Batch 7" below. Earlier: Batch 6 shipped — 19 items, nearly the whole "Next batch": CRM
@@ -102,7 +105,31 @@ LicensesView owns its own state → additions lost on tab switch. Cleanup batch:
 delete dead ResourcesView.jsx + allPmEntries, planner fragment key warning, NewProjectModal
 missing studyType for Study/Advisory, memoize myWorkFor/dashboard/revenue rollups.
 
-## Batch 16 — NEXT (Sana's feedback, 6 Jul 2026 late night — agreed, not yet built)
+## Shipped — Batches 17a–b (7 Jul 2026, evening): Sana's PM visibility pass — PM parked after this
+
+- [x] ~~Task visibility~~ — **Shipped 17a:** sortable aligned-column task TABLE (default lens on
+  every Plan & tasks; assigned-to / assigned-by / due / status / priority columns, rows expand to
+  the full card; `createdBy` recorded on new tasks) + project-level **All tasks** view (all phases,
+  one table, search + filters).
+- [x] ~~Risk report~~ — **Shipped 17a:** portfolio Risk report under Project Management (severity
+  = P×I, worst project first, live/high-critical/realized/overdue-review cards) + a summary strip
+  on each project's register.
+- [x] ~~Meeting discussion notes~~ — **Shipped 17a:** free-text "what was discussed" on log +
+  editable afterwards.
+- [x] ~~Board is not a board~~ — **Shipped 17b:** real side-by-side To do / In progress / Done
+  columns with compact cards (task board + sprint boards).
+- [x] ~~Gantt relative dates~~ — **Shipped 17b:** month labels + gridlines; domain focused on the
+  working window (achieved-long-ago milestones excluded from the scale).
+- [x] ~~Waterfall vs sprints "choose at the beginning"~~ — **Shipped 17b:** methodology picked on
+  the New-project form, fixed chip in the workspace, change behind a confirm.
+- [x] ~~Management dashboard costs~~ — **Shipped 17b:** Labour-cost stat card + per-project
+  Cost (est.) and Invoiced/fee (%) columns, sensitive roles only.
+- [x] ~~Default demo login~~ — **Shipped 17b:** Samir Al Mazrouei / Management (sees every module
+  + has real employee data; 28-Jun timesheet seeded submitted so no lockout mid-demo).
+- Follow-up ideas logged, not agreed: same table treatment for My Work and meeting action items;
+  per-person cost rates still Phase 2 (payroll link).
+
+## Batch 16 — remaining (Sana's feedback, 6 Jul 2026 late night — PM parked, these wait)
 
 - [x] ~~Construction feedback register~~ — **Shipped Batch 16b (7 Jul):** "Site feedback"
   section on supervision projects — issue type / issue-in / impact / description / reason /

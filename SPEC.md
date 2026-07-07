@@ -348,6 +348,20 @@ full **Project Workspace** (see below).
 >   7 Jul morning: Office Administration module (`/office`, adminstaff workspace:
 >   correspondence register with auto IN/OUT refs, registrations & licenses moved there),
 >   per-user SPECIAL ACCESS overrides in Admin Users (module + view/full + expiry).
+> - **Batches 17a–b (7 Jul, Sana's visibility pass — "I need to SEE tasks"):** tasks render as a
+>   sortable aligned-column **TaskTable** (`TaskTable.jsx`, shaded container; sort by
+>   date/priority/status/assignee/assigned-by; rows expand to the full editing card) — the default
+>   lens on each phase's Plan & tasks, with a real side-by-side kanban **Board** (compact cards)
+>   one click away; project-level **All tasks** view (`AllTasksView.jsx`) aggregates every phase
+>   with search + filters. Tasks record `createdBy` at creation (display falls back to the phase
+>   lead). Portfolio **Risk report** (`RiskReportView.jsx`, Projects nav) — severity = P×I,
+>   projects sorted worst-first, plus a what's-bad strip atop each project register. Meetings
+>   carry free-text `notes` ("what was discussed"). **Gantt** gained a month scale (labels +
+>   gridlines, domain = tasks + unachieved milestones only). **`pm.method` is now a setup-time
+>   choice** (picker on NewProjectModal → `project.method` → `emptyPmRecord`; PlanView shows a
+>   fixed chip, change behind a confirm). **Management dashboard** adds Labour-cost stat +
+>   per-project Cost (hours × AED 210) and Invoiced/fee columns (sensitive roles only). Default
+>   demo login = Samir Al Mazrouei / management (his 28-Jun week seeded submitted → no lockout).
 > - **7 Jul code review (medium) over the Batches 9–15 diff: 8 confirmed findings, ALL FIXED
 >   the same night** — see
 >   BACKLOG.md "Code review findings" for the ranked list (top items: PmOverview leaks fee data
@@ -369,7 +383,7 @@ due). Registers live in page state seeded per project from `PM_RECORDS`; edits l
 3. **Design stages** (`DesignStagesView`) — 30-60-90-final gate list with pass-gate action (opens the next gate); design-scope projects only.
 4. **Site** (`SiteView`) — five tabs: **WIRs** (RE → trade-engineer decisions, resubmit keeps the same reference with rev history), **MIRs** (approve/reject), **NCRs** (propose corrective action → approve CA → verify & close — closure blocked without an approved CA), **Site instructions** (issue with cost/time-impact flags, mark actioned), **Daily reports** (read-only log).
 5. **Schedule** (`ScheduleView`) — planned-vs-actual S-curve (SVG) with SPI chip, milestone bars baseline-vs-forecast/actual with slip flags. Full CPM deliberately out of scope.
-6. **Tasks** (`PmTasksView`) — per-project task list, assignee datalist from the team panel, overdue flags.
+6. **Tasks** (`PmTasksView` + `TaskTable`/`AllTasksView`, Batch 17) — table lens by default (aligned sortable columns: task, status, priority, assigned to, assigned by, due; rows expand to the full card), kanban board lens (To do / In progress / Done columns, compact cards), subtasks/dependencies/log-hours on the card; sidebar-level **All tasks** shows every phase's tasks in one filterable table.
 7. **Fees & cost** (`FeesView`, `SENSITIVE_VIEW_ROLES` only) — fee by stage with editable % complete + EAC, earned vs invoiced, manhour budget vs live timesheet actuals (entries coded to the project), variations register, and the project's invoices joined from Financials.
 8. **Claims & EOT** (`ClaimsView`) — the FIDIC register: per-claim deadline countdowns, status chain actions ("Mark notice served today" → detailed claim → engineer response → determined), contemporary-records log with formal/informal/correspondence typing, log-event form (starts the notice clock from the awareness date), per-project FIDIC edition selector.
 9. **Progress reports** (`ReportsView`) — monthly FIDIC 4.21 checklist; submission blocked until all required contents are checked; 7-days-after-month-end due tracking.

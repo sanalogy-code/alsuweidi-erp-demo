@@ -2,18 +2,18 @@
 
 The "how long did this actually take" log — numbers pulled from git history, for sharing with management. Refreshed on each docs sync.
 
-**As of:** 7 July 2026, afternoon
+**As of:** 7 July 2026, evening
 
 ## The headline
 
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Latest (7 Jul: Batches 16a–c — full task management, task-hours→timesheet, site feedback, pipeline staffing→HR)** | 7 July 2026, afternoon |
+| **Latest (7 Jul: Batches 17a–b — task table + kanban board, portfolio risk report, Gantt month scale, dashboard costs)** | 7 July 2026, evening |
 | **Elapsed time** | ~7 working days |
-| **Commits** | 143 |
-| **Deploys to the live site** | every push auto-deploys — ~136 |
-| **App code** | ~22,669 lines across 96 components + 12 pages |
+| **Commits** | 146 |
+| **Deploys to the live site** | every push auto-deploys — ~139 |
+| **App code** | ~23,191 lines across 99 components + 12 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 4 days
