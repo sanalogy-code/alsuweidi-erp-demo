@@ -2,18 +2,18 @@
 
 The "how long did this actually take" log — numbers pulled from git history, for sharing with management. Refreshed on each docs sync.
 
-**As of:** 6 July 2026, late night
+**As of:** 7 July 2026, afternoon
 
 ## The headline
 
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Latest (6 Jul: Batches 9–15 — PM module built + 9 current-ERP screens absorbed, all in one day)** | 6 July 2026, late night |
-| **Elapsed time** | ~140 hours, across **6 working days** |
-| **Commits** | 131 |
-| **Deploys to the live site** | every push auto-deploys — ~124 |
-| **App code** | ~21,355 lines across 94 components + 11 pages |
+| **Latest (7 Jul: Batches 16a–c — full task management, task-hours→timesheet, site feedback, pipeline staffing→HR)** | 7 July 2026, afternoon |
+| **Elapsed time** | ~7 working days |
+| **Commits** | 143 |
+| **Deploys to the live site** | every push auto-deploys — ~136 |
+| **App code** | ~22,669 lines across 96 components + 12 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 4 days

@@ -119,12 +119,13 @@ missing studyType for Study/Advisory, memoize myWorkFor/dashboard/revenue rollup
   submitted/approved weeks are locked; external staff get a friendly no-timesheet note), posts
   an automatic progress note, and flows to the PM dashboards/DMR via live timesheet state.
   Verified end-to-end: 4h logged on a P-2688 task appeared in Kubba's HR timesheet.
-- [ ] **Staffing requests from the pipeline → HR Staff planning** (corrected by Sana 7 Jul: the
-  resource planner stays for hired employees ONLY — no allocating to RFPs). Instead: from a
-  pipeline deal/RFP, a PM or manager raises an expected staffing need (role, headcount,
-  needed-by date, contingent on award) that lands in HR's existing **Staff planning** tab as an
-  intake queue; on award it converts to a real hiring plan line. Today Staff planning has no
-  pipeline-side intake — HR types entries by hand.
+- [x] ~~Staffing requests from the pipeline → HR Staff planning~~ — **Shipped Batch 16c (7 Jul):**
+  "Request staffing" on any live RFP (role × count, needed-by, note — contingent on award) lands
+  in an amber **Pipeline intake** queue at the top of HR Staff planning; HR accepts into the
+  hiring plan (ref auto-set to "Pipeline: <RFP>", note marked contingent) or declines; handled
+  requests collapse into a history. Verified both ends. Per Sana's correction: the resource
+  planner remains hired-employees-only. Phase 2: on award, auto-flip contingent plan lines to
+  the real project ref + notify the requester.
 - [ ] **Attendance punch drill-down** — the Period report hid too much: expandable per-person
   per-day rows with In / Break / Resume / Out / Total (the punch columns from the screenshot),
   summary stays the default lens.

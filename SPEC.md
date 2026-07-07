@@ -338,7 +338,18 @@ full **Project Workspace** (see below).
 >   **Registrations & licenses** expiry radar (CFPE/ADCD 1-Sept-2026 gate seeded).
 > - Standing design rule from Sana: **absorb the current ERP's information, never its design**,
 >   and link data across modules instead of standalone screens.
-> - **7 Jul code review (medium) over the Batches 9–15 diff: 8 confirmed findings** — see
+> - **Batches 16a–c (7 Jul):** tasks gained `parentId` subtasks (nested rendering, parent %
+>   roll-up), `dependsOn` dependencies (blocked chips/locks, amber Gantt bars), milestone
+>   add/edit/achieve on the Plan view, and **Log hours → timesheet** (App.logTaskHours writes
+>   into the assignee's weekly timesheet, draft/new weeks only). `pm.constructionFeedback` =
+>   the Site feedback register (issue type/impact/reason/improvement, open → with_design →
+>   completed, push-to-Lessons). `rfpData.INITIAL_STAFFING_REQUESTS` + App state = pipeline
+>   staffing requests (raised on RFPs, accepted/declined in HR Staff planning's intake).
+>   7 Jul morning: Office Administration module (`/office`, adminstaff workspace:
+>   correspondence register with auto IN/OUT refs, registrations & licenses moved there),
+>   per-user SPECIAL ACCESS overrides in Admin Users (module + view/full + expiry).
+> - **7 Jul code review (medium) over the Batches 9–15 diff: 8 confirmed findings, ALL FIXED
+>   the same night** — see
 >   BACKLOG.md "Code review findings" for the ranked list (top items: PmOverview leaks fee data
 >   to ungated roles; its "Fee invoiced" card jumps to a view that doesn't render; the PM module
 >   reads the static TIMESHEETS seed instead of App's lifted state). Fix before building Batch 16
