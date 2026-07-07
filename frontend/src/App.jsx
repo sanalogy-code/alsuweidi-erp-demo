@@ -14,8 +14,9 @@ import Admin from './pages/Admin'
 import Office from './pages/Office'
 import TimesheetGate from './components/TimesheetGate'
 import FeedbackButton, { INITIAL_FEEDBACK } from './components/SystemFeedback'
-import { PUBLIC_HOLIDAYS } from './data/hrData'
-import { TIMESHEETS } from './data/timesheetData'
+import { PUBLIC_HOLIDAYS, EMPLOYEES } from './data/hrData'
+import { TIMESHEETS, weekStartOf, toLocalISO } from './data/timesheetData'
+import { parseLocalDate } from './utils/date'
 import { PROJECTS } from './data/projectsData'
 import { getPmRecord, emptyPmRecord, INITIAL_ALLOCATIONS } from './data/pmData'
 import { INITIAL_DEALS } from './data/crmData'
@@ -40,6 +41,40 @@ export default function App() {
   // floating button, triaged in the Admin Center.
   const [systemFeedback, setSystemFeedback] = useState(INITIAL_FEEDBACK)
   const addFeedback = (f) => setSystemFeedback((prev) => [{ ...f, id: Math.max(0, ...prev.map((x) => x.id)) + 1 }, ...prev])
+
+  // Task-hours → timesheet (Batch 16): logging hours on a project task writes
+  // them into the assignee's weekly timesheet under that project's code, so the
+  // timesheet becomes a by-product of task work instead of a Thursday chore.
+  // Only draft/rejected/new weeks accept hours — submitted/approved weeks are
+  // locked (the approval already happened).
+  const logTaskHours = (assigneeName, projectId, hours, dateISO) => {
+    const emp = EMPLOYEES.find((e) => e.name.toLowerCase() === (assigneeName || '').toLowerCase())
+    if (!emp) return { ok: false, reason: 'external' }
+    const date = parseLocalDate(dateISO)
+    const weekStart = toLocalISO(weekStartOf(date))
+    const dayIdx = date.getDay()
+    const existing = timesheets.find((t) => t.employeeId === emp.id && t.weekStart === weekStart)
+    if (existing && existing.status !== 'draft' && existing.status !== 'rejected') {
+      return { ok: false, reason: existing.status }
+    }
+    setTimesheets((prev) => {
+      const ts = prev.find((t) => t.employeeId === emp.id && t.weekStart === weekStart)
+      if (!ts) {
+        return [...prev, {
+          id: Math.max(0, ...prev.map((t) => t.id)) + 1,
+          employeeId: emp.id, employeeName: emp.name, weekStart,
+          entries: [{ code: projectId, hours: Array.from({ length: 7 }, (_, i) => (i === dayIdx ? hours : 0)) }],
+          status: 'draft', submittedDate: null, approvedBy: null, approvedDate: null, rejectReason: null,
+        }]
+      }
+      const hasEntry = ts.entries.some((e) => e.code === projectId)
+      const entries = hasEntry
+        ? ts.entries.map((e) => (e.code === projectId ? { ...e, hours: e.hours.map((h, i) => (i === dayIdx ? (Number(h) || 0) + hours : h)) } : e))
+        : [...ts.entries, { code: projectId, hours: Array.from({ length: 7 }, (_, i) => (i === dayIdx ? hours : 0)) }]
+      return prev.map((t) => (t.id === ts.id ? { ...t, entries, status: 'draft' } : t))
+    })
+    return { ok: true, weekStart }
+  }
   // Lifted so deal ids never reset and get reused across CRM remounts — a reused id
   // would make the won-deal card link to another session's project via dealId
   const [deals, setDeals] = useState(INITIAL_DEALS)
@@ -133,7 +168,7 @@ export default function App() {
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
       <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} onUpdateAllocations={setAllocations} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
-      <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} />} />
+      <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} onLogTaskHours={logTaskHours} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} />} />
       <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />
       <Route path="/finance" element={<Finance user={user} onLogout={handleLogout} />} />

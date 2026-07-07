@@ -34,7 +34,7 @@ import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 // Contract administration (claims, monthly reports, authorities) is project-level.
 // PM state lives in App.jsx so edits survive navigation and feed "My Work".
 
-export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, timesheets = [], onUpdatePm, onUpdateProject, onAddMarketingTask }) {
+export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, timesheets = [], onLogTaskHours, onUpdatePm, onUpdateProject, onAddMarketingTask }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -181,7 +181,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
             {sel.view === 'overview' && !sel.phase && <PmOverview pm={pm} project={project} invoices={INVOICES} onJump={jump} canViewSensitive={canViewSensitive} />}
 
             {activePhase && (<>
-              {sel.view === 'tasks' && <PlanView pm={pm} phase={activePhase} onUpdatePhase={(next) => updatePhase(activePhase.key, next)} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} />}
+              {sel.view === 'tasks' && <PlanView pm={pm} phase={activePhase} onUpdatePhase={(next) => updatePhase(activePhase.key, next)} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} onLogHours={onLogTaskHours ? (assignee, hours, date) => onLogTaskHours(assignee, project.id, hours, date) : null} />}
               {sel.view === 'updates' && <WeeklyUpdatesView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
               {sel.view === 'deliverables' && activePhase.deliverables && <DeliverablesView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
               {sel.view === 'design' && activePhase.designStages && <DesignStagesView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}

@@ -111,6 +111,20 @@ export const TASK_STATUSES = [
 ]
 export const taskStatusMeta = (k) => TASK_STATUSES.find((s) => s.key === k) || TASK_STATUSES[0]
 
+// Batch 16: real task management. `parentId` nests subtasks under a parent;
+// `dependsOn` (task ids) blocks a task until its predecessors are done.
+export const taskBlocked = (task, tasks) =>
+  (task.dependsOn || []).some((id) => tasks.find((t) => t.id === id)?.status !== 'done')
+
+export const subtasksOf = (task, tasks) => tasks.filter((t) => t.parentId === task.id)
+
+// Parent progress rolls up from subtasks when it has them.
+export const taskProgress = (task, tasks) => {
+  const subs = subtasksOf(task, tasks)
+  if (!subs.length) return task.status === 'done' ? 100 : (task.pctComplete || 0)
+  return Math.round(subs.reduce((s, t) => s + (t.status === 'done' ? 100 : t.pctComplete || 0), 0) / subs.length)
+}
+
 // --- Authority workflows ----------------------------------------------------------
 export const AUTHORITY_STAGE_STATUSES = [
   { key: 'not_started', label: 'Not started', chip: 'bg-gray-100 text-gray-500' },
@@ -919,13 +933,13 @@ export const PM_RECORDS = {
         },
         tasks: [
           { id: 1, title: 'Revise simulator hall drawings per vendor pit dims', assignee: 'Mohammad Kubba', startDate: '2026-06-29', due: '2026-07-15', effortHours: 40, pctComplete: 15, sprintId: 2, priority: 'high', status: 'open',
-            checklist: [
-              { id: 1, text: 'Receive vendor pit dimensions', done: false },
-              { id: 2, text: 'Update plans & sections', done: false },
-              { id: 3, text: 'Coordinate structural pit rebate', done: false },
-            ], comments: [] },
+            checklist: [], comments: [] },
+          // Subtasks of task 1 — real children with their own assignee/dates/status.
+          { id: 6, parentId: 1, title: 'Receive vendor pit dimensions', assignee: 'Mohammad Kubba', startDate: '2026-06-29', due: '2026-07-08', effortHours: 2, pctComplete: 0, sprintId: 2, priority: 'high', status: 'open', checklist: [], comments: [] },
+          { id: 7, parentId: 1, title: 'Update plans & sections + structural pit rebate', assignee: 'Naseeb Shaheen', startDate: '2026-07-08', due: '2026-07-14', effortHours: 30, pctComplete: 0, sprintId: 2, priority: 'high', status: 'open', dependsOn: [6], checklist: [], comments: [] },
           { id: 2, title: 'Acoustic report internal QA', assignee: 'Naseeb Shaheen', startDate: '2026-07-03', due: '2026-07-10', effortHours: 12, pctComplete: 60, sprintId: 2, priority: 'normal', status: 'in_progress', checklist: [], comments: [] },
-          { id: 3, title: 'Coordinated MEP set for the 90% gate', assignee: 'Mohammad Kubba', startDate: '2026-07-01', due: '2026-07-11', effortHours: 30, pctComplete: 45, sprintId: 2, priority: 'high', status: 'in_progress', checklist: [], comments: [] },
+          // Blocked until the simulator hall revision (task 1) is done.
+          { id: 3, title: 'Coordinated MEP set for the 90% gate', assignee: 'Mohammad Kubba', startDate: '2026-07-01', due: '2026-07-11', effortHours: 30, pctComplete: 45, sprintId: 2, priority: 'high', status: 'in_progress', dependsOn: [1], checklist: [], comments: [] },
           { id: 4, title: 'Book 90% gate review — all disciplines + client', assignee: 'Mohammad Kubba', startDate: null, due: null, effortHours: 2, pctComplete: 0, sprintId: null, priority: 'normal', status: 'open', checklist: [], comments: [] },
           { id: 5, title: 'Parking deck GA issued to client', assignee: 'Naseeb Shaheen', startDate: '2026-06-22', due: '2026-06-30', effortHours: 20, pctComplete: 100, sprintId: 1, priority: 'normal', status: 'done', checklist: [], comments: [] },
         ],
