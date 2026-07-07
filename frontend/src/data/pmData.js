@@ -192,6 +192,26 @@ export const TEAM_ROLES = [
   'Inspector', 'Document Controller',
 ]
 
+// --- Construction feedback register (Batch 16b, from the current ERP's
+// "Feedback Required" screen): issues construction raises back to design —
+// the loop that turns site pain into better drawings next time. ---------------------
+export const FEEDBACK_ISSUE_TYPES = [
+  { key: 'discrepancy', label: 'Discrepancy', chip: 'bg-blue-100 text-blue-700' },
+  { key: 'missing', label: 'Missing information', chip: 'bg-amber-100 text-amber-700' },
+  { key: 'incorrect', label: 'Incorrect information', chip: 'bg-red-100 text-red-700' },
+  { key: 'other', label: 'Other', chip: 'bg-gray-100 text-gray-600' },
+]
+export const feedbackTypeMeta = (k) => FEEDBACK_ISSUE_TYPES.find((t) => t.key === k) || FEEDBACK_ISSUE_TYPES[3]
+
+export const FEEDBACK_IMPACTS = ['Quality', 'Cost', 'Time', 'Safety', 'Coordination']
+
+export const CONSTRUCTION_FEEDBACK_STATUSES = [
+  { key: 'open', label: 'Open', chip: 'bg-amber-100 text-amber-700' },
+  { key: 'with_design', label: 'With design section', chip: 'bg-blue-100 text-blue-700' },
+  { key: 'completed', label: 'Completed', chip: 'bg-green-100 text-green-700' },
+]
+export const cfStatusMeta = (k) => CONSTRUCTION_FEEDBACK_STATUSES.find((s) => s.key === k) || CONSTRUCTION_FEEDBACK_STATUSES[0]
+
 // --- Risk register (Batch 12) -------------------------------------------------------
 export const RISK_LEVELS = [
   { key: 'low', label: 'Low', score: 1, chip: 'bg-green-100 text-green-700' },
@@ -305,6 +325,7 @@ export const emptyPmRecord = (project) => ({
   phases: (project ? phaseKeysFor(project) : []).map((k) => emptyPhase(k)),
   claims: [], reports: [], authorities: [],
   risks: [], meetings: [], ipcs: [], handover: null,
+  constructionFeedback: [],
 })
 
 // --- Progress / lateness rollups (Batch 11: management dashboard) ------------------
@@ -394,6 +415,10 @@ export const PM_RECORDS = {
       { id: 2, ref: 'IPC-15', period: '2026-06', amountClaimed: 9100000, amountCertified: null, status: 'under_review', note: 'Verification against approved WIRs in progress — WIR-0139 batch included.' },
     ],
     handover: null,
+    constructionFeedback: [
+      { id: 1, type: 'missing', issueIn: 'Approved materials / manufacturers list', impact: 'Quality', description: 'Sanitary-ware manufacturers not defined by name in the spec (same gap as kitchen cabinets on previous projects) — contractor proposed three brands and the RE had no basis to reject.', reason: 'Improper data collection at spec stage', improvement: 'Design section to name approved manufacturers in Division 10/22 specs, not "or equal" only.', reportedBy: 'George Matta (site)', date: '2026-06-20', status: 'with_design' },
+      { id: 2, type: 'discrepancy', issueIn: 'ARC vs MEP drawings — L2 corridor', impact: 'Coordination', description: 'Ceiling heights on HPM-ARC-DWG-061 conflict with duct sizes on the MEP set; discovered at blockwork stage.', reason: 'Clash check skipped the corridor zones at 90% gate', improvement: 'Add corridor/riser zones explicitly to the 90% clash-review checklist.', reportedBy: 'Ramesh Pillai (site)', date: '2026-07-02', status: 'open' },
+    ],
     claims: [
       { id: 1, ref: 'CLM-01', title: 'EOT — late free issue of medical equipment vendor drawings', party: 'Contractor', eventDate: '2026-05-28', awarenessDate: '2026-06-02', noticeDate: '2026-06-18', status: 'notice_served', timeImpactDays: 21, costImpact: 450000,
         records: [

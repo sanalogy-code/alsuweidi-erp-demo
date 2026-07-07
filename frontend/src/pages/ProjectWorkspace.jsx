@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, Layers, HardHat, CalendarRange, ListTodo,
   Banknote, Scale, ClipboardList, Landmark, Users, ArrowLeft, CalendarCheck2, Info,
-  ShieldAlert, MessagesSquare, Receipt, PackageCheck,
+  ShieldAlert, MessagesSquare, Receipt, PackageCheck, MessageSquareQuote,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import PmOverview from '../components/projects/pm/PmOverview'
@@ -18,7 +18,7 @@ import ClaimsView from '../components/projects/pm/ClaimsView'
 import ReportsView from '../components/projects/pm/ReportsView'
 import AuthoritiesView from '../components/projects/pm/AuthoritiesView'
 import TeamView from '../components/projects/pm/TeamView'
-import { RisksView, MeetingsView, PaymentsView, HandoverView } from '../components/projects/pm/GovernanceViews'
+import { RisksView, MeetingsView, PaymentsView, HandoverView, ConstructionFeedbackView } from '../components/projects/pm/GovernanceViews'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import StagePipeline from '../components/projects/StagePipeline'
@@ -98,6 +98,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
     ...(hasSupervision ? [
       { key: 'payments', label: 'Payments (IPC)', icon: Receipt },
       { key: 'handover', label: 'Handover', icon: PackageCheck },
+      { key: 'cfeedback', label: 'Site feedback', icon: MessageSquareQuote, badge: (pm.constructionFeedback || []).filter((f) => f.status !== 'completed').length },
     ] : []),
   ]
 
@@ -198,6 +199,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
             {sel.view === 'meetings' && !sel.phase && <MeetingsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
             {sel.view === 'payments' && !sel.phase && <PaymentsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
             {sel.view === 'handover' && !sel.phase && <HandoverView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
+            {sel.view === 'cfeedback' && !sel.phase && <ConstructionFeedbackView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} project={project} onUpdateProject={onUpdateProject} currentUserName={user?.username} />}
           </main>
         </div>
       </div>

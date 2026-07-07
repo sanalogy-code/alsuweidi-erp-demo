@@ -3,6 +3,8 @@ import { Plus, Diamond } from 'lucide-react'
 import {
   RISK_LEVELS, riskLevelMeta, RISK_STATUSES, riskStatusMeta,
   IPC_STATUSES, ipcStatusMeta, daysUntil,
+  FEEDBACK_ISSUE_TYPES, feedbackTypeMeta, FEEDBACK_IMPACTS,
+  CONSTRUCTION_FEEDBACK_STATUSES, cfStatusMeta,
 } from '../../../data/pmData'
 import { fmtAED } from '../../../data/financeData'
 
@@ -198,6 +200,130 @@ export function PaymentsView({ pm, onUpdate }) {
         )
       })}
       <p className="text-[11px] text-gray-400">Approved WIRs are the verification basis for certified amounts; MIRs support materials-on-site. Line-item WIR linkage is Phase 2 wiring.</p>
+    </div>
+  )
+}
+
+// --- Construction feedback (Batch 16b) — site → design lessons loop --------------------
+export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProject, currentUserName }) {
+  const items = pm.constructionFeedback || []
+  const [showAdd, setShowAdd] = useState(false)
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
+  const [form, setForm] = useState({ type: 'discrepancy', issueIn: '', impact: FEEDBACK_IMPACTS[0], description: '', reason: '', improvement: '' })
+
+  const patch = (id, changes) => onUpdate({ ...pm, constructionFeedback: items.map((f) => (f.id === id ? { ...f, ...changes } : f)) })
+  const add = () => {
+    if (!form.issueIn.trim() || !form.description.trim()) return
+    onUpdate({
+      ...pm,
+      constructionFeedback: [{
+        id: Math.max(0, ...items.map((f) => f.id)) + 1, ...form,
+        issueIn: form.issueIn.trim(), description: form.description.trim(),
+        reason: form.reason.trim(), improvement: form.improvement.trim(),
+        reportedBy: currentUserName || 'Site team', date: todayISO(), status: 'open',
+      }, ...items],
+    })
+    setForm({ type: 'discrepancy', issueIn: '', impact: FEEDBACK_IMPACTS[0], description: '', reason: '', improvement: '' })
+    setShowAdd(false)
+  }
+  // Completing feedback with an improvement worth keeping → project Lessons tab.
+  const copyToLessons = (f) => {
+    if (!onUpdateProject) return
+    const lessons = project.lessons || []
+    onUpdateProject({
+      ...project,
+      lessons: [...lessons, {
+        id: Math.max(0, ...lessons.map((l) => l.id)) + 1,
+        text: `${f.issueIn}: ${f.improvement || f.description}`,
+        date: todayISO(), author: f.reportedBy,
+      }],
+    })
+    patch(f.id, { inLessons: true })
+  }
+
+  const rows = items
+    .filter((f) => !typeFilter || f.type === typeFilter)
+    .filter((f) => {
+      const q = search.trim().toLowerCase()
+      return !q || f.issueIn.toLowerCase().includes(q) || f.description.toLowerCase().includes(q) || (f.improvement || '').toLowerCase().includes(q)
+    })
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700">Construction feedback → design</h2>
+          <p className="text-xs text-gray-500">Issues found on site that design should fix at the source — {items.filter((f) => f.status !== 'completed').length} open. Completed items with an improvement can be pushed to the project's Lessons.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-36" />
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+            <option value="">All types</option>
+            {FEEDBACK_ISSUE_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
+          </select>
+          <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Raise feedback</button>
+        </div>
+      </div>
+
+      {showAdd && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-2 text-xs">
+          <div className="flex flex-wrap gap-1.5">
+            {FEEDBACK_ISSUE_TYPES.map((t) => (
+              <button key={t.key} onClick={() => setForm({ ...form, type: t.key })}
+                className={`px-2.5 py-1 rounded-full border transition ${form.type === t.key ? `${t.chip} border-transparent font-semibold` : 'border-gray-200 text-gray-500'}`}>
+                {t.label}
+              </button>
+            ))}
+            <select value={form.impact} onChange={(e) => setForm({ ...form, impact: e.target.value })} className="border rounded-md px-2 py-1 ml-auto">
+              {FEEDBACK_IMPACTS.map((i) => <option key={i}>{i} impact</option>)}
+            </select>
+          </div>
+          <input value={form.issueIn} onChange={(e) => setForm({ ...form, issueIn: e.target.value })} placeholder="Issue in… (e.g. approved materials list, ARC vs MEP drawings) *" className="w-full border rounded-md px-2.5 py-1.5" />
+          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} placeholder="What happened on site? *" className="w-full border rounded-md px-2.5 py-1.5" />
+          <div className="grid sm:grid-cols-2 gap-2">
+            <input value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} placeholder="Issue reason (e.g. improper data collection)" className="border rounded-md px-2.5 py-1.5" />
+            <input value={form.improvement} onChange={(e) => setForm({ ...form, improvement: e.target.value })} placeholder="Proposed improvement for design" className="border rounded-md px-2.5 py-1.5" />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 rounded-md border text-gray-600">Cancel</button>
+            <button onClick={add} className="px-3 py-1.5 rounded-md bg-brand text-white">Raise</button>
+          </div>
+        </div>
+      )}
+
+      {rows.length === 0 && !showAdd && <Empty label="No construction feedback logged." />}
+      {rows.map((f) => {
+        const tMeta = feedbackTypeMeta(f.type)
+        const sMeta = cfStatusMeta(f.status)
+        return (
+          <div key={f.id} className="bg-white rounded-lg border border-gray-200 px-4 py-3 space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-[11px] px-2 py-0.5 rounded-full ${tMeta.chip}`}>{tMeta.label}</span>
+              <span className="text-sm font-medium text-gray-800 flex-1 min-w-0">{f.issueIn}</span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{f.impact}</span>
+              <span className={`text-[11px] px-2 py-0.5 rounded-full ${sMeta.chip}`}>{sMeta.label}</span>
+            </div>
+            <p className="text-xs text-gray-600">{f.description}</p>
+            <div className="text-xs text-gray-500 space-y-0.5">
+              {f.reason && <div><span className="text-gray-400">Reason:</span> {f.reason}</div>}
+              {f.improvement && <div><span className="text-gray-400">Proposed improvement:</span> {f.improvement}</div>}
+              <div className="text-gray-400">{f.reportedBy} · {f.date}</div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {f.status === 'open' && <button onClick={() => patch(f.id, { status: 'with_design' })} className="text-[11px] px-2 py-0.5 rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50">Send to design section</button>}
+              {f.status === 'with_design' && <button onClick={() => patch(f.id, { status: 'completed' })} className="text-[11px] px-2 py-0.5 rounded-md border border-green-300 text-green-700 hover:bg-green-50">Mark completed</button>}
+              {f.status === 'completed' && !f.inLessons && onUpdateProject && (
+                <button onClick={() => copyToLessons(f)} className="text-[11px] px-2 py-0.5 rounded-md border border-purple-300 text-purple-700 hover:bg-purple-50">→ Add to project Lessons</button>
+              )}
+              {f.inLessons && <span className="text-[11px] text-purple-600">✓ in Lessons</span>}
+            </div>
+          </div>
+        )
+      })}
+      <p className="text-[11px] text-gray-400">
+        The register mirrors the current ERP's "Feedback Required" screen (issue type / issue in / impact / reason / proposed improvement). Routing to a named design owner + notification is Phase 2.
+      </p>
     </div>
   )
 }
