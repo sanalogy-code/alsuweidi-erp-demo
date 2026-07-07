@@ -13,6 +13,8 @@ const todayISO = () => new Date().toISOString().slice(0, 10)
 export default function DeliverablesView({ pm, onUpdate }) {
   const [expanded, setExpanded] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [form, setForm] = useState({ docNo: '', title: '', discipline: DESIGN_DISCIPLINES[0], dueDate: '' })
 
   const advance = (d, status) => {
@@ -47,11 +49,18 @@ export default function DeliverablesView({ pm, onUpdate }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-sm font-semibold text-gray-700">Deliverables register ({pm.deliverables.length})</h2>
-        <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline">
-          <Plus size={13} /> Register deliverable
-        </button>
+        <div className="flex items-center gap-2">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search doc no, title…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-44" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+            <option value="">All statuses</option>
+            {DELIVERABLE_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+          <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline">
+            <Plus size={13} /> Register deliverable
+          </button>
+        </div>
       </div>
 
       {showAdd && (
@@ -75,7 +84,13 @@ export default function DeliverablesView({ pm, onUpdate }) {
         </div>
       )}
 
-      {pm.deliverables.map((d) => {
+      {pm.deliverables
+        .filter((d) => !statusFilter || d.status === statusFilter)
+        .filter((d) => {
+          const q = search.trim().toLowerCase()
+          return !q || d.docNo.toLowerCase().includes(q) || d.title.toLowerCase().includes(q) || d.discipline.toLowerCase().includes(q)
+        })
+        .map((d) => {
         const meta = deliverableStatusMeta(d.status)
         const open = expanded === d.id
         const nexts = DELIVERABLE_NEXT[d.status] || []

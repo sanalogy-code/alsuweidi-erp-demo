@@ -11,6 +11,7 @@ import IT from './pages/IT'
 import Marketing from './pages/Marketing'
 import Finance from './pages/Finance'
 import Admin from './pages/Admin'
+import Office from './pages/Office'
 import TimesheetGate from './components/TimesheetGate'
 import FeedbackButton, { INITIAL_FEEDBACK } from './components/SystemFeedback'
 import { PUBLIC_HOLIDAYS } from './data/hrData'
@@ -139,6 +140,7 @@ export default function App() {
       <Route path="/marketing" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/content" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/admin" element={<Admin user={user} onLogout={handleLogout} feedback={systemFeedback} onUpdateFeedback={setSystemFeedback} />} />
+      <Route path="/office" element={<Office user={user} onLogout={handleLogout} />} />
       <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       </Routes>
     </>

@@ -10,6 +10,8 @@ const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', 
 
 export default function InvoicesView({ invoices, onUpdate, onAdd }) {
   const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
   const [showAdd, setShowAdd] = useState(false)
   const [payingId, setPayingId] = useState(null)
   const [payAmount, setPayAmount] = useState('')
@@ -46,6 +48,11 @@ export default function InvoicesView({ invoices, onUpdate, onAdd }) {
 
   const shown = invoices
     .filter((i) => statusFilter === 'all' || i.status === statusFilter)
+    .filter((i) => (!range.from || i.issueDate >= range.from) && (!range.to || i.issueDate <= range.to))
+    .filter((i) => {
+      const q = search.trim().toLowerCase()
+      return !q || i.invoiceNo.toLowerCase().includes(q) || i.clientName.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q)
+    })
     .sort((a, b) => b.issueDate.localeCompare(a.issueDate))
 
   const totalBilled = invoices.reduce((s, i) => s + invoiceTotal(i), 0)
@@ -69,6 +76,11 @@ export default function InvoicesView({ invoices, onUpdate, onAdd }) {
               <Plus size={13} /> New invoice
             </button>
           )}
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search no, client, description…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+          <label className="text-xs text-gray-500">From</label>
+          <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
+          <label className="text-xs text-gray-500">To</label>
+          <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
           <label className="text-xs text-gray-500">Status</label>
           <select
             value={statusFilter}

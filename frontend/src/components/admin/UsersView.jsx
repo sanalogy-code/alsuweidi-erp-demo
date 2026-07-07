@@ -1,10 +1,56 @@
-import { useState } from 'react'
-import { UserPlus, KeyRound, Ban, RotateCcw, Trash2, Pencil, Users } from 'lucide-react'
+import { useState, Fragment } from 'react'
+import { UserPlus, KeyRound, Ban, RotateCcw, Trash2, Pencil, Users, ShieldPlus, X } from 'lucide-react'
 import Modal from '../crm/Modal'
 import { ROLES } from '../../data/dashboardData'
-import { userStatusMeta } from '../../data/adminData'
+import { userStatusMeta, PERMISSION_MODULES } from '../../data/adminData'
 
 const roleLabel = (value) => ROLES.find((r) => r.value === value)?.label || value
+
+// Per-user SPECIAL ACCESS (7 Jul, Sana: "how do I give one person special
+// access?") — overrides layered on top of the role: grant an individual view or
+// full access to a module their role doesn't have, with an optional expiry
+// (cover-someone's-leave case). Stored as user.overrides = [{ module, level,
+// expires }]. Like everything in the Admin Center, this is the Phase 2 RBAC
+// spec — enforcement arrives with real auth.
+
+function SpecialAccessEditor({ user, onSave }) {
+  const overrides = user.overrides || []
+  const [form, setForm] = useState({ module: PERMISSION_MODULES[0]?.key, level: 'view', expires: '' })
+  const add = () => {
+    const next = overrides.filter((o) => o.module !== form.module)
+    onSave({ ...user, overrides: [...next, { module: form.module, level: form.level, expires: form.expires || null }] })
+  }
+  const remove = (moduleKey) => onSave({ ...user, overrides: overrides.filter((o) => o.module !== moduleKey) })
+  const moduleLabel = (k) => PERMISSION_MODULES.find((m) => m.key === k)?.label || k
+
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2.5 space-y-2 text-xs">
+      <div className="font-semibold text-gray-600">Special access — on top of the {roleLabel(user.role)} role</div>
+      {overrides.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {overrides.map((o) => (
+            <span key={o.module} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">
+              {moduleLabel(o.module)}: {o.level}{o.expires ? ` · until ${o.expires}` : ''}
+              <button onClick={() => remove(o.module)} className="hover:text-purple-900"><X size={10} /></button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <select value={form.module} onChange={(e) => setForm({ ...form, module: e.target.value })} className="border rounded-md px-2 py-1 bg-white">
+          {PERMISSION_MODULES.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+        </select>
+        <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="border rounded-md px-2 py-1 bg-white">
+          <option value="view">View</option>
+          <option value="full">Full</option>
+        </select>
+        <label className="text-gray-500">expires <input type="date" value={form.expires} onChange={(e) => setForm({ ...form, expires: e.target.value })} className="border rounded-md px-2 py-1 bg-white" /></label>
+        <button onClick={add} className="px-2.5 py-1 rounded-md bg-brand text-white">Grant</button>
+        <span className="text-gray-400">Leave expiry blank for permanent. Enforcement lands with Phase 2 auth.</span>
+      </div>
+    </div>
+  )
+}
 
 export default function UsersView({ users, onChange }) {
   const [statusFilter, setStatusFilter] = useState('all')
@@ -12,6 +58,7 @@ export default function UsersView({ users, onChange }) {
   const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null) // user being edited, or 'new'
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [accessFor, setAccessFor] = useState(null) // user id whose special-access editor is open
   const [flash, setFlash] = useState(null) // one-line feedback for mock actions
 
   const shown = users
@@ -117,14 +164,20 @@ export default function UsersView({ users, onChange }) {
               {shown.map((u) => {
                 const meta = userStatusMeta(u.status)
                 return (
-                  <tr key={u.id} className={`hover:bg-gray-50 ${u.status === 'disabled' ? 'opacity-60' : ''}`}>
+                  <Fragment key={u.id}>
+                  <tr className={`hover:bg-gray-50 ${u.status === 'disabled' ? 'opacity-60' : ''}`}>
                     <td className="px-4 py-3 align-top">
                       <div className="text-gray-800 font-medium">{u.name}</div>
                       <div className="text-[11px] text-gray-400">{u.email}</div>
                       {u.note && <div className="text-[11px] text-amber-600 mt-0.5">{u.note}</div>}
                       {u.disabledReason && <div className="text-[11px] text-gray-400 mt-0.5">{u.disabledReason}</div>}
                     </td>
-                    <td className="px-4 py-3 align-top text-gray-700 whitespace-nowrap">{roleLabel(u.role)}</td>
+                    <td className="px-4 py-3 align-top text-gray-700 whitespace-nowrap">
+                      {roleLabel(u.role)}
+                      {(u.overrides || []).length > 0 && (
+                        <div className="text-[10px] text-purple-600 mt-0.5">+ {(u.overrides || []).length} special access</div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 align-top">
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${meta.chip}`}>{meta.label}</span>
                     </td>
@@ -132,6 +185,7 @@ export default function UsersView({ users, onChange }) {
                     <td className="px-4 py-3 align-top text-right tabular-nums text-gray-700">{u.logins30d}</td>
                     <td className="px-4 py-3 align-top text-right whitespace-nowrap">
                       <div className="inline-flex items-center gap-2">
+                        <button onClick={() => setAccessFor(accessFor === u.id ? null : u.id)} title="Special access (per-user permissions)" className={(u.overrides || []).length ? 'text-purple-600 hover:text-purple-800' : 'text-gray-400 hover:text-purple-600'}><ShieldPlus size={14} /></button>
                         <button onClick={() => setEditing(u)} title="Edit" className="text-gray-400 hover:text-brand"><Pencil size={14} /></button>
                         <button onClick={() => resetPassword(u)} title="Send password reset" className="text-gray-400 hover:text-brand"><KeyRound size={14} /></button>
                         <button
@@ -145,6 +199,14 @@ export default function UsersView({ users, onChange }) {
                       </div>
                     </td>
                   </tr>
+                  {accessFor === u.id && (
+                    <tr>
+                      <td colSpan={6} className="px-4 pb-3">
+                        <SpecialAccessEditor user={u} onSave={update} />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 )
               })}
               {shown.length === 0 && (

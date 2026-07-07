@@ -17,6 +17,7 @@ export default function RfpView({ rfps, onUpdate, companies }) {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(null)
   const [statusFilter, setStatusFilter] = useState('')
+  const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({
     name: '', shortName: '', employer: '', engagement: RFP_ENGAGEMENTS[0], projectType: PROJECT_TYPES[0],
@@ -41,7 +42,12 @@ export default function RfpView({ rfps, onUpdate, companies }) {
     setShowAdd(false)
   }
 
-  const rows = rfps.filter((r) => !statusFilter || r.status === statusFilter)
+  const rows = rfps
+    .filter((r) => !statusFilter || r.status === statusFilter)
+    .filter((r) => {
+      const q = search.trim().toLowerCase()
+      return !q || r.refNo.toLowerCase().includes(q) || r.name.toLowerCase().includes(q) || r.shortName.toLowerCase().includes(q) || r.employer.toLowerCase().includes(q)
+    })
   const counts = Object.fromEntries(RFP_STATUSES.map((s) => [s.key, rfps.filter((r) => r.status === s.key).length]))
   const decided = counts.awarded + counts.lost
   const winRate = decided ? Math.round((counts.awarded / decided) * 100) : null
@@ -58,7 +64,8 @@ export default function RfpView({ rfps, onUpdate, companies }) {
         <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> New RFP</button>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search ref, name, employer…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-48 mr-1" />
         <button onClick={() => setStatusFilter('')} className={`px-2.5 py-1 rounded-full text-[11px] border transition ${!statusFilter ? 'border-brand text-brand bg-brand/5 font-semibold' : 'border-gray-200 text-gray-500'}`}>All</button>
         {RFP_STATUSES.map((s) => (
           <button key={s.key} onClick={() => setStatusFilter(statusFilter === s.key ? '' : s.key)}

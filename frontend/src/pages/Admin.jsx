@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, BadgeCheck, MessageSquareWarning } from 'lucide-react'
+import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, MessageSquareWarning } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AdminOverview from '../components/admin/AdminOverview'
 import UsersView from '../components/admin/UsersView'
 import RolesPermissionsView from '../components/admin/RolesPermissionsView'
 import AuditLogView from '../components/admin/AuditLogView'
-import LicensesView, { OFFICE_LICENSES } from '../components/admin/LicensesView'
 import { FeedbackQueue } from '../components/SystemFeedback'
 import {
   ADMIN_VIEW_ROLES, USER_ACCOUNTS, DEFAULT_PERMISSIONS, AUDIT_LOG,
@@ -21,8 +20,6 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback 
   const [view, setView] = useState('overview')
   const [users, setUsers] = useState(USER_ACCOUNTS)
   const [permissions, setPermissions] = useState(DEFAULT_PERMISSIONS)
-  // Owned here (not in the view) so added registrations survive tab switches — SPEC §4.
-  const [licenses, setLicenses] = useState(OFFICE_LICENSES)
 
   const invitedCount = users.filter((u) => u.status === 'invited').length
 
@@ -30,7 +27,6 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback 
     { key: 'overview', label: 'Overview', icon: LayoutDashboard },
     { key: 'users', label: 'Users', icon: Users, badge: invitedCount },
     { key: 'roles', label: 'Roles & permissions', icon: ShieldCheck },
-    { key: 'licenses', label: 'Registrations & licenses', icon: BadgeCheck },
     { key: 'feedback', label: 'System feedback', icon: MessageSquareWarning, badge: feedback.filter((f) => f.status === 'new').length },
     { key: 'log', label: 'Activity log', icon: ScrollText },
   ]
@@ -97,7 +93,6 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback 
           {view === 'roles' && (
             <RolesPermissionsView permissions={permissions} onChange={setPermissions} users={users} />
           )}
-          {view === 'licenses' && <LicensesView items={licenses} onChange={setLicenses} />}
           {view === 'feedback' && <FeedbackQueue items={feedback} onUpdate={onUpdateFeedback} />}
           {view === 'log' && (
             <AuditLogView log={AUDIT_LOG} users={users} />

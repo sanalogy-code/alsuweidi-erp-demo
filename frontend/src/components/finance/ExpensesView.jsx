@@ -11,6 +11,8 @@ const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', 
 export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserName }) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ date: new Date().toISOString().slice(0, 10), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', projectId: '', attachment: '' })
   const projectOf = (id) => PROJECTS.find((p) => p.id === id)
@@ -33,6 +35,11 @@ export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserNam
   const shown = expenses
     .filter((e) => statusFilter === 'all' || e.status === statusFilter)
     .filter((e) => categoryFilter === 'all' || e.category === categoryFilter)
+    .filter((e) => (!range.from || e.date >= range.from) && (!range.to || e.date <= range.to))
+    .filter((e) => {
+      const q = search.trim().toLowerCase()
+      return !q || e.vendor.toLowerCase().includes(q) || (e.description || '').toLowerCase().includes(q) || (e.submittedBy || '').toLowerCase().includes(q)
+    })
     .sort((a, b) => b.date.localeCompare(a.date))
 
   const approvedTotal = expenses.filter((e) => e.status === 'approved' || e.status === 'reimbursed').reduce((s, e) => s + e.amount, 0)
@@ -54,6 +61,9 @@ export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserNam
               <Plus size={13} /> Add expense
             </button>
           )}
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search vendor, description…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-48" />
+          <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} title="From" className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
+          <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} title="To" className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white">
             <option value="all">All categories</option>
             {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}

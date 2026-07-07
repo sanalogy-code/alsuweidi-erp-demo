@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import { CAPACITY_HOURS_PER_WEEK } from '../../../data/pmData'
 import { toLocalISO, weekStartOf, addDays } from '../../../data/timesheetData'
@@ -172,8 +172,8 @@ export default function ResourcePlannerView({ projects, pmRecords, employees, ti
               const personProjects = [...new Set(allocations.filter((a) => a.name === person.name).map((a) => a.projectId))]
                 .map((pid) => projects.find((p) => p.id === pid)).filter(Boolean)
               return (
-                <>
-                  <tr key={person.name} className="hover:bg-blue-50 cursor-pointer transition" onClick={() => setExpanded(open ? null : person.name)}>
+                <Fragment key={person.name}>
+                  <tr className="hover:bg-blue-50 cursor-pointer transition" onClick={() => setExpanded(open ? null : person.name)}>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1.5">
                         {open ? <ChevronUp size={13} className="text-gray-400" /> : <ChevronDown size={13} className="text-gray-400" />}
@@ -193,7 +193,7 @@ export default function ResourcePlannerView({ projects, pmRecords, employees, ti
                     })}
                   </tr>
                   {open && (
-                    <tr key={`${person.name}-detail`} className="bg-gray-50/60">
+                    <tr className="bg-gray-50/60">
                       <td colSpan={weeks.length + 1} className="px-4 py-3">
                         <div className="space-y-2">
                           {personProjects.length === 0 && <div className="text-xs text-gray-400">No allocations yet — use "Allocate" above.</div>}
@@ -218,7 +218,7 @@ export default function ResourcePlannerView({ projects, pmRecords, employees, ti
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               )
             })}
           </tbody>

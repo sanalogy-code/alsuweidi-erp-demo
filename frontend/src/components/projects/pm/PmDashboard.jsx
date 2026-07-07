@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Diamond, AlertTriangle, Clock3, FolderKanban, ListTodo } from 'lucide-react'
 import {
   projectProgress, projectHealth, lateTasksOf, nextMilestoneOf, worstSpiOf,
@@ -10,8 +11,13 @@ import { scopeOf } from '../../../data/projectsData'
 // The answer to "how are my projects doing?" in one screen.
 
 export default function PmDashboard({ projects, pmRecords, timesheets = [], onOpenWorkspace }) {
+  const [search, setSearch] = useState('')
   const rows = projects
     .filter((p) => p.generalStatus === 'In Progress' && pmRecords[p.id])
+    .filter((p) => {
+      const q = search.trim().toLowerCase()
+      return !q || p.name.toLowerCase().includes(q) || p.projectNo.toLowerCase().includes(q)
+    })
     .map((p) => {
       const pm = pmRecords[p.id]
       return {
@@ -41,6 +47,10 @@ export default function PmDashboard({ projects, pmRecords, timesheets = [], onOp
         <Stat icon={AlertTriangle} label="At risk" value={totals.atRisk} tone={totals.atRisk ? 'red' : 'gray'} />
         <Stat icon={ListTodo} label="Late tasks (portfolio)" value={totals.late} tone={totals.late ? 'amber' : 'gray'} />
         <Stat icon={Diamond} label="Milestones next 30 days" value={totals.msThisMonth} />
+      </div>
+
+      <div className="flex justify-end">
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search project no or name…" className="text-xs border border-gray-200 rounded-md px-2.5 py-1.5 bg-white w-56" />
       </div>
 
       <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">

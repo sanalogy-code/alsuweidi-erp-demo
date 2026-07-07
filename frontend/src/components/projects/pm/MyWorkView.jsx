@@ -7,7 +7,12 @@ import { myWorkFor, daysUntil, taskPriorityMeta, PHASE_META } from '../../../dat
 // Deadlines. This is the first thing a PM or engineer sees when opening Projects.
 
 export default function MyWorkView({ user, projects, pmRecords, onOpenWorkspace }) {
-  const { tasks, approvals, deadlines } = myWorkFor(user?.username, projects, pmRecords)
+  const all = myWorkFor(user?.username, projects, pmRecords)
+  const [search, setSearch] = useState('')
+  const q = search.trim().toLowerCase()
+  const tasks = all.tasks.filter((t) => !q || t.task.title.toLowerCase().includes(q) || t.project.name.toLowerCase().includes(q))
+  const approvals = all.approvals.filter((a) => !q || a.title.toLowerCase().includes(q) || a.ref.toLowerCase().includes(q) || a.project.name.toLowerCase().includes(q))
+  const deadlines = all.deadlines.filter((d) => !q || d.title.toLowerCase().includes(q) || d.project.name.toLowerCase().includes(q))
   const TABS = [
     { key: 'tasks', label: 'My tasks', icon: ListTodo, count: tasks.length },
     { key: 'approvals', label: 'Waiting on me', icon: ClipboardCheck, count: approvals.length },
@@ -36,7 +41,8 @@ export default function MyWorkView({ user, projects, pmRecords, onOpenWorkspace 
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-1 border-b border-gray-200">
+      <div className="flex flex-wrap items-center gap-1 border-b border-gray-200">
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search my work…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-44 mb-1 mr-2" />
         {TABS.map((t) => {
           const Icon = t.icon
           return (
