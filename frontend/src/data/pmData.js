@@ -90,6 +90,73 @@ export const REPORT_CHECKLIST_ITEMS = [
   { key: 'planned_actual', label: 'Planned vs actual comparison' },
 ]
 
+// --- Drawing transmittals (Batch 17): formal issue of deliverables ------------------
+export const TRANSMITTAL_PURPOSES = [
+  { key: 'for_approval', label: 'For approval', chip: 'bg-blue-100 text-blue-700' },
+  { key: 'for_construction', label: 'For construction', chip: 'bg-green-100 text-green-700' },
+  { key: 'for_information', label: 'For information', chip: 'bg-gray-100 text-gray-600' },
+]
+export const transmittalPurposeMeta = (k) => TRANSMITTAL_PURPOSES.find((p) => p.key === k) || TRANSMITTAL_PURPOSES[2]
+
+// --- RFI register (Batch 17): contractor questions during construction --------------
+// Distinct from WIRs — an RFI asks for information/clarification, a WIR asks
+// for inspection. Cost/time flags suggest a site instruction or claim record.
+export const RFI_STATUSES = [
+  { key: 'open', label: 'Open', chip: 'bg-amber-100 text-amber-700' },
+  { key: 'answered', label: 'Answered', chip: 'bg-blue-100 text-blue-700' },
+  { key: 'closed', label: 'Closed', chip: 'bg-green-100 text-green-700' },
+]
+export const rfiStatusMeta = (k) => RFI_STATUSES.find((s) => s.key === k) || RFI_STATUSES[0]
+
+// --- Coordination checklists per design gate (Batch 17) -----------------------------
+// Default template per gate; a phase materializes its own copy (gateChecklists,
+// keyed by gate key) the first time someone ticks an item.
+export const GATE_COORDINATION_TEMPLATES = {
+  '30': [
+    'Architecture ↔ structure grid & core alignment',
+    'MEP spatial provisions (risers, plant zones, ceiling voids)',
+    'Site constraints & authority pre-check (setbacks, height, parking)',
+    'BIM model federation — LOD 200 baseline',
+  ],
+  '60': [
+    'Arch ↔ structure clash review (openings, transfer zones)',
+    'MEP coordination — main routes & ceiling zones',
+    'Façade / structure interface review',
+    'Authority pre-check — code compliance snapshot',
+    'BIM federation — clash report issued & actions assigned',
+  ],
+  '90': [
+    'Full discipline clash resolution (incl. corridor & riser zones)',
+    'MEP final coordination sign-off',
+    'Façade / structure / MEP interface close-out',
+    'Authority submission package pre-check',
+    'BIM federation — zero critical clashes',
+    'QS cost check against budget',
+  ],
+  '100': [
+    'IFC set cross-discipline consistency check',
+    'Specification ↔ drawing alignment',
+    'Authority approval conditions incorporated',
+    'BIM as-designed model archived',
+  ],
+}
+export const gateChecklistTemplate = (gateKey) =>
+  (GATE_COORDINATION_TEMPLATES[gateKey] || []).map((text, i) => ({ id: i + 1, text, done: false, by: null, date: null }))
+
+// --- Safety observation log (Batch 17): supervision-phase HSE -----------------------
+export const SAFETY_CATEGORIES = [
+  { key: 'unsafe_act', label: 'Unsafe act', chip: 'bg-red-100 text-red-700' },
+  { key: 'unsafe_condition', label: 'Unsafe condition', chip: 'bg-amber-100 text-amber-700' },
+  { key: 'positive', label: 'Positive', chip: 'bg-green-100 text-green-700' },
+]
+export const safetyCategoryMeta = (k) => SAFETY_CATEGORIES.find((c) => c.key === k) || SAFETY_CATEGORIES[1]
+export const SAFETY_SEVERITIES = ['Low', 'Medium', 'High']
+export const SAFETY_OBS_STATUSES = [
+  { key: 'open', label: 'Open', chip: 'bg-red-100 text-red-700' },
+  { key: 'closed', label: 'Closed', chip: 'bg-green-100 text-green-700' },
+]
+export const safetyObsStatusMeta = (k) => SAFETY_OBS_STATUSES.find((s) => s.key === k) || SAFETY_OBS_STATUSES[0]
+
 // --- Methodology (Batch 11): waterfall vs sprints, per project ---------------------
 export const PM_METHODS = [
   { key: 'waterfall', label: 'Waterfall', hint: 'Phased plan on a timeline (Gantt)' },
@@ -303,9 +370,9 @@ export const emptyPhase = (key, label) => ({
   key, label: label || PHASE_META[key]?.label || key,
   team: [], tasks: [], milestones: [], progressCurve: [], weeklyUpdates: [],
   fees: { manhourBudget: 0, stages: [], variations: [] },
-  ...(key === 'design' ? { deliverables: [], designStages: [] } : {}),
-  ...(key === 'study' ? { deliverables: [] } : {}),
-  ...(key === 'supervision' ? { wirs: [], mirs: [], ncrs: [], siteInstructions: [], dailyReports: [] } : {}),
+  ...(key === 'design' ? { deliverables: [], designStages: [], transmittals: [], gateChecklists: {} } : {}),
+  ...(key === 'study' ? { deliverables: [], transmittals: [] } : {}),
+  ...(key === 'supervision' ? { wirs: [], mirs: [], ncrs: [], siteInstructions: [], dailyReports: [], rfis: [], safetyObservations: [], hse: { ltiFreeDays: 0 } } : {}),
 })
 
 // Which phases a project should have, derived from its scope when there is no seed.
@@ -325,7 +392,7 @@ export const emptyPmRecord = (project) => ({
   phases: (project ? phaseKeysFor(project) : []).map((k) => emptyPhase(k)),
   claims: [], reports: [], authorities: [],
   risks: [], meetings: [], ipcs: [], handover: null,
-  constructionFeedback: [],
+  constructionFeedback: [], photoReports: [],
 })
 
 // --- Progress / lateness rollups (Batch 11: management dashboard) ------------------
@@ -420,6 +487,15 @@ export const PM_RECORDS = {
       { id: 1, type: 'missing', issueIn: 'Approved materials / manufacturers list', impact: 'Quality', description: 'Sanitary-ware manufacturers not defined by name in the spec (same gap as kitchen cabinets on previous projects) — contractor proposed three brands and the RE had no basis to reject.', reason: 'Improper data collection at spec stage', improvement: 'Design section to name approved manufacturers in Division 10/22 specs, not "or equal" only.', reportedBy: 'George Matta (site)', date: '2026-06-20', status: 'with_design' },
       { id: 2, type: 'discrepancy', issueIn: 'ARC vs MEP drawings — L2 corridor', impact: 'Coordination', description: 'Ceiling heights on HPM-ARC-DWG-061 conflict with duct sizes on the MEP set; discovered at blockwork stage.', reason: 'Clash check skipped the corridor zones at 90% gate', improvement: 'Add corridor/riser zones explicitly to the 90% clash-review checklist.', reportedBy: 'Ramesh Pillai (site)', date: '2026-07-02', status: 'open' },
     ],
+    // Photo attachments for the monthly 4.21 report — file-name-only in Phase 1.
+    photoReports: [
+      { id: 1, month: '2026-06', photos: [
+        { id: 1, fileName: 'hpm-L3-zoneA-pour-2026-06-18.jpg', caption: 'L3 Zone A slab pour — 210m³ completed in night shift', date: '2026-06-18', location: 'Level 3, Zone A' },
+        { id: 2, fileName: 'hpm-ncr011-shaftwall-rebuild-2026-06-26.jpg', caption: 'NCR-011 fire-rated shaft wall rebuilt with certified 2-hr system', date: '2026-06-26', location: 'L1 corridor' },
+        { id: 3, fileName: 'hpm-L2-blockwork-west-2026-06-29.jpg', caption: 'L2 west wing blockwork progressing to programme', date: '2026-06-29', location: 'Level 2, west wing' },
+        { id: 4, fileName: 'hpm-facade-mockup-panel-2026-06-30.jpg', caption: 'Façade mockup panel — batch 4 extrusions offered for review', date: '2026-06-30', location: 'Laydown area' },
+      ] },
+    ],
     claims: [
       { id: 1, ref: 'CLM-01', title: 'EOT — late free issue of medical equipment vendor drawings', party: 'Contractor', eventDate: '2026-05-28', awarenessDate: '2026-06-02', noticeDate: '2026-06-18', status: 'notice_served', timeImpactDays: 21, costImpact: 450000,
         records: [
@@ -510,6 +586,33 @@ export const PM_RECORDS = {
           { key: '90', label: '90% — Pre-final', status: 'passed', gateDate: '2025-01-10', notes: 'QS cost check within budget.' },
           { key: '100', label: 'Final / IFC', status: 'passed', gateDate: '2025-03-28', notes: 'IFC issued; design fees closed.' },
         ],
+        // Gate coordination checklists — all gates passed, so items closed out.
+        gateChecklists: {
+          '90': [
+            { id: 1, text: 'Full discipline clash resolution (incl. corridor & riser zones)', done: true, by: 'Fatima Al Mansouri', date: '2025-01-08' },
+            { id: 2, text: 'MEP final coordination sign-off', done: true, by: 'Mohammad Kubba', date: '2025-01-08' },
+            { id: 3, text: 'Façade / structure / MEP interface close-out', done: true, by: 'Naseeb Shaheen', date: '2025-01-09' },
+            { id: 4, text: 'Authority submission package pre-check', done: true, by: 'Fatima Al Mansouri', date: '2025-01-09' },
+            { id: 5, text: 'BIM federation — zero critical clashes', done: true, by: 'Mohammad Kubba', date: '2025-01-10' },
+            { id: 6, text: 'QS cost check against budget', done: true, by: 'Fatima Al Mansouri', date: '2025-01-10' },
+          ],
+          '100': [
+            { id: 1, text: 'IFC set cross-discipline consistency check', done: true, by: 'Fatima Al Mansouri', date: '2025-03-26' },
+            { id: 2, text: 'Specification ↔ drawing alignment', done: true, by: 'Naseeb Shaheen', date: '2025-03-26' },
+            { id: 3, text: 'Authority approval conditions incorporated', done: true, by: 'Fatima Al Mansouri', date: '2025-03-27' },
+            { id: 4, text: 'BIM as-designed model archived', done: true, by: 'Mohammad Kubba', date: '2025-03-28' },
+          ],
+        },
+        // Issued drawing transmittals (line items reference the deliverables register).
+        transmittals: [
+          { id: 1, ref: 'TRN-001', date: '2025-04-02', to: 'Contractor (EBC)', purpose: 'for_construction', note: 'IFC architectural & structural set issued for mobilisation.', items: [
+            { deliverableId: 1, docNo: 'HPM-ARC-DWG-001', title: 'Ground floor plan', rev: 'C' },
+            { deliverableId: 2, docNo: 'HPM-STR-CAL-014', title: 'Transfer slab design calculations', rev: 'B' },
+          ] },
+          { id: 2, ref: 'TRN-002', date: '2026-06-05', to: 'Client', purpose: 'for_approval', note: 'Rooftop plant room layout for client review ahead of chiller procurement.', items: [
+            { deliverableId: 3, docNo: 'HPM-MEP-DWG-032', title: 'Rooftop plant room layout', rev: 'A' },
+          ] },
+        ],
         milestones: [
           { id: 1, label: '60% design gate', baseline: '2024-09-01', forecast: '2024-09-15', actual: '2024-09-15' },
           { id: 2, label: 'IFC issue', baseline: '2025-03-15', forecast: '2025-03-28', actual: '2025-03-28' },
@@ -582,6 +685,20 @@ export const PM_RECORDS = {
           { id: 1, date: '2026-07-05', manpower: 182, plant: 'Tower crane, 2 concrete pumps, 3 hoists', weather: '41°C, clear', workDone: 'L3 Zone B rebar; block walls L2 west; rooftop waterproofing prep.', delays: 'None', hse: 'Toolbox talk — heat stress; no incidents.' },
           { id: 2, date: '2026-07-04', manpower: 175, plant: 'Tower crane, 2 concrete pumps', weather: '40°C, clear', workDone: 'L3 Zone A pour completed 210m³.', delays: 'Pump breakdown 1.5h', hse: 'No incidents.' },
         ],
+        rfis: [
+          { id: 1, ref: 'RFI-021', subject: 'Terrazzo movement joint spacing — L2 corridors', question: 'HPM-ARC-DWG-061 shows no movement joints in terrazzo runs over 12m. Please confirm joint spacing and typical detail.', raisedBy: 'EBC (contractor)', date: '2026-06-18', discipline: 'Architecture', status: 'answered', answer: 'Provide movement joints at max 6m centres per spec section 09 66 13; typical detail issued as sketch SK-121.', answeredBy: 'Naseeb Shaheen', answeredDate: '2026-06-24', costImpact: false, timeImpact: false },
+          { id: 2, ref: 'RFI-022', subject: 'Chilled water riser insulation thickness at L3 crossover', question: 'Spec 23-07 table conflicts with drawing note (50mm vs 40mm) for the L3 riser crossover. Which governs?', raisedBy: 'EBC (contractor)', date: '2026-06-25', discipline: 'Mechanical', status: 'closed', answer: 'Spec governs — 50mm Class B throughout. Drawing note superseded; no cost change.', answeredBy: 'Mohammad Kubba', answeredDate: '2026-06-28', costImpact: false, timeImpact: false },
+          { id: 3, ref: 'RFI-023', subject: 'Radiology RF room shielding wall build-up', question: 'Vendor drawings still outstanding — please confirm lead shielding requirement and wall build-up for the RF room so blockwork can proceed without abortive work.', raisedBy: 'EBC (contractor)', date: '2026-07-01', discipline: 'Architecture', status: 'open', answer: null, answeredBy: null, answeredDate: null, costImpact: true, timeImpact: true },
+          { id: 4, ref: 'RFI-024', subject: 'Roof drain outlet clash with façade bracket at gridline 7', question: 'Rainwater outlet RWO-14 clashes with the façade support bracket at gridline 7. Propose offsetting outlet 300mm north — please confirm.', raisedBy: 'Skyline Facades (via EBC)', date: '2026-07-04', discipline: 'Civil / Drainage', status: 'open', answer: null, answeredBy: null, answeredDate: null, costImpact: false, timeImpact: false },
+        ],
+        safetyObservations: [
+          { id: 1, ref: 'HSE-041', date: '2026-06-12', observer: 'Ramesh Pillai (site)', category: 'unsafe_condition', severity: 'High', description: 'Unprotected slab edge at L3 Zone B after formwork strike.', action: 'Work stopped; edge protection reinstated same day; contractor HSE officer briefed.', status: 'closed' },
+          { id: 2, ref: 'HSE-042', date: '2026-06-19', observer: 'George Matta (site)', category: 'unsafe_act', severity: 'Medium', description: 'Two operatives cutting blockwork without dust masks or eye protection.', action: 'Toolbox talk on PPE for cutting operations; supervisor warned.', status: 'closed' },
+          { id: 3, ref: 'HSE-043', date: '2026-06-28', observer: 'Ramesh Pillai (site)', category: 'positive', severity: 'Low', description: 'Contractor rigging crew ran an unprompted pre-lift check on the terrazzo pallets — good practice worth logging.', action: 'Commended in weekly meeting; shared as good practice.', status: 'closed' },
+          { id: 4, ref: 'HSE-044', date: '2026-07-03', observer: 'George Matta (site)', category: 'unsafe_condition', severity: 'Medium', description: 'Trailing welding leads across the L2 east access route.', action: 'Contractor to install cable hangers along access routes.', status: 'open' },
+          { id: 5, ref: 'HSE-045', date: '2026-07-05', observer: 'Ramesh Pillai (site)', category: 'unsafe_act', severity: 'High', description: 'Operative observed riding the material hoist platform with a load.', action: null, status: 'open' },
+        ],
+        hse: { ltiFreeDays: 231 },
         milestones: [
           { id: 1, label: 'Structure topped out', baseline: '2026-05-31', forecast: '2026-06-14', actual: '2026-06-14' },
           { id: 2, label: 'Envelope watertight', baseline: '2026-09-30', forecast: '2026-10-20', actual: null },
@@ -932,6 +1049,29 @@ export const PM_RECORDS = {
           { key: '60', label: '60% — Design development', status: 'passed', gateDate: '2026-05-22', notes: 'Clash meeting — simulator MEP routing resolved.' },
           { key: '90', label: '90% — Pre-final', status: 'in_progress', gateDate: '2026-08-15', notes: 'Gate review booked; acoustic report is the long pole.' },
           { key: '100', label: 'Final / IFC', status: 'not_started', gateDate: '2026-10-01', notes: '' },
+        ],
+        // 90% gate coordination checklist mid-flight (60% items were closed at the gate).
+        gateChecklists: {
+          '60': [
+            { id: 1, text: 'Arch ↔ structure clash review (openings, transfer zones)', done: true, by: 'Naseeb Shaheen', date: '2026-05-20' },
+            { id: 2, text: 'MEP coordination — main routes & ceiling zones', done: true, by: 'Mohammad Kubba', date: '2026-05-21' },
+            { id: 3, text: 'Façade / structure interface review', done: true, by: 'Naseeb Shaheen', date: '2026-05-21' },
+            { id: 4, text: 'Authority pre-check — code compliance snapshot', done: true, by: 'Mohammad Kubba', date: '2026-05-22' },
+            { id: 5, text: 'BIM federation — clash report issued & actions assigned', done: true, by: 'Mohammad Kubba', date: '2026-05-22' },
+          ],
+          '90': [
+            { id: 1, text: 'Full discipline clash resolution (incl. corridor & riser zones)', done: false, by: null, date: null },
+            { id: 2, text: 'MEP final coordination sign-off', done: false, by: null, date: null },
+            { id: 3, text: 'Façade / structure / MEP interface close-out', done: true, by: 'Naseeb Shaheen', date: '2026-07-01' },
+            { id: 4, text: 'Authority submission package pre-check', done: true, by: 'Mohammad Kubba', date: '2026-06-30' },
+            { id: 5, text: 'BIM federation — zero critical clashes', done: false, by: null, date: null },
+            { id: 6, text: 'QS cost check against budget', done: false, by: null, date: null },
+          ],
+        },
+        transmittals: [
+          { id: 1, ref: 'TRN-001', date: '2026-06-30', to: 'Client', purpose: 'for_approval', note: 'Parking deck GA package for client review (Sprint 5 close-out).', items: [
+            { deliverableId: 2, docNo: 'CTF-STR-DWG-004', title: 'Parking deck GA & details', rev: 'A' },
+          ] },
         ],
         milestones: [
           { id: 1, label: '60% design gate', baseline: '2026-05-15', forecast: '2026-05-22', actual: '2026-05-22' },

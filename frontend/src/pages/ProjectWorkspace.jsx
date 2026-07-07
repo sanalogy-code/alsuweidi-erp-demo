@@ -4,6 +4,7 @@ import {
   LayoutDashboard, FileText, Layers, HardHat, CalendarRange, ListTodo,
   Banknote, Scale, ClipboardList, Landmark, Users, ArrowLeft, CalendarCheck2, Info,
   ShieldAlert, MessagesSquare, Receipt, PackageCheck, MessageSquareQuote,
+  Send, ListChecks, HelpCircle, ShieldCheck, Camera, Smartphone,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import PmOverview from '../components/projects/pm/PmOverview'
@@ -20,6 +21,12 @@ import ReportsView from '../components/projects/pm/ReportsView'
 import AuthoritiesView from '../components/projects/pm/AuthoritiesView'
 import TeamView from '../components/projects/pm/TeamView'
 import { RisksView, MeetingsView, PaymentsView, HandoverView, ConstructionFeedbackView } from '../components/projects/pm/GovernanceViews'
+import TransmittalsView from '../components/projects/pm/TransmittalsView'
+import RfiView from '../components/projects/pm/RfiView'
+import GateCoordinationView from '../components/projects/pm/GateCoordinationView'
+import PhotoReportView from '../components/projects/pm/PhotoReportView'
+import SafetyLogView from '../components/projects/pm/SafetyLogView'
+import QuickDailyEntry from '../components/projects/pm/QuickDailyEntry'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import StagePipeline from '../components/projects/StagePipeline'
@@ -71,8 +78,13 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
     { key: 'tasks', label: 'Plan & tasks', icon: ListTodo, badge: ph.tasks.filter((t) => t.status !== 'done').length },
     { key: 'updates', label: 'Weekly updates', icon: CalendarCheck2 },
     ...(ph.deliverables ? [{ key: 'deliverables', label: 'Deliverables', icon: FileText, badge: ph.deliverables.filter((d) => d.status === 'comments' || d.status === 'internal_review').length }] : []),
+    ...(ph.deliverables ? [{ key: 'transmittals', label: 'Transmittals', icon: Send }] : []),
     ...(ph.designStages ? [{ key: 'design', label: 'Design gates', icon: Layers }] : []),
+    ...(ph.designStages ? [{ key: 'gatecoord', label: 'Gate coordination', icon: ListChecks }] : []),
     ...(ph.wirs ? [{ key: 'site', label: 'Site', icon: HardHat, badge: ph.wirs.filter((w) => w.status !== 'approved' && w.status !== 'approved_as_noted').length + ph.ncrs.filter((n) => n.status !== 'closed').length }] : []),
+    ...(ph.wirs ? [{ key: 'quickdaily', label: 'Quick daily entry', icon: Smartphone }] : []),
+    ...(ph.wirs ? [{ key: 'rfis', label: 'RFIs', icon: HelpCircle, badge: (ph.rfis || []).filter((r) => r.status === 'open').length }] : []),
+    ...(ph.wirs ? [{ key: 'hse', label: 'Safety log', icon: ShieldCheck, badge: (ph.safetyObservations || []).filter((o) => o.status === 'open').length }] : []),
     { key: 'schedule', label: 'Schedule', icon: CalendarRange },
     ...(canViewSensitive ? [{ key: 'fees', label: 'Fees & cost', icon: Banknote }] : []),
     { key: 'team', label: 'Team', icon: Users },
@@ -93,6 +105,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
   const contractSections = [
     { key: 'claims', label: 'Claims & EOT', icon: Scale, badge: claimAlertCount },
     { key: 'reports', label: 'Progress reports', icon: ClipboardList, badge: reportsDue },
+    ...(hasSupervision ? [{ key: 'photoreport', label: 'Photo report (4.21)', icon: Camera }] : []),
     { key: 'authorities', label: 'Authorities', icon: Landmark },
     { key: 'risks', label: 'Risks', icon: ShieldAlert, badge: openRisks },
     { key: 'meetings', label: 'Meetings & actions', icon: MessagesSquare, badge: openActions },
@@ -188,8 +201,13 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
               {sel.view === 'tasks' && <PlanView pm={pm} phase={activePhase} onUpdatePhase={(next) => updatePhase(activePhase.key, next)} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} onLogHours={onLogTaskHours ? (assignee, hours, date) => onLogTaskHours(assignee, project.id, hours, date) : null} />}
               {sel.view === 'updates' && <WeeklyUpdatesView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
               {sel.view === 'deliverables' && activePhase.deliverables && <DeliverablesView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
+              {sel.view === 'transmittals' && activePhase.deliverables && <TransmittalsView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} project={project} />}
               {sel.view === 'design' && activePhase.designStages && <DesignStagesView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
+              {sel.view === 'gatecoord' && activePhase.designStages && <GateCoordinationView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
               {sel.view === 'site' && activePhase.wirs && <SiteView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
+              {sel.view === 'quickdaily' && activePhase.wirs && <QuickDailyEntry phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
+              {sel.view === 'rfis' && activePhase.wirs && <RfiView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
+              {sel.view === 'hse' && activePhase.wirs && <SafetyLogView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
               {sel.view === 'schedule' && <ScheduleView pm={activePhase} />}
               {sel.view === 'fees' && <FeesView pm={activePhase} project={project} invoices={INVOICES} timesheets={timesheets} totalManhourBudget={pm.phases.reduce((s, ph) => s + (ph.fees.manhourBudget || 0), 0)} canViewSensitive={canViewSensitive} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
               {sel.view === 'team' && <TeamView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
@@ -197,6 +215,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
 
             {sel.view === 'claims' && !sel.phase && <ClaimsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
             {sel.view === 'reports' && !sel.phase && <ReportsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
+            {sel.view === 'photoreport' && !sel.phase && <PhotoReportView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} project={project} />}
             {sel.view === 'authorities' && !sel.phase && <AuthoritiesView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
             {sel.view === 'risks' && !sel.phase && <RisksView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
             {sel.view === 'meetings' && !sel.phase && <MeetingsView pm={pm} onUpdate={(next) => onUpdatePm(project.id, next)} />}
