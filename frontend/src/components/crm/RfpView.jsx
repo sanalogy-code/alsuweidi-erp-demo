@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, ExternalLink, UserPlus } from 'lucide-react'
 import { RFP_STATUSES, rfpStatusMeta, RFP_ENGAGEMENTS } from '../../data/rfpData'
 import { PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_LOCATIONS, CONTRACT_TYPES } from '../../data/projectsData'
+import { DESIGNATIONS } from '../../data/hrData'
 
 // Proposals / RFP register (Batch 14) — the information from the current ERP's
 // RFP form, redesigned: a scannable register with expandable rows and a compact
@@ -13,12 +14,30 @@ const todayISO = () => new Date().toISOString().slice(0, 10)
 
 const scoreTone = (n) => (n == null ? 'text-gray-300' : n >= 70 ? 'text-green-600' : n >= 50 ? 'text-amber-600' : 'text-red-600')
 
-export default function RfpView({ rfps, onUpdate, companies }) {
+export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, currentUserName }) {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(null)
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
+  const [staffFormFor, setStaffFormFor] = useState(null)
+  const [staffForm, setStaffForm] = useState({ role: DESIGNATIONS[0]?.title || 'Resident Engineer', count: 1, neededBy: '', note: '' })
+  const [staffFlash, setStaffFlash] = useState(null)
+
+  // Pipeline staffing request (Batch 16c): "if this lands we need X of role Y by
+  // date Z" — goes straight to HR's Staff planning intake, contingent on award.
+  const sendStaffing = (r) => {
+    if (!staffForm.neededBy) return
+    onRequestStaffing({
+      rfpId: r.id, rfpName: r.shortName, role: staffForm.role,
+      count: Number(staffForm.count) || 1, neededBy: staffForm.neededBy,
+      note: staffForm.note.trim(), requestedBy: currentUserName || r.rfpManager || 'PM',
+    })
+    setStaffFormFor(null)
+    setStaffForm({ role: DESIGNATIONS[0]?.title || 'Resident Engineer', count: 1, neededBy: '', note: '' })
+    setStaffFlash(r.id)
+    setTimeout(() => setStaffFlash(null), 3000)
+  }
   const [form, setForm] = useState({
     name: '', shortName: '', employer: '', engagement: RFP_ENGAGEMENTS[0], projectType: PROJECT_TYPES[0],
     mainFunction: MAIN_FUNCTIONS[0], location: PROJECT_LOCATIONS[0], contractType: CONTRACT_TYPES[0],
@@ -153,7 +172,28 @@ export default function RfpView({ rfps, onUpdate, companies }) {
                     <button onClick={() => patch(r.id, { status: 'lost' })} className="px-2.5 py-1 rounded-md border border-red-300 text-red-700 hover:bg-red-50">Lost</button>
                   </>)}
                   {r.status === 'awarded' && !r.projectId && <span className="text-gray-400 self-center">Create the delivery project from the won deal in Pipeline (LOA required).</span>}
+                  {onRequestStaffing && r.status !== 'lost' && r.status !== 'declined' && (
+                    <button onClick={() => setStaffFormFor(staffFormFor === r.id ? null : r.id)} className="px-2.5 py-1 rounded-md border border-gray-300 text-gray-600 hover:border-brand hover:text-brand flex items-center gap-1">
+                      <UserPlus size={12} /> Request staffing
+                    </button>
+                  )}
+                  {staffFlash === r.id && <span className="text-green-700 self-center">✓ Sent to HR Staff planning</span>}
                 </div>
+
+                {staffFormFor === r.id && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2 space-y-1.5">
+                    <div className="text-[11px] font-semibold text-gray-500">Expected staffing if this is awarded — goes to HR's Staff planning intake</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select value={staffForm.role} onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })} className="border rounded-md px-2 py-1 bg-white">
+                        {DESIGNATIONS.map((d) => <option key={d.title}>{d.title}</option>)}
+                      </select>
+                      <label className="text-gray-500">× <input type="number" min="1" value={staffForm.count} onChange={(e) => setStaffForm({ ...staffForm, count: e.target.value })} className="w-14 border rounded-md px-1.5 py-1 text-right" /></label>
+                      <label className="text-gray-500">needed by <input type="date" value={staffForm.neededBy} onChange={(e) => setStaffForm({ ...staffForm, neededBy: e.target.value })} className="border rounded-md px-2 py-1 ml-1" /></label>
+                      <input value={staffForm.note} onChange={(e) => setStaffForm({ ...staffForm, note: e.target.value })} placeholder="Note (e.g. site-based, specific experience)" className="flex-1 min-w-[160px] border rounded-md px-2 py-1" />
+                      <button onClick={() => sendStaffing(r)} className="px-2.5 py-1 rounded-md bg-brand text-white">Send to HR</button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

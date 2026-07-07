@@ -17,6 +17,22 @@ export const rfpStatusMeta = (k) => RFP_STATUSES.find((s) => s.key === k) || RFP
 
 export const RFP_ENGAGEMENTS = ['Design + Supervision', 'Design only', 'Supervision only', 'Study / Advisory', 'Secondment']
 
+// --- Pipeline staffing requests (Batch 16c, Sana 7 Jul) --------------------------
+// "When we have a project in the pipeline and expect we need x employees, PMs and
+// managers should be able to request that — it feeds HR's Staff planning tab."
+// Contingent on award; HR accepts a request into the hiring plan or declines it.
+export const STAFFING_REQUEST_STATUSES = [
+  { key: 'requested', label: 'Requested', chip: 'bg-amber-100 text-amber-700' },
+  { key: 'accepted', label: 'In hiring plan', chip: 'bg-green-100 text-green-700' },
+  { key: 'declined', label: 'Declined', chip: 'bg-gray-100 text-gray-500' },
+]
+export const staffingStatusMeta = (k) => STAFFING_REQUEST_STATUSES.find((s) => s.key === k) || STAFFING_REQUEST_STATUSES[0]
+
+export const INITIAL_STAFFING_REQUESTS = [
+  { id: 1, rfpId: 1, rfpName: 'Jubail Research Facility', role: 'Resident Engineer', count: 1, neededBy: '2026-10-01', note: 'Full-time on site from mobilisation if we win.', requestedBy: 'Osama Hussain', date: '2026-07-01', status: 'requested' },
+  { id: 2, rfpId: 1, rfpName: 'Jubail Research Facility', role: 'Structural Engineer', count: 2, neededBy: '2026-09-15', note: 'Marine/coastal experience preferred.', requestedBy: 'Osama Hussain', date: '2026-07-01', status: 'requested' },
+]
+
 // companyId → crmData INITIAL_COMPANIES (nullable); projectId → projectsData
 // PROJECTS when awarded; dealId → CRM deals when one was raised.
 export const INITIAL_RFPS = [

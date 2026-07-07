@@ -45,7 +45,7 @@ import { weekStartOf, addDays, toLocalISO } from '../data/timesheetData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 import { parseLocalDate, todayLocal } from '../utils/date'
 
-export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [], onEmployeeAdded, timesheets = [], setTimesheets }) {
+export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [], onEmployeeAdded, timesheets = [], setTimesheets, staffingRequests = [], onUpdateStaffingRequests }) {
   const location = useLocation()
   // Home-page quick actions deep-link straight to a view (e.g. Fill Timesheet)
   const [view, setView] = useState(location.state?.view || 'myhr')
@@ -557,6 +557,8 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
               onAdd={(p) => setStaffPlans([...staffPlans, { ...p, id: Math.max(...staffPlans.map((x) => x.id), 0) + 1 }])}
               onUpdate={(p) => setStaffPlans(staffPlans.map((x) => (x.id === p.id ? p : x)))}
               onRemove={(id) => setStaffPlans(staffPlans.filter((x) => x.id !== id))}
+              staffingRequests={staffingRequests}
+              onUpdateStaffingRequests={onUpdateStaffingRequests}
             />
           )}
 

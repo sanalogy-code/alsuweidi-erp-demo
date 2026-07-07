@@ -14,6 +14,7 @@ import Admin from './pages/Admin'
 import Office from './pages/Office'
 import TimesheetGate from './components/TimesheetGate'
 import FeedbackButton, { INITIAL_FEEDBACK } from './components/SystemFeedback'
+import { INITIAL_STAFFING_REQUESTS } from './data/rfpData'
 import { PUBLIC_HOLIDAYS, EMPLOYEES } from './data/hrData'
 import { TIMESHEETS, weekStartOf, toLocalISO } from './data/timesheetData'
 import { parseLocalDate } from './utils/date'
@@ -41,6 +42,10 @@ export default function App() {
   // floating button, triaged in the Admin Center.
   const [systemFeedback, setSystemFeedback] = useState(INITIAL_FEEDBACK)
   const addFeedback = (f) => setSystemFeedback((prev) => [{ ...f, id: Math.max(0, ...prev.map((x) => x.id)) + 1 }, ...prev])
+  // Pipeline staffing requests: raised on an RFP in CRM, triaged in HR Staff
+  // planning (Batch 16c). Lifted here because it crosses the CRM↔HR boundary.
+  const [staffingRequests, setStaffingRequests] = useState(INITIAL_STAFFING_REQUESTS)
+  const addStaffingRequest = (r) => setStaffingRequests((prev) => [{ ...r, id: Math.max(0, ...prev.map((x) => x.id)) + 1, date: new Date().toISOString().slice(0, 10), status: 'requested' }, ...prev])
 
   // Task-hours → timesheet (Batch 16): logging hours on a project task writes
   // them into the assignee's weekly timesheet under that project's code, so the
@@ -166,10 +171,10 @@ export default function App() {
       <Route path="/dev" element={<DevDashboard />} />
       <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
-      <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} />} />
+      <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} onRequestStaffing={addStaffingRequest} />} />
       <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} onUpdateAllocations={setAllocations} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
       <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} onLogTaskHours={logTaskHours} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} />} />
-      <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} />} />
+      <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} staffingRequests={staffingRequests} onUpdateStaffingRequests={setStaffingRequests} />} />
       <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />
       <Route path="/finance" element={<Finance user={user} onLogout={handleLogout} />} />
       <Route path="/marketing" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />

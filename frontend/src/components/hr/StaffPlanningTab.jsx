@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { CalendarClock, Plus, AlertTriangle, X } from 'lucide-react'
+import { CalendarClock, Plus, AlertTriangle, X, Inbox } from 'lucide-react'
 import { DESIGNATIONS, STAFF_PLAN_STATUS } from '../../data/hrData'
+import { staffingStatusMeta } from '../../data/rfpData'
 import { parseLocalDate, todayLocal } from '../../utils/date'
 
 // Staff planning: hires needed for upcoming/known projects — role, headcount,
@@ -10,7 +11,7 @@ const fmt = (d) => (d ? parseLocalDate(d).toLocaleDateString('en-GB', { day: 'nu
 
 const inputCls = 'border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand'
 
-export default function StaffPlanningTab({ plans, projects = [], onAdd, onUpdate, onRemove }) {
+export default function StaffPlanningTab({ plans, projects = [], onAdd, onUpdate, onRemove, staffingRequests = [], onUpdateStaffingRequests }) {
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState({ projectRef: '', role: DESIGNATIONS[0].title, count: 1, neededBy: '', notes: '' })
 
@@ -55,6 +56,52 @@ export default function StaffPlanningTab({ plans, projects = [], onAdd, onUpdate
           <div className="text-xl font-bold text-gray-800">{byProject.length}</div>
         </div>
       </div>
+
+      {/* Pipeline intake (Batch 16c): staffing needs PMs raised on RFPs in CRM.
+          Accepting converts the request into a plan line, marked contingent. */}
+      {staffingRequests.filter((r) => r.status === 'requested').length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-2">
+          <div className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">
+            <Inbox size={13} /> Pipeline intake — staffing requested on proposals ({staffingRequests.filter((r) => r.status === 'requested').length})
+          </div>
+          {staffingRequests.filter((r) => r.status === 'requested').map((r) => (
+            <div key={r.id} className="bg-white rounded-md border border-amber-100 px-3 py-2 flex items-center gap-3 flex-wrap text-xs">
+              <span className="font-medium text-gray-800">{r.count}× {r.role}</span>
+              <span className="text-gray-500">for <span className="text-gray-700">{r.rfpName}</span> (pipeline) · by {fmt(r.neededBy)}</span>
+              {r.note && <span className="text-gray-400 flex-1 min-w-[120px] truncate" title={r.note}>{r.note}</span>}
+              <span className="text-gray-400">{r.requestedBy} · {r.date}</span>
+              <span className="flex gap-1.5 ml-auto">
+                <button
+                  onClick={() => {
+                    onAdd({ projectRef: `Pipeline: ${r.rfpName}`, role: r.role, count: r.count, neededBy: r.neededBy, notes: `Contingent on award. ${r.note || ''}`.trim(), status: 'planned' })
+                    onUpdateStaffingRequests(staffingRequests.map((x) => (x.id === r.id ? { ...x, status: 'accepted' } : x)))
+                  }}
+                  className="px-2 py-1 rounded-md border border-green-300 text-green-700 hover:bg-green-50 font-medium">
+                  Accept into plan
+                </button>
+                <button
+                  onClick={() => onUpdateStaffingRequests(staffingRequests.map((x) => (x.id === r.id ? { ...x, status: 'declined' } : x)))}
+                  className="px-2 py-1 rounded-md border border-gray-300 text-gray-500 hover:bg-gray-50">
+                  Decline
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      {staffingRequests.some((r) => r.status !== 'requested') && (
+        <details className="text-xs text-gray-400">
+          <summary className="cursor-pointer">Handled pipeline requests ({staffingRequests.filter((r) => r.status !== 'requested').length})</summary>
+          <div className="mt-1.5 space-y-1">
+            {staffingRequests.filter((r) => r.status !== 'requested').map((r) => (
+              <div key={r.id} className="flex items-center gap-2">
+                <span>{r.count}× {r.role} — {r.rfpName}</span>
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${staffingStatusMeta(r.status).chip}`}>{staffingStatusMeta(r.status).label}</span>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
 
       {adding && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">

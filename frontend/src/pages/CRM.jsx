@@ -20,7 +20,7 @@ import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_TASKS, INITIAL_INTERACTION
 import RfpView from '../components/crm/RfpView'
 import { INITIAL_RFPS } from '../data/rfpData'
 
-export default function CRM({ user, onLogout, projects = [], onAddProject, deals, setDeals }) {
+export default function CRM({ user, onLogout, projects = [], onAddProject, deals, setDeals, onRequestStaffing }) {
   const navigate = useNavigate()
   const [projectDeal, setProjectDeal] = useState(null)
   const [companies, setCompanies] = useState(INITIAL_COMPANIES)
@@ -271,7 +271,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
         )}
 
         {tab === 'rfps' && (
-          <RfpView rfps={rfps} onUpdate={setRfps} companies={companies} />
+          <RfpView rfps={rfps} onUpdate={setRfps} companies={companies} onRequestStaffing={onRequestStaffing} currentUserName={user?.username} />
         )}
 
         {tab === 'pipeline' && (
