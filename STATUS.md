@@ -8,7 +8,13 @@ Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.
 
 **Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (7 Jul 2026 morning — Sana's five points):**
+**Latest (7 Jul 2026 — Batch 16a, full task management):**
+- **Subtasks**: real parent/child tasks (own assignee, dates, status, priority) nested under the parent on the board, sprint columns, and backlog; parent % complete rolls up from children.
+- **Dependencies**: "Blocked by" on any task — blocked tasks get an amber chip + lock, can't move past To-do until predecessors are done, and render amber on the Gantt. Add/remove dependencies from the card.
+- **Milestones are editable**: add, adjust forecast (red when slipping past baseline), "Achieved today" — on both waterfall and sprint plans.
+- **Log hours on a task → timesheet**: hours land in the assignee's weekly HR timesheet under the project's code (creates the draft week if needed; submitted/approved weeks are locked; external site staff get a clear note), post an automatic progress note on the task, and flow through to the Management dashboard hours and the DMR. The timesheet becomes a by-product of doing the work. Demo: P-2688 → Design → Plan & tasks.
+
+**Earlier (7 Jul 2026 morning — Sana's five points):**
 - **Office Administration** (`/office`, new module — 9th): the **admin-staff** workspace, split out of the system Admin Center per Sana ("admin is admin staff, not IT admin"). **Correspondence register** (every letter in/out with auto IN/OUT-2026-NNN refs, party, project link, attachment, reply-by tracking with overdue flags, full filters + date range) and **Registrations & licenses** (moved here from Admin Center — it's an ODC function). Admin Center is now purely system admin: users, roles, audit, system feedback.
 - **Per-user special access**: Admin → Users → shield icon on any row → grant an individual view/full on a module their role doesn't have, with optional expiry (cover-someone's-leave). Shows as "+N special access" on the row. Enforcement lands with Phase 2 auth like the rest of the Admin Center.
 - **Filters/search/date-range pass**: invoices (search + issue-date range), expenses (search + date range), deliverables (search + status), RFPs (search), My Work (search), Management dashboard (search), correspondence (everything). More views still to cover — tracked in Batch 16's basics pass.

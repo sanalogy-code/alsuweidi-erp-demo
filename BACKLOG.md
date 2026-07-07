@@ -109,13 +109,16 @@ missing studyType for Study/Advisory, memoize myWorkFor/dashboard/revenue rollup
   Incorrect Information / Others), what it's in (e.g. approved materials list), impact measure
   (e.g. D-Quality), description, issue reason, proposed improvement, reported by, status.
   Feeds the Lessons tab / design QA. Place: project workspace, project-level section.
-- [ ] **Full task management** — Sana: "look at PMP and PM tools, stop keeping it simple."
-  Dependencies (`dependsOn` with blocked-until indicators, reflected on the Gantt), real
-  **subtasks** (parent/child, not just checklists), add/edit **milestones** from the Plan view
-  (currently seed-only).
-- [ ] **Task hours → timesheet** — "Log hours" on a task writes the hours into the assignee's
-  weekly timesheet under that project's code automatically (timesheet becomes a by-product of
-  task work). Timesheets state already lives in App.jsx, so this is wiring, not architecture.
+- [x] ~~Full task management~~ — **Shipped Batch 16a (7 Jul):** subtasks (parent/child with own
+  assignee/dates/status, nested on the board/sprint/backlog, parent % rolls up), dependencies
+  (`dependsOn` → blocked chip, status locked until predecessors done, amber Gantt bars,
+  add/remove on the card), milestone editor (add / edit forecast / mark achieved) on both
+  waterfall and sprint plans. Demo: P-2688 Design → Plan & tasks.
+- [x] ~~Task hours → timesheet~~ — **Shipped Batch 16a (7 Jul):** "Log hours" on any task writes
+  into the assignee's weekly timesheet under the project code (draft/new weeks only —
+  submitted/approved weeks are locked; external staff get a friendly no-timesheet note), posts
+  an automatic progress note, and flows to the PM dashboards/DMR via live timesheet state.
+  Verified end-to-end: 4h logged on a P-2688 task appeared in Kubba's HR timesheet.
 - [ ] **Staffing requests from the pipeline → HR Staff planning** (corrected by Sana 7 Jul: the
   resource planner stays for hired employees ONLY — no allocating to RFPs). Instead: from a
   pipeline deal/RFP, a PM or manager raises an expected staffing need (role, headcount,
