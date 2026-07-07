@@ -3,6 +3,7 @@ import { FolderKanban, Camera, PenLine, EyeOff, Eye, CheckCircle2, AlertCircle, 
 import Modal from '../crm/Modal'
 import { PROJECT_TYPES, MAIN_FUNCTIONS, PROJECT_SCOPES, GENERAL_STATUS, scopeOf, yearStartedOf, yearCompletedOf } from '../../data/projectsData'
 import { usePortfolioPacks, addPortfolioPack, removePortfolioPack } from '../../data/portfolioPacksStore'
+import PackUsageLog from './PackUsageLog'
 
 // Built-up-area bands for "find me a project about this size" searches.
 // Projects with no recorded area (0 / infrastructure) only match "All sizes".
@@ -16,7 +17,7 @@ const SIZE_BANDS = [
 // Marketing's lens on the project list: is each project ready to show clients?
 // Portfolio-ready = has a marketing description + approved photography + not
 // confidential. Marketing owns the description and the confidentiality flag here.
-export default function PortfolioView({ projects, onUpdateProject, onCompleteDescriptionTask }) {
+export default function PortfolioView({ projects, onUpdateProject, onCompleteDescriptionTask, packUsage = [], onLogPackUsage }) {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [functionFilter, setFunctionFilter] = useState('')
@@ -266,6 +267,9 @@ export default function PortfolioView({ projects, onUpdateProject, onCompleteDes
           </button>
         </form>
       </div>
+
+      {/* Asset usage tracking — who sent/downloaded which pack, to whom */}
+      {onLogPackUsage && <PackUsageLog packs={packs} usage={packUsage} onLog={onLogPackUsage} />}
 
       {descProject && (
         <Modal title={`Marketing description — ${descProject.projectNo}`} onClose={() => setDescProject(null)}>

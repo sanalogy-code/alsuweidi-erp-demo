@@ -115,16 +115,88 @@ export const CONTENT_STATUSES = {
 }
 
 // relatedProjectId is nullable — links a post to a portfolio project.
+// campaignId is nullable — groups the item under a CAMPAIGNS entry.
+// `approval` is nullable — set when the item moves to approved (who/when/comment),
+// so the approval chain is auditable, not just a status flip.
 // The content itself is the `copy` (text) and `media` (file-name-only until
 // Phase 2 storage); `title` is an optional internal reference label.
 export const CONTENT_ITEMS = [
-  { id: 1, title: 'Saadiyat Villas Cluster 4 — construction milestone', type: 'Project spotlight', channel: 'LinkedIn', date: '2026-07-06', owner: 'Marketing', status: 'approved', relatedProjectId: 5, copy: 'Cluster 4 at Saadiyat Villas has reached a major construction milestone — all 38 villa structures are now topped out. Proud to deliver full design and supervision for @Emaar Properties on this landmark community. #engineering #abudhabi', media: 'saadiyat-c4-drone-milestone.mp4', notes: 'Drone footage approved by client — tag Emaar.' },
-  { id: 2, title: 'Meet our engineers — Fatima Al Mansouri', type: 'LinkedIn post', channel: 'LinkedIn', date: '2026-07-09', owner: 'Marketing', status: 'draft', relatedProjectId: null, copy: 'People of ALSUWEIDI, part 3: meet Fatima Al Mansouri, the structural engineer behind some of our most ambitious facades. "The best structure is the one nobody notices — it just works."', media: 'people-fatima-al-mansouri.jpg', notes: 'People-of-ALSUWEIDI series, part 3.' },
-  { id: 3, title: 'Q3 company newsletter', type: 'Newsletter', channel: 'Email', date: '2026-07-15', owner: 'Marketing', status: 'pending_approval', relatedProjectId: null, copy: 'Q3 kickoff edition: planning meeting recap, three project milestones, and a warm welcome to our new joiners. Full draft in the attached layout.', media: 'newsletter-2026-q3-draft.pdf', notes: 'Includes Q3 planning meeting recap and new-joiner welcomes.' },
-  { id: 4, title: 'Healthcare design capabilities campaign', type: 'Campaign', channel: 'LinkedIn', date: '2026-07-20', owner: 'Marketing', status: 'idea', relatedProjectId: 1, copy: '', media: '', notes: 'Anchor on Harbour Point Medical Centre once photos are in.' },
-  { id: 5, title: 'Eid Al Adha greeting', type: 'LinkedIn post', channel: 'LinkedIn', date: '2026-07-01', owner: 'Marketing', status: 'published', relatedProjectId: null, copy: 'Eid Mubarak from all of us at ALSUWEIDI Engineering Consultants. Wishing you and your families a blessed Eid Al Adha.', media: 'eid-al-adha-2026-card.png', notes: '' },
-  { id: 6, title: 'Corniche Tower retrofit — case study page', type: 'News article', channel: 'Website', date: '2026-07-28', owner: 'Marketing', status: 'draft', relatedProjectId: 12, copy: 'How do you re-skin a 24-storey office tower without decanting a single tenant? Our facade team\'s condition assessment and retrofit design for Corniche Tower — full case study with before/after imagery.', media: 'corniche-retrofit-case-study.zip', notes: 'Completed project — full case study with before/after.' },
-  { id: 7, title: 'Big 5 exhibition — save the date', type: 'Event', channel: 'Email', date: '2026-08-12', owner: 'Marketing', status: 'idea', relatedProjectId: null, copy: '', media: '', notes: 'Announce our Big 5 stand to the client mailing list — book stand by end of July.' },
+  { id: 1, title: 'Saadiyat Villas Cluster 4 — construction milestone', type: 'Project spotlight', channel: 'LinkedIn', date: '2026-07-06', owner: 'Marketing', status: 'approved', relatedProjectId: 5, campaignId: null, approval: { by: 'Khalid Al Suweidi', date: '2026-07-03', comment: 'Client tag confirmed with Emaar comms — good to go.' }, copy: 'Cluster 4 at Saadiyat Villas has reached a major construction milestone — all 38 villa structures are now topped out. Proud to deliver full design and supervision for @Emaar Properties on this landmark community. #engineering #abudhabi', media: 'saadiyat-c4-drone-milestone.mp4', notes: 'Drone footage approved by client — tag Emaar.' },
+  { id: 2, title: 'Meet our engineers — Fatima Al Mansouri', type: 'LinkedIn post', channel: 'LinkedIn', date: '2026-07-09', owner: 'Marketing', status: 'draft', relatedProjectId: null, campaignId: 2, approval: null, copy: 'People of ALSUWEIDI, part 3: meet Fatima Al Mansouri, the structural engineer behind some of our most ambitious facades. "The best structure is the one nobody notices — it just works."', media: 'people-fatima-al-mansouri.jpg', notes: 'People-of-ALSUWEIDI series, part 3.' },
+  { id: 3, title: 'Q3 company newsletter', type: 'Newsletter', channel: 'Email', date: '2026-07-15', owner: 'Marketing', status: 'pending_approval', relatedProjectId: null, campaignId: null, approval: null, copy: 'Q3 kickoff edition: planning meeting recap, three project milestones, and a warm welcome to our new joiners. Full draft in the attached layout.', media: 'newsletter-2026-q3-draft.pdf', notes: 'Includes Q3 planning meeting recap and new-joiner welcomes.' },
+  { id: 4, title: 'Healthcare design capabilities campaign', type: 'Campaign', channel: 'LinkedIn', date: '2026-07-20', owner: 'Marketing', status: 'idea', relatedProjectId: 1, campaignId: 1, approval: null, copy: '', media: '', notes: 'Anchor on Harbour Point Medical Centre once photos are in.' },
+  { id: 5, title: 'Eid Al Adha greeting', type: 'LinkedIn post', channel: 'LinkedIn', date: '2026-07-01', owner: 'Marketing', status: 'published', relatedProjectId: null, campaignId: null, approval: { by: 'Khalid Al Suweidi', date: '2026-06-29', comment: '' }, copy: 'Eid Mubarak from all of us at ALSUWEIDI Engineering Consultants. Wishing you and your families a blessed Eid Al Adha.', media: 'eid-al-adha-2026-card.png', notes: '' },
+  { id: 6, title: 'Corniche Tower retrofit — case study page', type: 'News article', channel: 'Website', date: '2026-07-28', owner: 'Marketing', status: 'draft', relatedProjectId: 12, campaignId: 1, approval: null, copy: 'How do you re-skin a 24-storey office tower without decanting a single tenant? Our facade team\'s condition assessment and retrofit design for Corniche Tower — full case study with before/after imagery.', media: 'corniche-retrofit-case-study.zip', notes: 'Completed project — full case study with before/after.' },
+  { id: 7, title: 'Big 5 exhibition — save the date', type: 'Event', channel: 'Email', date: '2026-08-12', owner: 'Marketing', status: 'idea', relatedProjectId: null, campaignId: null, approval: null, copy: '', media: '', notes: 'Announce our Big 5 stand to the client mailing list — book stand by end of July.' },
+]
+
+// ---------------------------------------------------------------------------
+// Campaigns — LIGHTWEIGHT FIRST SHAPE, scope to be confirmed with Sana.
+// A campaign is just a named goal + date range that content items hang off
+// (via campaignId). No budgets/audiences/UTMs yet — that's the scoping call.
+// ---------------------------------------------------------------------------
+
+export const CAMPAIGN_STATUSES = {
+  planning: { label: 'Planning', chip: 'bg-gray-100 text-gray-600' },
+  active: { label: 'Active', chip: 'bg-blue-100 text-blue-700' },
+  done: { label: 'Done', chip: 'bg-green-100 text-green-700' },
+}
+
+export const CAMPAIGNS = [
+  { id: 1, name: 'Design capabilities push — H2 2026', goal: 'Position the design practice (healthcare + facade retrofit) ahead of Q4 tenders.', startDate: '2026-07-01', endDate: '2026-10-31', status: 'active', owner: 'Marketing' },
+  { id: 2, name: 'People of ALSUWEIDI', goal: 'Employer-brand series — one engineer profile a month to support hiring.', startDate: '2026-05-01', endDate: '2026-12-31', status: 'active', owner: 'Marketing' },
+]
+
+// ---------------------------------------------------------------------------
+// Portfolio pack usage log — who sent/downloaded which pack, to whom.
+// Manually logged for now: the CRM download button lives in the CRM module,
+// so auto-logging from there is wired in Phase 2 (needs the shared store).
+// ---------------------------------------------------------------------------
+
+export const PACK_USAGE_LOG = [
+  { id: 1, packId: 1, packName: 'ALSUWEIDI-Portfolio-Education-2026.pdf', action: 'sent', by: 'Naseeb Shaheen', date: '2026-06-30', client: 'ADEK', note: 'Follow-up to the Khalifa City schools meeting.' },
+  { id: 2, packId: 4, packName: 'ALSUWEIDI-Portfolio-Communities-2026.pdf', action: 'downloaded', by: 'Osama Hussain', date: '2026-06-24', client: 'Modon Properties', note: '' },
+  { id: 3, packId: 2, packName: 'ALSUWEIDI-Portfolio-DataCenter-2026.pdf', action: 'sent', by: 'Marketing', date: '2026-06-12', client: 'Khazna', note: 'Attached to intro email after WETEX contact.' },
+]
+
+// ---------------------------------------------------------------------------
+// Event / exhibition tracker
+// ---------------------------------------------------------------------------
+
+export const EVENT_TYPES = ['Exhibition', 'Conference', 'Client event']
+
+export const EVENT_STATUSES = {
+  planned: { label: 'Planned', chip: 'bg-gray-100 text-gray-600' },
+  confirmed: { label: 'Confirmed', chip: 'bg-blue-100 text-blue-700' },
+  attended: { label: 'Attended', chip: 'bg-green-100 text-green-700' },
+  skipped: { label: 'Skipped', chip: 'bg-slate-100 text-slate-500' },
+}
+
+export const MARKETING_EVENTS = [
+  { id: 1, name: 'Cityscape Abu Dhabi 2026', dates: '2026-09-14 → 2026-09-16', venue: 'ADNEC, Abu Dhabi', type: 'Exhibition', owner: 'Marketing', budget: 85000, status: 'confirmed', outcomes: '', leadsCount: 0 },
+  { id: 2, name: 'WETEX 2026', dates: '2026-10-06 → 2026-10-08', venue: 'DWTC, Dubai', type: 'Exhibition', owner: 'Marketing', budget: 40000, status: 'planned', outcomes: '', leadsCount: 0 },
+  { id: 3, name: 'Big 5 Global 2026', dates: '2026-11-24 → 2026-11-27', venue: 'DWTC, Dubai', type: 'Exhibition', owner: 'Marketing', budget: 120000, status: 'planned', outcomes: 'Stand booking due end of July.', leadsCount: 0 },
+  { id: 4, name: 'ADNOC suppliers forum', dates: '2026-05-19', venue: 'ADNOC HQ, Abu Dhabi', type: 'Client event', owner: 'Osama Hussain', budget: 5000, status: 'attended', outcomes: 'Two supervision leads; pump-station framework mentioned again.', leadsCount: 2 },
+]
+
+// ---------------------------------------------------------------------------
+// Award submissions register
+// ---------------------------------------------------------------------------
+
+export const AWARD_STATUSES = {
+  considering: { label: 'Considering', chip: 'bg-gray-100 text-gray-600' },
+  preparing: { label: 'Preparing', chip: 'bg-blue-100 text-blue-700' },
+  submitted: { label: 'Submitted', chip: 'bg-purple-100 text-purple-700' },
+  shortlisted: { label: 'Shortlisted', chip: 'bg-amber-100 text-amber-700' },
+  won: { label: 'Won', chip: 'bg-green-100 text-green-700' },
+  lost: { label: 'Lost', chip: 'bg-red-100 text-red-700' },
+}
+
+// projectId → PROJECTS (nullable; projectName kept as the display fallback).
+export const AWARD_SUBMISSIONS = [
+  { id: 1, award: 'MEED Projects Awards — Building Project of the Year', organiser: 'MEED', category: 'Buildings', projectId: 12, projectName: 'Corniche Tower Facade Retrofit', deadline: '2026-03-15', status: 'won', owner: 'Marketing', notes: 'Won GCC category — press release published, trophy in reception.' },
+  { id: 2, award: 'Construction Innovation Awards 2026', organiser: 'Big Project ME', category: 'Retrofit & Refurbishment', projectId: 5, projectName: 'Saadiyat Villas Cluster 4', deadline: '2026-08-30', status: 'preparing', owner: 'Marketing', notes: 'Need approved photography before the entry can be finalised.' },
+  { id: 3, award: 'Abu Dhabi Sustainability Awards', organiser: 'Department of Energy', category: 'Sustainable Design', projectId: null, projectName: 'Khalifa City School Cluster (TIS)', deadline: '2026-05-01', status: 'lost', owner: 'Marketing', notes: 'Not shortlisted — feedback: entries favoured operational-stage evidence.' },
 ]
 
 // ---------------------------------------------------------------------------

@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import { Inbox, CalendarDays, FolderKanban, Palette, LineChart, FileUser } from 'lucide-react'
+import { Inbox, CalendarDays, FolderKanban, Palette, LineChart, FileUser, Megaphone, BadgeCheck, Ticket, Trophy } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import MarketingInbox from '../components/marketing/MarketingInbox'
 import ContentCalendar from '../components/marketing/ContentCalendar'
 import PortfolioView from '../components/marketing/PortfolioView'
 import BrandAssetsView from '../components/marketing/BrandAssetsView'
 import MarketingAnalytics from '../components/marketing/MarketingAnalytics'
+import CampaignsView from '../components/marketing/CampaignsView'
+import ContentApprovals from '../components/marketing/ContentApprovals'
+import EventsView from '../components/marketing/EventsView'
+import AwardsView from '../components/marketing/AwardsView'
 import CvSearch from '../components/hr/CvSearch'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
-import { CONTENT_ITEMS } from '../data/marketingData'
+import { CONTENT_ITEMS, CAMPAIGNS, MARKETING_EVENTS, AWARD_SUBMISSIONS, PACK_USAGE_LOG } from '../data/marketingData'
 import { EMPLOYEES } from '../data/hrData'
 import { MARKETING_VIEW_ROLES, HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 
@@ -19,10 +23,17 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
   const canManage = MARKETING_VIEW_ROLES.includes(user?.role)
   const [view, setView] = useState(canManage ? 'inbox' : 'branding')
   const [contentItems, setContentItems] = useState(CONTENT_ITEMS)
+  const [campaigns, setCampaigns] = useState(CAMPAIGNS)
+  const [events, setEvents] = useState(MARKETING_EVENTS)
+  const [awards, setAwards] = useState(AWARD_SUBMISSIONS)
+  const [packUsage, setPackUsage] = useState(PACK_USAGE_LOG)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
 
   const openTasks = marketingTasks.filter((t) => t.status === 'pending').length
   const missingDesc = projects.filter((p) => !p.marketingDescription && !p.confidential).length
+  const pendingApprovals = contentItems.filter((c) => c.status === 'pending_approval').length
+
+  const updateContentItem = (c) => setContentItems(contentItems.map((x) => (x.id === c.id ? c : x)))
 
   const NAV_MAIN = [
     { key: 'branding', label: 'Branding', icon: Palette },
@@ -30,7 +41,11 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
   const NAV_WORKSPACE = canManage ? [
     { key: 'inbox', label: 'Inbox', icon: Inbox, badge: openTasks },
     { key: 'calendar', label: 'Content calendar', icon: CalendarDays },
+    { key: 'campaigns', label: 'Campaigns', icon: Megaphone },
+    { key: 'approvals', label: 'Approvals', icon: BadgeCheck, badge: pendingApprovals },
     { key: 'portfolio', label: 'Portfolio', icon: FolderKanban, badge: missingDesc },
+    { key: 'events', label: 'Events', icon: Ticket },
+    { key: 'awards', label: 'Awards', icon: Trophy },
     { key: 'cvs', label: 'CV search', icon: FileUser },
     { key: 'analytics', label: 'Analytics', icon: LineChart },
   ] : []
@@ -103,12 +118,35 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
             />
           )}
 
+          {view === 'campaigns' && canManage && (
+            <CampaignsView
+              campaigns={campaigns}
+              onUpdate={setCampaigns}
+              items={contentItems}
+              onUpdateItem={updateContentItem}
+            />
+          )}
+
+          {view === 'approvals' && canManage && (
+            <ContentApprovals items={contentItems} user={user} onUpdateItem={updateContentItem} />
+          )}
+
           {view === 'portfolio' && canManage && (
             <PortfolioView
               projects={projects}
               onUpdateProject={onUpdateProject}
               onCompleteDescriptionTask={completeDescriptionTask}
+              packUsage={packUsage}
+              onLogPackUsage={(entry) => setPackUsage([...packUsage, entry])}
             />
+          )}
+
+          {view === 'events' && canManage && (
+            <EventsView events={events} onUpdate={setEvents} />
+          )}
+
+          {view === 'awards' && canManage && (
+            <AwardsView awards={awards} onUpdate={setAwards} projects={projects} />
           )}
 
           {view === 'cvs' && canManage && (
