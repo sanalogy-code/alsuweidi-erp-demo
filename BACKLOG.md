@@ -76,9 +76,9 @@ mentions, deadlines — Phase 2 backend, but the in-app inbox UI could be Phase 
 personal dashboard ("my week": tasks + approvals + timesheet state across all modules — My Work
 covers projects only); mobile layout audit.
 
-**Platform / access (system admin)** — per-user permission OVERRIDES on top of roles ("give one
-person special access" — the Admin matrix is role-level only); temporary/delegated access
-(covering someone's leave); access expiry dates; grade/employment-type-aware visibility rules;
+**Platform / access (system admin)** — ~~per-user permission OVERRIDES~~ **shipped 7 Jul morning**
+(Admin → Users → shield icon: module + view/full + optional expiry; enforcement = Phase 2 auth);
+still open: grade/employment-type-aware visibility rules;
 error logging + admin error console; usage analytics per module (mock exists); workflow builder
 (generic request→approve→fulfil engine — today each module hand-rolls its own chain).
 

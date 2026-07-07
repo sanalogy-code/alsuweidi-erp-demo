@@ -8,7 +8,13 @@ Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.
 
 **Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (7 Jul 2026, closing goal sweep — "become every employee"):**
+**Latest (7 Jul 2026 morning — Sana's five points):**
+- **Office Administration** (`/office`, new module — 9th): the **admin-staff** workspace, split out of the system Admin Center per Sana ("admin is admin staff, not IT admin"). **Correspondence register** (every letter in/out with auto IN/OUT-2026-NNN refs, party, project link, attachment, reply-by tracking with overdue flags, full filters + date range) and **Registrations & licenses** (moved here from Admin Center — it's an ODC function). Admin Center is now purely system admin: users, roles, audit, system feedback.
+- **Per-user special access**: Admin → Users → shield icon on any row → grant an individual view/full on a module their role doesn't have, with optional expiry (cover-someone's-leave). Shows as "+N special access" on the row. Enforcement lands with Phase 2 auth like the rest of the Admin Center.
+- **Filters/search/date-range pass**: invoices (search + issue-date range), expenses (search + date range), deliverables (search + status), RFPs (search), My Work (search), Management dashboard (search), correspondence (everything). More views still to cover — tracked in Batch 16's basics pass.
+- Fragment-key fixes in the users table and planner grid.
+
+**Earlier (7 Jul 2026, closing goal sweep — "become every employee"):**
 - **All 8 code-review findings fixed** (fee-data leak gated, blank-pane jump fixed, PM module now reads live timesheet state, phase hour double-count clarified, draft-invoice forecast skew fixed, WIR rev bump aligned to the resubmit button, Add-task collects start dates, licenses state survives tab switches, dead file deleted).
 - **The accountant can now DO things**: `finance` role added (login dropdown + module gate + home tile); **New invoice** (project link, auto 5% VAT, issue/due dates, attachment file-name for the PDF/scan), **Record payment** (partial receipts → partially-paid/paid), **Add expense** (category, project job-costing, receipt/invoice photo file-name). Attachments show on the rows.
 - **System feedback loop**: floating **Feedback** button on every page (something broken / feature request / question, per module) → **Admin Center → System feedback** queue with triage statuses. Every employee's direct line into the system's backlog — how requirements-gathering continues once real staff touch the demo.
