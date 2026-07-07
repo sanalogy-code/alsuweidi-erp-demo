@@ -1,11 +1,10 @@
 import { Wrench, AlertTriangle } from 'lucide-react'
-import { parseLocalDate, todayLocal } from '../../utils/date'
+import { daysUntil } from '../../data/pmData'
+import { parseLocalDate } from '../../utils/date'
 
 // Preventive-maintenance schedule for site/survey equipment — calibration and
 // service intervals with next-due tracking. "Mark done" stamps today and
 // advances next-due by the interval.
-
-const daysUntil = (iso) => Math.round((parseLocalDate(iso) - todayLocal()) / (1000 * 60 * 60 * 24))
 
 const addMonths = (iso, months) => {
   const d = parseLocalDate(iso)

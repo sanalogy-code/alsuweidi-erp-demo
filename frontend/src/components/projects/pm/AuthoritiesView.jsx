@@ -7,7 +7,7 @@ import { AUTHORITY_TEMPLATES, authorityStageMeta } from '../../../data/pmData'
 // parallel track with a submit → comments → resubmit cycle history. Portals are
 // data, not code; timelines are user-entered, never hardcoded (per research).
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 
 export default function AuthoritiesView({ pm, onUpdate }) {
   const [expanded, setExpanded] = useState(null)

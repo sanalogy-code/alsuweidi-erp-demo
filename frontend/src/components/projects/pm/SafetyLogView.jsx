@@ -6,7 +6,7 @@ import { SAFETY_CATEGORIES, SAFETY_SEVERITIES, SAFETY_OBS_STATUSES, safetyCatego
 // plus the monthly stat strip the 4.21 report's "safety statistics" checklist
 // item references. LTI-free days is a manual counter for the demo.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 const nextRef = (list) => `HSE-${String(list.reduce((m, o) => Math.max(m, parseInt((o.ref || '').replace(/\D/g, ''), 10) || 0), 0) + 1).padStart(3, '0')}`
 
 export default function SafetyLogView({ phase, onUpdate, currentUserName }) {

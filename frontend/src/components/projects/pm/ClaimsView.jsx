@@ -9,7 +9,7 @@ import { fmtAED } from '../../../data/financeData'
 // informal notices are logged too (UAE Civil Code good-faith doctrines can turn
 // on awareness evidence).
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 
 function Deadline({ label, iso, done }) {
   if (!iso) return null

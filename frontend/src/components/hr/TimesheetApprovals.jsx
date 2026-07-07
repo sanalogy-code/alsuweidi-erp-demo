@@ -32,7 +32,13 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
 
   const pending = visible.filter((t) => t.status === 'submitted').sort((a, b) => (a.submittedDate || '').localeCompare(b.submittedDate || ''))
   const hasPendingAtAll = timesheets.some((t) => t.status === 'submitted')
-  const recent = visible.filter((t) => t.status === 'approved' || t.status === 'rejected')
+  // "Recently decided" ignores the STATUS filter on purpose: approving from a
+  // status='submitted' lens must still show the confirmation here, or the
+  // approval looks like it vanished. Search + date range still apply.
+  const recentPool = timesheets
+    .filter((t) => (!range.from || t.weekStart >= range.from) && (!range.to || t.weekStart <= range.to))
+    .filter((t) => { const q = search.trim().toLowerCase(); return !q || (t.employeeName || '').toLowerCase().includes(q) })
+  const recent = recentPool.filter((t) => t.status === 'approved' || t.status === 'rejected')
     .sort((a, b) => (b.approvedDate || b.weekStart).localeCompare(a.approvedDate || a.weekStart)).slice(0, 5)
 
   // Last fully-elapsed week: the one before the current week.

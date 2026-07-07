@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { BadgeCheck, Check, X } from 'lucide-react'
 import { CONTENT_STATUSES } from '../../data/marketingData'
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../utils/date'
 
 // Content approval chain — content statuses already flow
 // idea → draft → pending approval → approved → published; this view makes the

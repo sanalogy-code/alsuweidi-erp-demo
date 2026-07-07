@@ -113,7 +113,7 @@ export default function HRInbox({ leaveRequests, certificateRequests, complaints
         <div className="p-4 border-b border-gray-200 flex items-start justify-between flex-wrap gap-2">
           <div>
             <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-              <Inbox size={15} className="text-brand" /> Inbox ({items.length})
+              <Inbox size={15} className="text-brand" /> Inbox ({items.length === allItems.length ? items.length : `${items.length} of ${allItems.length}`})
             </h2>
             <p className="text-xs text-gray-500">Everything waiting on HR — leave, certificates, business cards, concerns, and candidates — oldest first.</p>
           </div>

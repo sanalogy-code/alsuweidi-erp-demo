@@ -194,8 +194,10 @@ function VatTab({ invoices, expenses }) {
     // Real per-expense input VAT (recoverable only). Legacy seed rows without a
     // vatAmount fall back to a 5% estimate — counted separately so it's honest.
     const inputVat = exp.filter((e) => e.vatAmount != null && !e.vatNonRecoverable).reduce((s, e) => s + e.vatAmount, 0)
-    const estimated = exp.filter((e) => e.vatAmount == null).reduce((s, e) => s + e.amount * VAT_RATE, 0)
-    const blocked = exp.filter((e) => e.vatNonRecoverable).reduce((s, e) => s + (e.vatAmount ?? 0), 0)
+    // Non-recoverable rows never enter the estimate; flagged legacy rows land in
+    // the excluded bucket at the same 5% estimate instead of reducing net payable.
+    const estimated = exp.filter((e) => e.vatAmount == null && !e.vatNonRecoverable).reduce((s, e) => s + e.amount * VAT_RATE, 0)
+    const blocked = exp.filter((e) => e.vatNonRecoverable).reduce((s, e) => s + (e.vatAmount ?? e.amount * VAT_RATE), 0)
     return { q: q.key, sales, outputVat, purchases, inputVat, estimated, blocked, net: outputVat - inputVat - estimated }
   })
   const anyEstimated = rows.some((r) => r.estimated > 0)

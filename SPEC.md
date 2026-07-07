@@ -6,6 +6,8 @@
 
 If you're a developer, an AI agent, or anyone picking this project up cold: read this file first, then `README.md` for run/deploy instructions.
 
+> **7 Jul 2026 night — THE EVERYTHING LIST sweep (Batches 16d + 18a–g).** The persona backlog in BACKLOG.md was built in one parallel pass. Shell-level additions (in `components/`): `NotificationsBell.jsx` (context provider in App + bell in every Navbar; feed composed live from lifted state), `GlobalSearch.jsx` (Ctrl+K palette: people, live projects, companies, contacts, RFPs, screens), `HomeWidgets.jsx` (My Week strip + management Company-KPI panel with board-pack print on the home page). Module additions: Finance gained Receipts / Petty cash / Payables / Retention / Month-end close / Activity views + credit notes and per-expense VAT; HR gained Appraisals / Training / Disciplinary / Exit interviews / Headcount & attrition / Grades & bands (`data/hrTalentData.js`); Marketing gained Campaigns / Approvals / Events / Awards / pack-usage log; the CRM RFP register gained bid-decision gate, tender checklists, bid cost, Competitors and Debriefs tabs; Office gained Meeting rooms / Supplies / Courier / Vehicles + Salik / Document numbering; IT gained SLA timers / Installed software / Maintenance / Access requests / System status; the PM workspace gained Transmittals / RFIs / Gate coordination / Photo report (4.21) / Safety log / Quick daily entry; Admin gained Authority & access (delegation-of-authority + visibility rules). Plus the 16d attendance punch drill-down and the 18a filter basics pass (~24 registers). Detailed per-view notes: STATUS.md "Latest".
+
 ---
 
 ## 1. Architecture

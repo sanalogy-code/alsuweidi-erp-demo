@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ListTodo, ClipboardCheck, AlarmClock, Clock, Printer, TrendingUp, Banknote, HeartPulse, Users } from 'lucide-react'
 import { EMPLOYEES } from '../data/hrData'
@@ -11,7 +12,9 @@ import { INITIAL_RFPS } from '../data/rfpData'
 // single management screen composed from the pieces that already exist, with a
 // board-pack print action.
 
-export function MyWeekPanel({ user, projects = [], pmRecords = {}, timesheets = [] }) {
+// memo: HomePage's 6s carousel tick re-renders the page; these panels' props
+// are stable between ticks, so skip their myWorkFor/KPI recomputation.
+export const MyWeekPanel = memo(function MyWeekPanel({ user, projects = [], pmRecords = {}, timesheets = [] }) {
   const navigate = useNavigate()
   const work = myWorkFor(user?.username || '', projects, pmRecords)
   const emp = EMPLOYEES.find((e) => e.name.toLowerCase() === (user?.username || '').toLowerCase())
@@ -44,9 +47,9 @@ export function MyWeekPanel({ user, projects = [], pmRecords = {}, timesheets = 
       </div>
     </div>
   )
-}
+})
 
-export function KpiPanel({ projects = [], pmRecords = {}, timesheets = [] }) {
+export const KpiPanel = memo(function KpiPanel({ projects = [], pmRecords = {}, timesheets = [] }) {
   const navigate = useNavigate()
 
   // Utilization: logged hours vs 40h capacity across employees with timesheets, last 4 weeks present in state
@@ -110,4 +113,4 @@ export function KpiPanel({ projects = [], pmRecords = {}, timesheets = [] }) {
       </div>
     </div>
   )
-}
+})

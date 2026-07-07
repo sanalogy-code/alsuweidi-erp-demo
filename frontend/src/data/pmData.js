@@ -1205,14 +1205,17 @@ export const myWorkFor = (name, projects, pmRecords) => {
   projects.forEach((project) => {
     const pm = pmRecords[project.id]
     if (!pm) return
-    const onTeam = pm.phases.some((ph) => ph.team.some((m) => m.name.toLowerCase() === lower))
-    pm.phases.forEach((ph) => {
-      ph.tasks.forEach((t) => {
-        if (t.status !== 'done' && t.assignee.toLowerCase() === lower) tasks.push({ project, phase: ph, task: t })
+    // Fully guarded: this now runs app-shell-wide (NotificationsProvider + home
+    // widgets), so a record missing any register array must not white-screen.
+    const phases = pm.phases || []
+    const onTeam = phases.some((ph) => (ph.team || []).some((m) => (m.name || '').toLowerCase() === lower))
+    phases.forEach((ph) => {
+      ;(ph.tasks || []).forEach((t) => {
+        if (t.status !== 'done' && (t.assignee || '').toLowerCase() === lower) tasks.push({ project, phase: ph, task: t })
       })
       if (onTeam) {
         ;(ph.wirs || []).forEach((w) => {
-          if (w.status === 'pending_re' || w.status === 'pending_trade') approvals.push({ project, phase: ph, kind: 'WIR', ref: w.ref, title: w.title, since: w.history[w.history.length - 1]?.date })
+          if (w.status === 'pending_re' || w.status === 'pending_trade') approvals.push({ project, phase: ph, kind: 'WIR', ref: w.ref, title: w.title, since: (w.history || []).at(-1)?.date })
         })
         ;(ph.mirs || []).forEach((m) => {
           if (m.status === 'pending_re') approvals.push({ project, phase: ph, kind: 'MIR', ref: m.ref, title: m.title, since: m.deliveryDate })
@@ -1221,24 +1224,24 @@ export const myWorkFor = (name, projects, pmRecords) => {
           if (n.status === 'ca_proposed') approvals.push({ project, phase: ph, kind: 'NCR', ref: n.ref, title: `Corrective action awaiting approval — ${n.description}`, since: n.date })
         })
         ;(ph.deliverables || []).forEach((d) => {
-          if (d.status === 'internal_review') approvals.push({ project, phase: ph, kind: 'QA', ref: d.docNo, title: `Internal QA — ${d.title}`, since: d.history[d.history.length - 1]?.date })
+          if (d.status === 'internal_review') approvals.push({ project, phase: ph, kind: 'QA', ref: d.docNo, title: `Internal QA — ${d.title}`, since: (d.history || []).at(-1)?.date })
         })
       }
     })
     ;(pm.meetings || []).forEach((mt) => {
-      mt.actions.forEach((a) => {
-        if (a.status !== 'done' && a.owner.toLowerCase() === lower) {
+      ;(mt.actions || []).forEach((a) => {
+        if (a.status !== 'done' && (a.owner || '').toLowerCase() === lower) {
           tasks.push({ project, phase: { key: 'meeting', label: `Action — ${mt.ref}` }, task: { ...a, title: a.text, assignee: a.owner, priority: 'normal', status: 'open', checklist: [], comments: [] } })
         }
       })
     })
     if (onTeam) {
-      pm.claims.forEach((c) => {
+      ;(pm.claims || []).forEach((c) => {
         const { noticeDue, detailedDue } = claimDeadlines(c, pm.fidicEdition)
         const due = c.status === 'event_logged' ? noticeDue : c.status === 'notice_served' ? detailedDue : null
         if (due && daysUntil(due) <= 21) deadlines.push({ project, kind: 'Claim', ref: c.ref, title: c.status === 'event_logged' ? '28-day claim notice' : 'Fully detailed claim', due })
       })
-      pm.reports.filter((r) => !r.submittedDate).forEach((r) => {
+      ;(pm.reports || []).filter((r) => !r.submittedDate).forEach((r) => {
         deadlines.push({ project, kind: 'Report', ref: r.month, title: 'Monthly progress report (FIDIC 4.21)', due: r.dueDate })
       })
     }

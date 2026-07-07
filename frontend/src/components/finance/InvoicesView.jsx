@@ -56,10 +56,12 @@ export default function InvoicesView({ invoices, onUpdate, onAdd, creditNotes = 
     setPayingId(null); setPayAmount('')
   }
 
-  // Credit note: reason + amount capped at the invoice total less credits already
-  // issued against it. Ref (CN-2026-NNN) is assigned by Finance.jsx.
+  // Credit note: reason + amount capped at what's still OUTSTANDING less credits
+  // already issued — a CN can't exceed what the client still owes (refunds against
+  // paid invoices are a Phase 2 GL flow, so the button hides once fully paid).
+  // Ref (CN-2026-NNN) is assigned by Finance.jsx.
   const cnAgainst = (inv) => creditNotes.filter((c) => c.invoiceId === inv.id).reduce((s, c) => s + c.amount, 0)
-  const cnMax = (inv) => Math.max(0, invoiceTotal(inv) - cnAgainst(inv))
+  const cnMax = (inv) => Math.max(0, invoiceOutstanding(inv) - cnAgainst(inv))
   const issueCreditNote = (inv) => {
     const amt = Number(cnForm.amount)
     if (!onAddCreditNote || !amt || amt <= 0 || !cnForm.reason.trim()) return
@@ -85,7 +87,14 @@ export default function InvoicesView({ invoices, onUpdate, onAdd, creditNotes = 
     .reduce((s, i) => s + invoiceOutstanding(i), 0)
 
   const send = (inv) => onUpdate({ ...inv, status: 'sent' })
-  const markPaid = (inv) => applyPayment(inv, invoiceOutstanding(inv))
+  // Settle in full. If nothing is outstanding but the status is stale (e.g. a
+  // seeded amountPaid that already covers the total), still flip it to paid —
+  // recordPaymentOnInvoice no-ops on a zero amount, so it can't do this for us.
+  const markPaid = (inv) => {
+    const due = invoiceOutstanding(inv)
+    if (due > 0) return applyPayment(inv, due)
+    onUpdate({ ...inv, status: 'paid', amountPaid: invoiceTotal(inv) })
+  }
 
   return (
     <div className="space-y-4">

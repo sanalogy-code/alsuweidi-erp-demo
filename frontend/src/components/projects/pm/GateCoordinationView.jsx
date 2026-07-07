@@ -8,7 +8,7 @@ import { gateChecklistTemplate } from '../../../data/pmData'
 // gate passes. Each gate starts from a standard template; ticking an item
 // stamps who/when. Gate status itself lives in the Design gates view.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 
 const GATE_STATUS_CHIP = {
   passed: 'bg-green-100 text-green-700',

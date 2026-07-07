@@ -7,7 +7,7 @@ import { TRANSMITTAL_PURPOSES, transmittalPurposeMeta } from '../../../data/pmDa
 // deliverables register at their current rev. Print view is a clean block —
 // real PDF generation and attachments are Phase 2.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 const nextRef = (list) => `TRN-${String(list.reduce((m, t) => Math.max(m, parseInt((t.ref || '').replace(/\D/g, ''), 10) || 0), 0) + 1).padStart(3, '0')}`
 
 export default function TransmittalsView({ phase, onUpdate, project }) {

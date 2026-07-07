@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Send, Download, Plus } from 'lucide-react'
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../utils/date'
 
 // Asset usage tracking — who sent/downloaded which portfolio pack, to whom.
 // Rendered under the Portfolio packs card. Manual "Log a send" for now:

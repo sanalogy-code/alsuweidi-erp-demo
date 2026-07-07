@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import DevDashboard from './pages/DevDashboard'
@@ -164,9 +164,12 @@ export default function App() {
     )
   }
 
-  // Notification sources — one object per render is fine; the provider memoizes
-  // the composed feed on it.
-  const notificationSources = { projects, pmRecords, timesheets, marketingTasks, staffingRequests, systemFeedback }
+  // Notification sources — memoized so the provider's feed composition (which
+  // walks every project × phase) only reruns when one of these actually changes.
+  const notificationSources = useMemo(
+    () => ({ projects, pmRecords, timesheets, marketingTasks, staffingRequests, systemFeedback }),
+    [projects, pmRecords, timesheets, marketingTasks, staffingRequests, systemFeedback],
+  )
 
   return (
     <NotificationsProvider user={user} sources={notificationSources}>

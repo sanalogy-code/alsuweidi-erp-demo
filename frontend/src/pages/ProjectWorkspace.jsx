@@ -75,13 +75,13 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
 
   // Section list per phase, shaped by what that phase actually is.
   const phaseSections = (ph) => [
-    { key: 'tasks', label: 'Plan & tasks', icon: ListTodo, badge: ph.tasks.filter((t) => t.status !== 'done').length },
+    { key: 'tasks', label: 'Plan & tasks', icon: ListTodo, badge: (ph.tasks || []).filter((t) => t.status !== 'done').length },
     { key: 'updates', label: 'Weekly updates', icon: CalendarCheck2 },
     ...(ph.deliverables ? [{ key: 'deliverables', label: 'Deliverables', icon: FileText, badge: ph.deliverables.filter((d) => d.status === 'comments' || d.status === 'internal_review').length }] : []),
     ...(ph.deliverables ? [{ key: 'transmittals', label: 'Transmittals', icon: Send }] : []),
     ...(ph.designStages ? [{ key: 'design', label: 'Design gates', icon: Layers }] : []),
     ...(ph.designStages ? [{ key: 'gatecoord', label: 'Gate coordination', icon: ListChecks }] : []),
-    ...(ph.wirs ? [{ key: 'site', label: 'Site', icon: HardHat, badge: ph.wirs.filter((w) => w.status !== 'approved' && w.status !== 'approved_as_noted').length + ph.ncrs.filter((n) => n.status !== 'closed').length }] : []),
+    ...(ph.wirs ? [{ key: 'site', label: 'Site', icon: HardHat, badge: ph.wirs.filter((w) => w.status !== 'approved' && w.status !== 'approved_as_noted').length + (ph.ncrs || []).filter((n) => n.status !== 'closed').length }] : []),
     ...(ph.wirs ? [{ key: 'quickdaily', label: 'Quick daily entry', icon: Smartphone }] : []),
     ...(ph.wirs ? [{ key: 'rfis', label: 'RFIs', icon: HelpCircle, badge: (ph.rfis || []).filter((r) => r.status === 'open').length }] : []),
     ...(ph.wirs ? [{ key: 'hse', label: 'Safety log', icon: ShieldCheck, badge: (ph.safetyObservations || []).filter((o) => o.status === 'open').length }] : []),

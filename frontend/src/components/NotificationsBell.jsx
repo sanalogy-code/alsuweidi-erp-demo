@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, X } from 'lucide-react'
 import { EMPLOYEES } from '../data/hrData'
@@ -32,12 +32,14 @@ export const notificationsFor = (user, { projects, pmRecords, timesheets, market
 
   // Projects: my tasks due/overdue soon, approvals waiting on me, contract deadlines
   const work = myWorkFor(name, projects, pmRecords)
-  work.tasks.forEach(({ project, task }) => {
+  work.tasks.forEach(({ project, phase, task }) => {
     if (!task.due) return
     const d = daysUntil(task.due)
     if (d > 3) return
     items.push({
-      id: `task:${project.id}:${task.id ?? task.title}`, module: 'Projects', date: task.due, to: `/projects/${project.id}`,
+      // phase key is part of the id — task ids restart at 1 per phase, and
+      // meeting actions share the list with their own id sequence.
+      id: `task:${project.id}:${phase?.key ?? 'p'}:${task.id ?? task.title}:${task.title}`, module: 'Projects', date: task.due, to: `/projects/${project.id}`,
       text: d < 0 ? `Task overdue — ${task.title}` : `Task due ${d === 0 ? 'today' : `in ${d}d`} — ${task.title}`,
       sub: project.name, urgent: d < 0,
     })
@@ -101,12 +103,15 @@ export function NotificationsProvider({ user, sources, children }) {
     try { return new Set(JSON.parse(localStorage.getItem(readKey(user)) || '[]')) } catch { return new Set() }
   })
   const items = useMemo(() => notificationsFor(user, sources), [user, sources])
-  const persist = (next) => {
-    setReadIds(next)
-    localStorage.setItem(readKey(user), JSON.stringify([...next]))
-  }
-  const markRead = (id) => persist(new Set([...readIds, id]))
-  const markAllRead = () => persist(new Set([...readIds, ...items.map((i) => i.id)]))
+  const persist = useCallback((updater) => {
+    setReadIds((prev) => {
+      const next = updater(prev)
+      localStorage.setItem(readKey(user), JSON.stringify([...next]))
+      return next
+    })
+  }, [user])
+  const markRead = useCallback((id) => persist((prev) => new Set([...prev, id])), [persist])
+  const markAllRead = useCallback(() => persist((prev) => new Set([...prev, ...items.map((i) => i.id)])), [persist, items])
   const unread = items.filter((i) => !readIds.has(i.id)).length
   // sources exposed so shell-level features (global search) can see the same
   // lifted state without threading props through every page.

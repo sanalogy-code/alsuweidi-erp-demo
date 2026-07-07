@@ -13,7 +13,7 @@ import { fmtAED } from '../../../data/financeData'
 // certificates (IPC), and the FIDIC handover chain (TOC → DLP → Performance
 // Certificate with snagging).
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 const Empty = ({ label }) => (
   <div className="bg-white rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400">{label}</div>
 )

@@ -6,7 +6,7 @@ import { Camera, Plus, Printer, X, Image } from 'lucide-react'
 // caption/date/location — real file storage & upload are Phase 2, so the
 // print-style grid shows name-card placeholders.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 const thisMonth = () => todayISO().slice(0, 7)
 
 export default function PhotoReportView({ pm, onUpdate, project }) {

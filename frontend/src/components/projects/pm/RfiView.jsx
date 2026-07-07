@@ -6,7 +6,7 @@ import { RFI_STATUSES, rfiStatusMeta } from '../../../data/pmData'
 // construction — distinct from WIRs (inspection requests). Cost/time impact
 // flags nudge the team toward a site instruction or claim record.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 const nextRef = (list) => `RFI-${String(list.reduce((m, r) => Math.max(m, parseInt((r.ref || '').replace(/\D/g, ''), 10) || 0), 0) + 1).padStart(3, '0')}`
 
 const DISCIPLINES = ['Architecture', 'Structural', 'Mechanical', 'Electrical', 'Civil / Drainage', 'Other']

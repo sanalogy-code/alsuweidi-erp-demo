@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Check, Truck, PlayCircle, CheckCircle2 } from 'lucide-react'
 import { PROJECTS } from '../../data/projectsData'
-import { parseLocalDate } from '../../utils/date'
+import { parseLocalDate, todayLocal } from '../../utils/date'
 import { fmtAED, SUPPLIER_INVOICE_STATUSES, supplierInvoiceStatusMeta } from '../../data/financeData'
 
 const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
@@ -112,7 +112,7 @@ export default function PayablesView({ supplierInvoices, onUpdate }) {
               {shown.map((s) => {
                 const meta = supplierInvoiceStatusMeta(s.status)
                 const proj = projectOf(s.projectId)
-                const overdue = s.status !== 'paid' && s.dueDate && s.dueDate < '2026-07-07'
+                const overdue = s.status !== 'paid' && s.dueDate && parseLocalDate(s.dueDate) < todayLocal()
                 return (
                   <tr key={s.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 align-top">

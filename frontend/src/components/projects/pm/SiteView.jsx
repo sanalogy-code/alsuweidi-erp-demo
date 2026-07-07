@@ -6,7 +6,7 @@ import { wirStatusMeta, ncrStatusMeta, NCR_PRIORITIES } from '../../../data/pmDa
 // reports. WIR resubmissions stay under the same reference with rev history —
 // approved WIRs are the verification basis for interim payment certificates.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 
 const TABS = [
   { key: 'wir', label: 'WIRs' },
@@ -242,7 +242,9 @@ export default function SiteView({ pm, onUpdate }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [range, setRange] = useState({ from: '', to: '' })
-  const switchTab = (k) => { setTab(k); setStatusFilter('all') }
+  // Reset ALL filters on tab switch — each register filters different text and
+  // DATE fields, so a WIR date range silently hiding every NCR was a trap.
+  const switchTab = (k) => { setTab(k); setStatusFilter('all'); setSearch(''); setRange({ from: '', to: '' }) }
 
   // Shared filter row config per register: display rows only — updates still go through the full pm lists.
   const cfg = {

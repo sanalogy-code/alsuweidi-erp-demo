@@ -8,7 +8,7 @@ import { DESIGN_DISCIPLINES } from '../../../data/projectsData'
 // preserved per revision. Resubmitting bumps the rev letter.
 
 const nextRev = (rev) => String.fromCharCode((rev || 'A').charCodeAt(0) + 1)
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 
 export default function DeliverablesView({ pm, onUpdate }) {
   const [expanded, setExpanded] = useState(null)

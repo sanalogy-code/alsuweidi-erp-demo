@@ -14,6 +14,14 @@ export function todayLocal() {
   return t
 }
 
+// Today as a LOCAL 'YYYY-MM-DD' string. new Date().toISOString().slice(0, 10)
+// is the classic bug here: it's UTC, so in the UAE (UTC+4) it stamps yesterday
+// until 4am. Use this instead of hand-rolling it per view.
+export function todayISO() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 // Compact age for queue/inbox rows — 'today' or 'Nd ago'.
 export function daysAgo(iso) {
   const n = Math.floor((todayLocal() - parseLocalDate(iso)) / (1000 * 60 * 60 * 24))

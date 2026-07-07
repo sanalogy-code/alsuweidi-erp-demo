@@ -14,7 +14,7 @@ import { DESIGNATIONS } from '../../data/hrData'
 // add form, instead of a 30-field page. Awarded RFPs link to their delivery
 // project; the win rate feeds Marketing analytics in Phase 2.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../utils/date'
 
 const scoreTone = (n) => (n == null ? 'text-gray-300' : n >= 70 ? 'text-green-600' : n >= 50 ? 'text-amber-600' : 'text-red-600')
 

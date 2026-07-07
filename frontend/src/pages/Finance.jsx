@@ -78,11 +78,8 @@ export default function Finance({ user, onLogout }) {
     }))
   }
   const addReceipt = (receipt) => {
-    let receiptNo
-    setReceipts((prev) => {
-      receiptNo = nextRef(prev, 'receiptNo', 'RCT-2026')
-      return [{ ...receipt, id: nextId(prev), receiptNo }, ...prev]
-    })
+    // Keep the updater pure — no values smuggled out of it (StrictMode runs it twice).
+    setReceipts((prev) => [{ ...receipt, id: nextId(prev), receiptNo: nextRef(prev, 'receiptNo', 'RCT-2026') }, ...prev])
     applyAllocations(receipt.allocations)
     log(`Receipt recorded — ${fmtAED(receipt.amount)} from ${receipt.clientName} (${receipt.allocations.length} invoice${receipt.allocations.length > 1 ? 's' : ''})`)
   }

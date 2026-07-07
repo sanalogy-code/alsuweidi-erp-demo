@@ -6,7 +6,7 @@ import { Smartphone, CheckCircle2 } from 'lucide-react'
 // Deliberately mobile-first: single column, large touch targets, sticky submit.
 // The full daily-report form (weather, delays, HSE) stays in the Site view.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 
 export default function QuickDailyEntry({ phase, onUpdate }) {
   const reports = phase.dailyReports || []

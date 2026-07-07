@@ -4,10 +4,21 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-07 evening (Batches 17a–b shipped — Sana's PM visibility pass: task
-table + All tasks + real kanban board, portfolio risk report, meeting notes, Gantt month scale,
-methodology-at-setup, dashboard costs, Samir/management default login. **PM is parked per Sana**
-— next: attendance punch drill-down, filters sweep, then THE EVERYTHING LIST. Earlier: Batch 8 shipped — Admin Center module: users, roles & permissions
+**Last updated:** 2026-07-07 night — **THE EVERYTHING LIST below is BUILT.** Batches 16d +
+18a–g shipped as one parallel sweep: punch drill-down; search/status/date-range on ~24 more
+registers; the notifications center (bell + badge everywhere); global search (Ctrl+K); My Week
+strip + management Company-KPI home with board-pack print; delegation-of-authority matrix +
+visibility rules; and the full persona sweep — accountant (receipts/credit notes/per-expense
+VAT/petty cash/payables + payment runs/retention/month-end close/audit trail), HR talent
+(appraisals/training→accomplishments/disciplinary/exit interviews/headcount & attrition/
+grades & bands), Marketing + BD (campaigns/content approval records/pack usage/events/awards;
+bid-decision gate/tender checklists/bid cost/competitor register/debriefs), Office + IT
+(meeting rooms/supplies/courier/vehicles + Salik/doc numbering; SLA timers/installed software/
+maintenance/access requests/status board), PM-site (transmittals/RFIs/gate coordination/4.21
+photo reports/safety log/quick daily entry). **Still genuinely open:** the "Needs a decision"
+section below (default shapes are now on screen to react to), Phase 2 backend items, standing
+non-code actions, and the code-quality consolidation batch. Earlier: Batches 17a–b — Sana's PM
+visibility pass; **PM parked per Sana**. Earlier: Batch 8 shipped — Admin Center module: users, roles & permissions
 matrix, activity log. See "Shipped — Batch 8" below. Earlier: Batch 7 shipped — Financials &
 Accounting module first pass +
 Developer Dashboard work log. See "Shipped — Batch 7" below. Earlier: Batch 6 shipped — 19 items, nearly the whole "Next batch": CRM
@@ -522,8 +533,24 @@ the naming question still open — folded into it below.
 - [ ] Shared `SidebarNav` component — CRM/HR/Projects each carry a near-identical copy that has
   already drifted
 - [ ] Shared date/currency helpers — `fmtShortDate`, holiday-range formatting, AED formatting exist
-  in 3–6 copies; `todayISO()` is UTC-based (pre-4am dates stamp yesterday) and re-derived per module
-- [ ] `nextId()` helper — max+1 id generation is hand-rolled at ~10 call sites in two variants
+  in 3–6 copies. **`todayISO()` is now a shared local-safe helper in `utils/date.js` (18h) and the
+  15 per-view UTC copies were swapped for imports** — remaining: the ~35 inline
+  `new Date().toISOString().slice(0,10)` call sites and the finance-view `fmtDate` ×5 copies.
+- [ ] `nextId()` helper — max+1 id generation is hand-rolled at ~13+ call sites in two variants
+  (Finance.jsx has one; lift it to a shared util)
+- [ ] Shared `<RegisterFilterBar>` / `useRegisterFilter` — the 18a sweep hand-rolled the
+  search+status+date-range trio ~10× (GovernanceViews alone has 4 copies); SiteView's cfg map is
+  the shape to generalize. Also: `countBy` helper for HeadcountDashboard's 3 identical rollups,
+  hoist DeliverablesView's filter IIFE, call `bidRecommendation` once per row in RfpView,
+  GovernanceView/EventsView/RfpView should use `fmtAED`.
+- [ ] Finance state (invoices/expenses/receipts) is module-local — Home KPIs and global search
+  read seeds, so same-session finance edits don't reach them (labelled on-screen). Lift to App
+  with the other cross-module state when it next matters.
+- [ ] Per-invoice credit-note netting in statements/aging + a CN-aware `invoiceOutstanding`
+  (CNs are capped at outstanding since 18h, so views can't disagree by more than the cap);
+  refunds against paid invoices = Phase 2 GL.
+- [ ] One audit-log mechanism — Finance's session Activity log vs Admin's AUDIT_LOG are two
+  shapes; generalize before a third module copies either.
 - [ ] Denied leave requests get an `approvedDate` stamped — harmless today (nothing displays it),
   rename/split the field before anything does
 

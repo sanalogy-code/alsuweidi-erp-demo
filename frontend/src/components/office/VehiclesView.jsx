@@ -36,8 +36,11 @@ export default function VehiclesView({ bookings, onChangeBookings, salik, onChan
 
   const returnVehicle = (b) => {
     const km = window.prompt('Km reading on return?', b.kmOut ? String(b.kmOut + 50) : '')
-    if (km === null) return
-    onChangeBookings(bookings.map((x) => (x.id === b.id ? { ...x, kmIn: Number(km) || null } : x)))
+    if (km === null) return // cancelled
+    const kmIn = Number(km)
+    // A blank or non-numeric entry still closes the booking (kmIn stays null) —
+    // silently staying "out" after the user confirmed the prompt was the bug.
+    onChangeBookings(bookings.map((x) => (x.id === b.id ? { ...x, returned: true, kmIn: Number.isFinite(kmIn) && km.trim() !== '' ? kmIn : null } : x)))
   }
 
   const salikTotal = salik.reduce((sum, s) => sum + s.amountAed, 0)
@@ -124,7 +127,7 @@ export default function VehiclesView({ bookings, onChangeBookings, salik, onChan
         <div className="space-y-2">
           {[...bookings].sort((a, b) => b.date.localeCompare(a.date)).map((b) => {
             const v = vehicle(b.vehicleId)
-            const out = b.kmIn === null || b.kmIn === undefined
+            const out = !b.returned && (b.kmIn === null || b.kmIn === undefined)
             return (
               <div key={b.id} className="bg-white rounded-lg border border-gray-200 px-4 py-3">
                 <div className="flex items-center gap-3 flex-wrap">
@@ -132,7 +135,7 @@ export default function VehiclesView({ bookings, onChangeBookings, salik, onChan
                   <span className="flex-1 min-w-0">
                     <span className="block text-sm text-gray-800 truncate">{b.purpose}</span>
                     <span className="text-xs text-gray-400">
-                      {b.driver}{b.kmOut != null ? ` · out ${b.kmOut.toLocaleString()} km` : ''}{b.kmIn != null ? ` · in ${b.kmIn.toLocaleString()} km (${(b.kmIn - b.kmOut).toLocaleString()} driven)` : ''}
+                      {b.driver}{b.kmOut != null ? ` · out ${b.kmOut.toLocaleString()} km` : ''}{b.kmIn != null ? ` · in ${b.kmIn.toLocaleString()} km${b.kmOut != null ? ` (${(b.kmIn - b.kmOut).toLocaleString()} driven)` : ''}` : ''}
                     </span>
                   </span>
                   <span className="text-xs text-gray-400 shrink-0">{b.date}</span>

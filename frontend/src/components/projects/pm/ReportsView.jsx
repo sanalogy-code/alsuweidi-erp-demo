@@ -4,7 +4,7 @@ import { REPORT_CHECKLIST_ITEMS, daysUntil } from '../../../data/pmData'
 // due within 7 days of month end. Teeth: non-submission can let the Engineer
 // decline a Payment Certificate — hence the compliance tracker.
 
-const todayISO = () => new Date().toISOString().slice(0, 10)
+import { todayISO } from '../../../utils/date'
 
 export default function ReportsView({ pm, onUpdate }) {
   const toggle = (r, key) => onUpdate({
