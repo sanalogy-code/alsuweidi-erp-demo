@@ -3,7 +3,7 @@ import { Check, X, ReceiptText, Plus, Paperclip } from 'lucide-react'
 import { PROJECTS } from '../../data/projectsData'
 import { parseLocalDate } from '../../utils/date'
 import {
-  EXPENSE_CATEGORIES, EXPENSE_STATUSES, expenseStatusMeta, fmtAED,
+  EXPENSE_CATEGORIES, EXPENSE_STATUSES, expenseStatusMeta, fmtAED, VAT_RATE,
 } from '../../data/financeData'
 
 const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
@@ -14,8 +14,14 @@ export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserNam
   const [search, setSearch] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ date: new Date().toISOString().slice(0, 10), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', projectId: '', attachment: '' })
+  const emptyForm = { date: new Date().toISOString().slice(0, 10), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', vatAmount: '', vatTouched: false, vatNonRecoverable: false, projectId: '', attachment: '' }
+  const [form, setForm] = useState(emptyForm)
   const projectOf = (id) => PROJECTS.find((p) => p.id === id)
+
+  // VAT defaults to 5% of net but is editable (the amount on the supplier's tax
+  // invoice wins — zero-rated / exempt items exist).
+  const autoVat = (net) => Math.round((Number(net) || 0) * VAT_RATE)
+  const effectiveVat = form.vatTouched ? Number(form.vatAmount) || 0 : autoVat(form.amount)
 
   // Accountant action (7 Jul): log an expense with the receipt/invoice scan attached
   // (file-name only until Phase 2 storage).
@@ -24,11 +30,12 @@ export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserNam
     onAdd({
       date: form.date, category: form.category, vendor: form.vendor.trim(),
       description: form.description.trim() || form.category, amount: Number(form.amount),
+      vatAmount: effectiveVat, vatNonRecoverable: form.vatNonRecoverable || undefined,
       status: 'pending', submittedBy: currentUserName || 'Finance',
       projectId: form.projectId ? Number(form.projectId) : null,
       attachment: form.attachment.trim() || null,
     })
-    setForm({ date: new Date().toISOString().slice(0, 10), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', projectId: '', attachment: '' })
+    setForm(emptyForm)
     setShowAdd(false)
   }
 
@@ -89,7 +96,14 @@ export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserNam
             <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Description" className="border rounded-md px-2.5 py-1.5 sm:col-span-3" />
           </div>
           <div className="flex flex-wrap gap-2 items-center">
-            <label className="text-gray-500">AED <input type="number" min="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-28 border rounded-md px-2 py-1 ml-1 text-right" /></label>
+            <label className="text-gray-500">Net AED <input type="number" min="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-28 border rounded-md px-2 py-1 ml-1 text-right" /></label>
+            <label className="text-gray-500" title="Defaults to 5% of net — override with the VAT shown on the supplier's tax invoice">
+              VAT <input type="number" min="0" value={form.vatTouched ? form.vatAmount : autoVat(form.amount)} onChange={(e) => setForm({ ...form, vatAmount: e.target.value, vatTouched: true })} className="w-20 border rounded-md px-2 py-1 ml-1 text-right" />
+              {!form.vatTouched && <span className="text-gray-400 ml-1">(auto 5%)</span>}
+            </label>
+            <label className="flex items-center gap-1 text-gray-500" title="e.g. entertainment — VAT paid but not recoverable on the FTA return">
+              <input type="checkbox" checked={form.vatNonRecoverable} onChange={(e) => setForm({ ...form, vatNonRecoverable: e.target.checked })} /> VAT non-recoverable
+            </label>
             <label className="text-gray-500">Date <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="border rounded-md px-2 py-1 ml-1" /></label>
             <label className="flex items-center gap-1 text-gray-500"><Paperclip size={11} /><input value={form.attachment} onChange={(e) => setForm({ ...form, attachment: e.target.value })} placeholder="Receipt / invoice photo (file name)" className="w-64 border rounded-md px-2 py-1" /></label>
             <div className="flex-1" />
@@ -144,7 +158,13 @@ export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserNam
                       {e.note && <div className="text-[11px] text-gray-400 mt-0.5">{e.note}</div>}
                       {e.attachment && <div className="text-[10px] text-gray-400 flex items-center gap-0.5 mt-0.5"><Paperclip size={9} /> {e.attachment}</div>}
                     </td>
-                    <td className="px-4 py-3 align-top text-right tabular-nums text-gray-900 whitespace-nowrap">{fmtAED(e.amount)}</td>
+                    <td className="px-4 py-3 align-top text-right tabular-nums text-gray-900 whitespace-nowrap">
+                      {fmtAED(e.amount)}
+                      <div className="text-[11px] text-gray-400">
+                        {e.vatAmount != null ? `VAT ${fmtAED(e.vatAmount)}` : 'VAT est. 5%'}
+                        {e.vatNonRecoverable && <span className="text-red-500"> · non-rec.</span>}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 align-top">
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${meta.chip}`}>{meta.label}</span>
                       <div className="text-[11px] text-gray-400 mt-1">{e.submittedBy}</div>

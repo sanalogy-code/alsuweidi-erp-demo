@@ -32,7 +32,8 @@ const downloadCsv = (name, rows) => {
   URL.revokeObjectURL(a.href)
 }
 
-function AgingTab({ invoices }) {
+function AgingTab({ invoices, creditNotes = [] }) {
+  const cnTotal = creditNotes.reduce((s, c) => s + c.amount, 0)
   const open = invoices.filter((i) => i.status !== 'draft' && invoiceOutstanding(i) > 0)
   const clients = [...new Set(open.map((i) => i.clientName))]
   const rows = clients.map((client) => {
@@ -86,26 +87,37 @@ function AgingTab({ invoices }) {
           </tfoot>
         </table>
       </div>
+      {cnTotal > 0 && (
+        <p className="text-[11px] text-gray-400">
+          {fmtAED(cnTotal)} of credit notes are outstanding against these balances (see the client statements) —
+          netting them into the aging buckets per invoice lands with the Phase 2 GL.
+        </p>
+      )}
     </div>
   )
 }
 
-function StatementsTab({ invoices }) {
+function StatementsTab({ invoices, creditNotes = [] }) {
   const clients = [...new Set(invoices.filter((i) => i.status !== 'draft').map((i) => i.clientName))].sort()
   const [client, setClient] = useState(clients[0] || '')
   const theirs = invoices.filter((i) => i.clientName === client && i.status !== 'draft')
     .sort((a, b) => (a.issueDate || '').localeCompare(b.issueDate || ''))
+  const theirCNs = creditNotes.filter((c) => c.clientName === client)
+  const cnTotal = theirCNs.reduce((s, c) => s + c.amount, 0)
   const totals = theirs.reduce((acc, i) => ({
     invoiced: acc.invoiced + invoiceTotal(i),
     paid: acc.paid + Math.min(i.amountPaid ?? 0, invoiceTotal(i)),
     balance: acc.balance + invoiceOutstanding(i),
   }), { invoiced: 0, paid: 0, balance: 0 })
+  // Statement balance nets off credit notes issued to this client.
+  const netBalance = Math.max(0, totals.balance - cnTotal)
 
   const exportCsv = () => downloadCsv(`statement-${client.replace(/\W+/g, '-')}.csv`, [
     [`Statement of account — ${client}`], [],
-    ['Date', 'Invoice no', 'Description', 'Invoiced (incl. VAT)', 'Paid', 'Balance', 'Due date', 'Status'],
+    ['Date', 'Ref', 'Description', 'Invoiced (incl. VAT)', 'Paid / credited', 'Balance', 'Due date', 'Status'],
     ...theirs.map((i) => [i.issueDate, i.invoiceNo, i.description, invoiceTotal(i), Math.min(i.amountPaid ?? 0, invoiceTotal(i)), invoiceOutstanding(i), i.dueDate, i.status]),
-    [], ['Totals', '', '', totals.invoiced, totals.paid, totals.balance],
+    ...theirCNs.map((c) => [c.date, c.creditNoteNo, `Credit note — ${c.reason}`, -c.amount, '', -c.amount, '', 'credit note']),
+    [], ['Totals', '', '', totals.invoiced - cnTotal, totals.paid, netBalance],
   ])
 
   return (
@@ -139,18 +151,28 @@ function StatementsTab({ invoices }) {
                 <td className={`px-4 py-2.5 text-right font-medium ${invoiceOutstanding(i) > 0 ? 'text-red-600' : 'text-gray-300'}`}>{invoiceOutstanding(i) ? fmtAED(invoiceOutstanding(i), { compact: true }) : '—'}</td>
               </tr>
             ))}
+            {theirCNs.map((c) => (
+              <tr key={`cn-${c.id}`} className="hover:bg-gray-50 bg-purple-50/40">
+                <td className="px-4 py-2.5 text-xs text-gray-500">{c.date}</td>
+                <td className="px-4 py-2.5 font-mono text-xs text-purple-700">{c.creditNoteNo}</td>
+                <td className="px-4 py-2.5 text-gray-700 max-w-[280px] truncate" title={c.reason}>Credit note — {c.reason}</td>
+                <td className="px-4 py-2.5 text-right text-purple-700">−{fmtAED(c.amount, { compact: true })}</td>
+                <td className="px-4 py-2.5" />
+                <td className="px-4 py-2.5 text-right text-purple-700">−{fmtAED(c.amount, { compact: true })}</td>
+              </tr>
+            ))}
           </tbody>
           <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold text-gray-700">
             <tr>
-              <td colSpan={3} className="px-4 py-2">Totals</td>
-              <td className="px-4 py-2 text-right">{fmtAED(totals.invoiced, { compact: true })}</td>
+              <td colSpan={3} className="px-4 py-2">Totals{cnTotal > 0 ? ' (net of credit notes)' : ''}</td>
+              <td className="px-4 py-2 text-right">{fmtAED(totals.invoiced - cnTotal, { compact: true })}</td>
               <td className="px-4 py-2 text-right text-green-700">{fmtAED(totals.paid, { compact: true })}</td>
-              <td className="px-4 py-2 text-right text-red-600">{fmtAED(totals.balance, { compact: true })}</td>
+              <td className="px-4 py-2 text-right text-red-600">{fmtAED(netBalance, { compact: true })}</td>
             </tr>
           </tfoot>
         </table>
       </div>
-      <p className="text-[11px] text-gray-400">Per-receipt history (payment dates and references) needs a receipts register — Phase 2 with the accounting integration; today's "Paid" is the running amount received per invoice.</p>
+      <p className="text-[11px] text-gray-400">Paid amounts trace to the Receipts register (per-receipt dates and bank references). Credit notes net off the statement balance here; posting them through the GL and VAT return is Phase 2.</p>
     </div>
   )
 }
@@ -169,13 +191,19 @@ function VatTab({ invoices, expenses }) {
     const sales = out.reduce((s, i) => s + i.amount, 0)
     const exp = expenses.filter((e) => e.status !== 'rejected' && q.months.includes((e.date || '').slice(0, 7)))
     const purchases = exp.reduce((s, e) => s + e.amount, 0)
-    const inputVat = purchases * VAT_RATE // estimate — expenses don't carry per-line VAT yet
-    return { q: q.key, sales, outputVat, purchases, inputVat, net: outputVat - inputVat }
+    // Real per-expense input VAT (recoverable only). Legacy seed rows without a
+    // vatAmount fall back to a 5% estimate — counted separately so it's honest.
+    const inputVat = exp.filter((e) => e.vatAmount != null && !e.vatNonRecoverable).reduce((s, e) => s + e.vatAmount, 0)
+    const estimated = exp.filter((e) => e.vatAmount == null).reduce((s, e) => s + e.amount * VAT_RATE, 0)
+    const blocked = exp.filter((e) => e.vatNonRecoverable).reduce((s, e) => s + (e.vatAmount ?? 0), 0)
+    return { q: q.key, sales, outputVat, purchases, inputVat, estimated, blocked, net: outputVat - inputVat - estimated }
   })
+  const anyEstimated = rows.some((r) => r.estimated > 0)
+  const anyBlocked = rows.some((r) => r.blocked > 0)
 
   const exportCsv = () => downloadCsv('vat-return-working.csv', [
-    ['Period', 'Standard-rated sales (net)', 'Output VAT', 'Purchases (net)', 'Input VAT (est.)', 'Net VAT payable'],
-    ...rows.map((r) => [r.q, r.sales, r.outputVat, r.purchases, Math.round(r.inputVat), Math.round(r.net)]),
+    ['Period', 'Standard-rated sales (net)', 'Output VAT', 'Purchases (net)', 'Input VAT (recoverable)', 'of which estimated (legacy rows)', 'Non-recoverable VAT (excluded)', 'Net VAT payable'],
+    ...rows.map((r) => [r.q, r.sales, r.outputVat, r.purchases, Math.round(r.inputVat + r.estimated), Math.round(r.estimated), Math.round(r.blocked), Math.round(r.net)]),
   ])
 
   return (
@@ -192,7 +220,7 @@ function VatTab({ invoices, expenses }) {
               <th className="text-right px-4 py-2">Sales (net)</th>
               <th className="text-right px-4 py-2">Output VAT</th>
               <th className="text-right px-4 py-2">Purchases (net)</th>
-              <th className="text-right px-4 py-2">Input VAT (est.)</th>
+              <th className="text-right px-4 py-2">Input VAT (recoverable)</th>
               <th className="text-right px-4 py-2">Net payable</th>
             </tr>
           </thead>
@@ -203,7 +231,11 @@ function VatTab({ invoices, expenses }) {
                 <td className="px-4 py-2.5 text-right text-gray-700">{fmtAED(r.sales, { compact: true })}</td>
                 <td className="px-4 py-2.5 text-right text-gray-700">{fmtAED(r.outputVat, { compact: true })}</td>
                 <td className="px-4 py-2.5 text-right text-gray-700">{fmtAED(r.purchases, { compact: true })}</td>
-                <td className="px-4 py-2.5 text-right text-gray-500">{fmtAED(r.inputVat, { compact: true })}</td>
+                <td className="px-4 py-2.5 text-right text-gray-500">
+                  {fmtAED(r.inputVat + r.estimated, { compact: true })}
+                  {r.estimated > 0 && <div className="text-[10px] text-amber-600">incl. {fmtAED(r.estimated, { compact: true })} est.*</div>}
+                  {r.blocked > 0 && <div className="text-[10px] text-red-500">excl. {fmtAED(r.blocked)} non-rec.</div>}
+                </td>
                 <td className={`px-4 py-2.5 text-right font-semibold ${r.net > 0 ? 'text-gray-800' : 'text-green-700'}`}>{fmtAED(r.net, { compact: true })}</td>
               </tr>
             ))}
@@ -211,13 +243,16 @@ function VatTab({ invoices, expenses }) {
         </table>
       </div>
       <p className="text-[11px] text-gray-400">
-        Input VAT is an estimate (5% across expenses) because expense lines don't carry per-line VAT yet — that field, non-recoverable categories, reverse-charge items, and the registrant's actual FTA filing calendar come with the Phase 2 accounting scope. This view is the working paper shape to agree with the accountant.
+        Input VAT sums the actual per-expense VAT captured on each expense line, excluding VAT flagged non-recoverable
+        (e.g. entertainment{anyBlocked ? ' — excluded amounts shown per period' : ''}).
+        {anyEstimated && ' *Legacy seed expenses without a captured VAT amount fall back to a 5% estimate — shown separately per period.'}
+        {' '}Reverse-charge items and the registrant&apos;s actual FTA filing calendar come with the Phase 2 accounting scope.
       </p>
     </div>
   )
 }
 
-export default function AccountantView({ invoices, expenses }) {
+export default function AccountantView({ invoices, expenses, creditNotes = [] }) {
   const [tab, setTab] = useState('aging')
   const TABS = [
     { key: 'aging', label: 'Receivables aging', icon: ReceiptText },
@@ -236,8 +271,8 @@ export default function AccountantView({ invoices, expenses }) {
           )
         })}
       </div>
-      {tab === 'aging' && <AgingTab invoices={invoices} />}
-      {tab === 'statements' && <StatementsTab invoices={invoices} />}
+      {tab === 'aging' && <AgingTab invoices={invoices} creditNotes={creditNotes} />}
+      {tab === 'statements' && <StatementsTab invoices={invoices} creditNotes={creditNotes} />}
       {tab === 'vat' && <VatTab invoices={invoices} expenses={expenses} />}
     </div>
   )

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Send, CheckCircle2, FileText, Plus, Banknote, Paperclip } from 'lucide-react'
+import { Send, CheckCircle2, FileText, Plus, Banknote, Paperclip, FileMinus2 } from 'lucide-react'
 import { PROJECTS } from '../../data/projectsData'
 import { parseLocalDate } from '../../utils/date'
 import {
@@ -8,13 +8,15 @@ import {
 
 const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
 
-export default function InvoicesView({ invoices, onUpdate, onAdd }) {
+export default function InvoicesView({ invoices, onUpdate, onAdd, creditNotes = [], onAddCreditNote, onPayment }) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
   const [showAdd, setShowAdd] = useState(false)
   const [payingId, setPayingId] = useState(null)
   const [payAmount, setPayAmount] = useState('')
+  const [creditingId, setCreditingId] = useState(null)
+  const [cnForm, setCnForm] = useState({ amount: '', reason: '' })
   const [form, setForm] = useState({ clientName: '', projectId: '', description: '', amount: '', issueDate: '', dueDate: '', attachment: '' })
   const projectOf = (id) => PROJECTS.find((p) => p.id === id)
 
@@ -38,12 +40,34 @@ export default function InvoicesView({ invoices, onUpdate, onAdd }) {
     setShowAdd(false)
   }
 
+  // Payments route through onPayment (Finance.jsx), which updates the invoice AND
+  // creates a receipt in the Receipts register so the register stays the source of
+  // truth for what's been paid. Falls back to a direct update if not wired.
+  const applyPayment = (inv, amt) => {
+    if (onPayment) return onPayment(inv, amt)
+    const newPaid = Math.min((inv.amountPaid ?? 0) + amt, invoiceTotal(inv))
+    onUpdate({ ...inv, amountPaid: newPaid, status: newPaid >= invoiceTotal(inv) ? 'paid' : 'partially_paid' })
+  }
+
   const recordPayment = (inv) => {
     const amt = Number(payAmount)
     if (!amt || amt <= 0) return
-    const newPaid = Math.min((inv.amountPaid ?? 0) + amt, invoiceTotal(inv))
-    onUpdate({ ...inv, amountPaid: newPaid, status: newPaid >= invoiceTotal(inv) ? 'paid' : 'partially_paid' })
+    applyPayment(inv, Math.min(amt, invoiceOutstanding(inv)))
     setPayingId(null); setPayAmount('')
+  }
+
+  // Credit note: reason + amount capped at the invoice total less credits already
+  // issued against it. Ref (CN-2026-NNN) is assigned by Finance.jsx.
+  const cnAgainst = (inv) => creditNotes.filter((c) => c.invoiceId === inv.id).reduce((s, c) => s + c.amount, 0)
+  const cnMax = (inv) => Math.max(0, invoiceTotal(inv) - cnAgainst(inv))
+  const issueCreditNote = (inv) => {
+    const amt = Number(cnForm.amount)
+    if (!onAddCreditNote || !amt || amt <= 0 || !cnForm.reason.trim()) return
+    onAddCreditNote({
+      invoiceId: inv.id, clientName: inv.clientName, date: new Date().toISOString().slice(0, 10),
+      amount: Math.min(amt, cnMax(inv)), reason: cnForm.reason.trim(),
+    })
+    setCreditingId(null); setCnForm({ amount: '', reason: '' })
   }
 
   const shown = invoices
@@ -61,7 +85,7 @@ export default function InvoicesView({ invoices, onUpdate, onAdd }) {
     .reduce((s, i) => s + invoiceOutstanding(i), 0)
 
   const send = (inv) => onUpdate({ ...inv, status: 'sent' })
-  const markPaid = (inv) => onUpdate({ ...inv, status: 'paid', amountPaid: invoiceTotal(inv) })
+  const markPaid = (inv) => applyPayment(inv, invoiceOutstanding(inv))
 
   return (
     <div className="space-y-4">
@@ -205,6 +229,22 @@ export default function InvoicesView({ invoices, onUpdate, onAdd }) {
                         )
                       )}
                       {inv.status === 'paid' && <span className="text-[11px] text-gray-300">—</span>}
+                      {onAddCreditNote && inv.status !== 'draft' && cnMax(inv) > 0 && (
+                        creditingId === inv.id ? (
+                          <div className="mt-1.5 flex items-center gap-1 justify-end flex-wrap">
+                            <input value={cnForm.reason} onChange={(e) => setCnForm({ ...cnForm, reason: e.target.value })} placeholder="Reason *" className="w-40 border rounded-md px-1.5 py-0.5 text-xs" autoFocus />
+                            <input type="number" min="0" max={cnMax(inv)} value={cnForm.amount} onChange={(e) => setCnForm({ ...cnForm, amount: e.target.value })} placeholder={`≤ ${cnMax(inv)}`} className="w-24 border rounded-md px-1.5 py-0.5 text-xs text-right" />
+                            <button onClick={() => issueCreditNote(inv)} className="text-xs text-purple-700 font-medium hover:underline">Issue</button>
+                            <button onClick={() => { setCreditingId(null); setCnForm({ amount: '', reason: '' }) }} className="text-xs text-gray-400 hover:underline">✕</button>
+                          </div>
+                        ) : (
+                          <div className="mt-1">
+                            <button onClick={() => { setCreditingId(inv.id); setPayingId(null) }} className="inline-flex items-center gap-1 text-[11px] text-purple-600 hover:underline">
+                              <FileMinus2 size={11} /> Credit note
+                            </button>
+                          </div>
+                        )
+                      )}
                     </td>
                   </tr>
                 )
@@ -222,8 +262,43 @@ export default function InvoicesView({ invoices, onUpdate, onAdd }) {
         </div>
       </div>
 
+      {/* Credit notes issued */}
+      {creditNotes.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-gray-100 text-[11px] uppercase tracking-wide text-gray-400 font-medium">Credit notes issued</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[640px]">
+              <tbody className="divide-y divide-gray-50">
+                {[...creditNotes].sort((a, b) => (b.date || '').localeCompare(a.date || '')).map((cn) => {
+                  const inv = invoices.find((i) => i.id === cn.invoiceId)
+                  return (
+                    <tr key={cn.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2.5 align-top whitespace-nowrap">
+                        <div className="font-mono text-xs text-purple-700">{cn.creditNoteNo}</div>
+                        <div className="text-[11px] text-gray-400">{fmtDate(cn.date)}</div>
+                      </td>
+                      <td className="px-4 py-2.5 align-top">
+                        <div className="text-gray-800">{cn.clientName}</div>
+                        <div className="text-[11px] text-gray-400">against <span className="font-mono">{inv?.invoiceNo || `invoice #${cn.invoiceId}`}</span></div>
+                      </td>
+                      <td className="px-4 py-2.5 align-top text-xs text-gray-600 max-w-[280px]">{cn.reason}</td>
+                      <td className="px-4 py-2.5 align-top text-right tabular-nums font-medium text-purple-700 whitespace-nowrap">−{fmtAED(cn.amount)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-2 text-[11px] text-gray-400 border-t border-gray-100">
+            Credit notes reduce the client&apos;s balance on their statement (Accountant → Client statements).
+            Posting them through the GL and the VAT return is Phase 2.
+          </div>
+        </div>
+      )}
+
       <p className="text-[11px] text-gray-400">
-        Actions (Send / Mark paid) mutate in-memory demo state only. Partial payments, credit notes, VAT returns and reconciliation are Phase 2.
+        Actions mutate in-memory demo state only. Record payment / Full creates a receipt in the Receipts register,
+        which is the source of truth for paid status. Dunning, GL posting and reconciliation are Phase 2.
       </p>
     </div>
   )
