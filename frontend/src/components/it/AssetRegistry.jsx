@@ -9,9 +9,15 @@ export default function AssetRegistry({ assets, employees, onAdd, onUpdate }) {
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState({ type: ASSET_TYPES[0], model: '', serial: '', purchaseDate: '', valueAed: '', assignedToId: '', notes: '' })
   const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
 
   const empName = (id) => employees.find((e) => e.id === id)?.name || '—'
-  const rows = assets.filter((a) => statusFilter === 'all' || a.status === statusFilter)
+  const rows = assets
+    .filter((a) => statusFilter === 'all' || a.status === statusFilter)
+    .filter((a) => {
+      const q = search.trim().toLowerCase()
+      return !q || [a.tag, a.type, a.model, a.serial, a.assignedToId ? empName(a.assignedToId) : ''].some((f) => (f || '').toLowerCase().includes(q))
+    })
   const totalValue = assets.filter((a) => a.status !== 'retired').reduce((s, a) => s + (a.valueAed || 0), 0)
 
   const nextTag = `IT-${String(Math.max(...assets.map((a) => Number(a.tag.replace('IT-', '')) || 0)) + 1).padStart(4, '0')}`
@@ -44,6 +50,7 @@ export default function AssetRegistry({ assets, employees, onAdd, onUpdate }) {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tag, model, person…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52 focus:outline-none focus:ring-1 focus:ring-brand" />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand">
             <option value="all">All statuses</option>
             {Object.entries(ASSET_STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}

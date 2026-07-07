@@ -27,7 +27,16 @@ export default function ClaimsView({ pm, onUpdate }) {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ title: '', party: 'Contractor', eventDate: '', awarenessDate: '' })
   const [recordDraft, setRecordDraft] = useState({})
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [range, setRange] = useState({ from: '', to: '' })
   const ed = fidicOf(pm.fidicEdition)
+
+  const statuses = [...new Set(pm.claims.map((c) => c.status))]
+  const filtered = pm.claims
+    .filter((c) => statusFilter === 'all' || c.status === statusFilter)
+    .filter((c) => (!range.from || (c.eventDate || '') >= range.from) && (!range.to || (c.eventDate || '') <= range.to))
+    .filter((c) => { const q = search.trim().toLowerCase(); return !q || (c.ref || '').toLowerCase().includes(q) || (c.title || '').toLowerCase().includes(q) || (c.party || '').toLowerCase().includes(q) })
 
   const update = (c, patch) => onUpdate({ ...pm, claims: pm.claims.map((x) => x.id === c.id ? { ...x, ...patch } : x) })
 
@@ -67,6 +76,18 @@ export default function ClaimsView({ pm, onUpdate }) {
         </div>
       </div>
 
+      <div className="flex items-center gap-2 flex-wrap">
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search ref, title, party…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+        <label className="text-xs text-gray-500">From</label>
+        <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
+        <label className="text-xs text-gray-500">To</label>
+        <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white">
+          <option value="all">All statuses</option>
+          {statuses.map((s) => <option key={s} value={s}>{claimStatusMeta(s).label}</option>)}
+        </select>
+      </div>
+
       <div className="rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-[11px] leading-snug text-blue-700">
         {ed.label}: notice within <b>{ed.noticeDays} days</b> of event awareness (condition precedent — a missed notice can extinguish the claim), fully detailed claim within <b>{ed.detailedClaimDays} days</b> of the notice, monthly interim updates for continuing events. Contemporary records are contractually required.
       </div>
@@ -92,7 +113,11 @@ export default function ClaimsView({ pm, onUpdate }) {
         <div className="bg-white rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400">No claims or EOT events registered.</div>
       )}
 
-      {pm.claims.map((c) => {
+      {pm.claims.length > 0 && filtered.length === 0 && (
+        <div className="bg-white rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400">No claims match the filters.</div>
+      )}
+
+      {filtered.map((c) => {
         const meta = claimStatusMeta(c.status)
         const { noticeDue, detailedDue } = claimDeadlines(c, pm.fidicEdition)
         const open = expanded === c.id

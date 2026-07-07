@@ -14,6 +14,7 @@ const fmtK = (n) => (n ? `${Math.round(n / 1000)}k` : '—')
 
 export default function RevenueReportsView({ invoices }) {
   const [lens, setLens] = useState('earned') // earned | forecast | comparison
+  const [search, setSearch] = useState('')
 
   // Earned (invoiced, ex-VAT) per project per month.
   const rows = PROJECTS.map((p) => {
@@ -28,6 +29,10 @@ export default function RevenueReportsView({ invoices }) {
     const forecastTotal = Object.values(forecast).reduce((s, v) => s + v, 0)
     return { p, monthly, earnedTotal, forecast, forecastTotal }
   }).filter((r) => r.earnedTotal > 0 || r.forecastTotal > 0)
+    .filter((r) => {
+      const q = search.trim().toLowerCase()
+      return !q || (r.p.name || '').toLowerCase().includes(q) || (r.p.projectNo || '').toLowerCase().includes(q)
+    })
     .sort((a, b) => b.earnedTotal - a.earnedTotal)
 
   const grand = (key) => MONTHS.map((m) => rows.reduce((s, r) => s + (key === 'earned' ? r.monthly[m] : r.forecast[m]), 0))
@@ -45,10 +50,13 @@ export default function RevenueReportsView({ invoices }) {
           <h2 className="text-sm font-semibold text-gray-800">Revenue reports — 2026</h2>
           <p className="text-xs text-gray-500">Per project per month, AED thousands ex-VAT. Earned = invoiced; forecast spreads the remaining fee to year end.</p>
         </div>
-        <div className="flex text-xs rounded-md border border-gray-200 overflow-hidden">
-          {LENSES.map((l) => (
-            <button key={l.key} onClick={() => setLens(l.key)} className={`px-2.5 py-1.5 font-medium ${lens === l.key ? 'bg-brand text-white' : 'bg-white text-gray-500'}`}>{l.label}</button>
-          ))}
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search project…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52 focus:outline-none focus:ring-1 focus:ring-brand" />
+          <div className="flex text-xs rounded-md border border-gray-200 overflow-hidden">
+            {LENSES.map((l) => (
+              <button key={l.key} onClick={() => setLens(l.key)} className={`px-2.5 py-1.5 font-medium ${lens === l.key ? 'bg-brand text-white' : 'bg-white text-gray-500'}`}>{l.label}</button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -79,6 +87,9 @@ export default function RevenueReportsView({ invoices }) {
                   </tr>
                 )
               })}
+              {rows.length === 0 && (
+                <tr><td colSpan={MONTHS.length + 2} className="px-3 py-6 text-center text-sm text-gray-400">No projects match</td></tr>
+              )}
             </tbody>
             <tfoot className="border-t border-gray-200 bg-gray-50 font-semibold text-gray-700">
               <tr>
@@ -91,6 +102,7 @@ export default function RevenueReportsView({ invoices }) {
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
+          {rows.length === 0 && <div className="py-4 text-center text-sm text-gray-400">No projects match</div>}
           {rows.map(({ p, earnedTotal, forecastTotal }) => {
             const max = Math.max(...rows.map((r) => Math.max(r.earnedTotal, r.forecastTotal)), 1)
             return (

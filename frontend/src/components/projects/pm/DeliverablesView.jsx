@@ -15,6 +15,7 @@ export default function DeliverablesView({ pm, onUpdate }) {
   const [showAdd, setShowAdd] = useState(false)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
   const [form, setForm] = useState({ docNo: '', title: '', discipline: DESIGN_DISCIPLINES[0], dueDate: '' })
 
   const advance = (d, status) => {
@@ -53,6 +54,10 @@ export default function DeliverablesView({ pm, onUpdate }) {
         <h2 className="text-sm font-semibold text-gray-700">Deliverables register ({pm.deliverables.length})</h2>
         <div className="flex items-center gap-2">
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search doc no, title…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-44" />
+          <label className="text-xs text-gray-500">From</label>
+          <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" />
+          <label className="text-xs text-gray-500">To</label>
+          <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" />
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
             <option value="">All statuses</option>
             {DELIVERABLE_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
@@ -84,13 +89,18 @@ export default function DeliverablesView({ pm, onUpdate }) {
         </div>
       )}
 
-      {pm.deliverables
-        .filter((d) => !statusFilter || d.status === statusFilter)
-        .filter((d) => {
-          const q = search.trim().toLowerCase()
-          return !q || d.docNo.toLowerCase().includes(q) || d.title.toLowerCase().includes(q) || d.discipline.toLowerCase().includes(q)
-        })
-        .map((d) => {
+      {(() => {
+        const filtered = pm.deliverables
+          .filter((d) => !statusFilter || d.status === statusFilter)
+          .filter((d) => (!range.from || (d.dueDate || '') >= range.from) && (!range.to || (d.dueDate || '') <= range.to))
+          .filter((d) => {
+            const q = search.trim().toLowerCase()
+            return !q || (d.docNo || '').toLowerCase().includes(q) || (d.title || '').toLowerCase().includes(q) || (d.discipline || '').toLowerCase().includes(q)
+          })
+        if (pm.deliverables.length > 0 && filtered.length === 0) {
+          return <div className="bg-white rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400">No deliverables match the filters.</div>
+        }
+        return filtered.map((d) => {
         const meta = deliverableStatusMeta(d.status)
         const open = expanded === d.id
         const nexts = DELIVERABLE_NEXT[d.status] || []
@@ -135,7 +145,8 @@ export default function DeliverablesView({ pm, onUpdate }) {
             )}
           </div>
         )
-      })}
+      })
+      })()}
 
       <p className="text-[11px] text-gray-400">
         Review workflow: internal QA → issued to client → comments → revise → resubmit (rev bumps). The same register pattern serves incoming contractor documents in Phase 2. File storage is Phase 2 — entries are metadata-only.

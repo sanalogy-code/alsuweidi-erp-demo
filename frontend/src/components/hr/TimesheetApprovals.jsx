@@ -17,9 +17,22 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
   const [expanded, setExpanded] = useState(null)
   const [rejecting, setRejecting] = useState(null)
   const [reason, setReason] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
 
-  const pending = timesheets.filter((t) => t.status === 'submitted').sort((a, b) => (a.submittedDate || '').localeCompare(b.submittedDate || ''))
-  const recent = timesheets.filter((t) => t.status === 'approved' || t.status === 'rejected')
+  const statusesPresent = [...new Set(timesheets.map((t) => t.status))]
+  const visible = timesheets
+    .filter((t) => statusFilter === 'all' || t.status === statusFilter)
+    .filter((t) => (!range.from || t.weekStart >= range.from) && (!range.to || t.weekStart <= range.to))
+    .filter((t) => {
+      const q = search.trim().toLowerCase()
+      return !q || (t.employeeName || '').toLowerCase().includes(q)
+    })
+
+  const pending = visible.filter((t) => t.status === 'submitted').sort((a, b) => (a.submittedDate || '').localeCompare(b.submittedDate || ''))
+  const hasPendingAtAll = timesheets.some((t) => t.status === 'submitted')
+  const recent = visible.filter((t) => t.status === 'approved' || t.status === 'rejected')
     .sort((a, b) => (b.approvedDate || b.weekStart).localeCompare(a.approvedDate || a.weekStart)).slice(0, 5)
 
   // Last fully-elapsed week: the one before the current week.
@@ -78,10 +91,21 @@ export default function TimesheetApprovals({ timesheets, employees = [], project
               ? "Your team's submitted weeks, oldest first — as line manager, you approve them."
               : 'Every submitted week company-wide, oldest first. Line managers approve their own team — HR steps in where there is no manager or the manager is away.'}
           </p>
+          <div className="mt-3 flex items-center gap-2 flex-wrap">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search employee…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white">
+              <option value="all">All statuses</option>
+              {statusesPresent.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+            </select>
+            <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="Week starting from" />
+            <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="Week starting to" />
+          </div>
         </div>
 
         {pending.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-400">Nothing waiting — all submitted weeks are approved.</div>
+          <div className="p-8 text-center text-sm text-gray-400">
+            {hasPendingAtAll ? 'No submitted weeks match the current filters.' : 'Nothing waiting — all submitted weeks are approved.'}
+          </div>
         ) : (
           <div className="divide-y divide-gray-100">
             {pending.map((t) => (

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { AlertTriangle, Clock } from 'lucide-react'
 
 const WINDOW_DAYS = 90
@@ -47,15 +48,33 @@ const DOC_COLOR = {
 }
 
 export default function RenewalsReport({ employees, onViewEmployee }) {
-  const items = buildRenewalItems(employees)
+  const [docFilter, setDocFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const allItems = buildRenewalItems(employees)
+  const docTypesPresent = [...new Set(allItems.map((i) => i.docType))]
+  const items = allItems
+    .filter((i) => docFilter === 'all' || i.docType === docFilter)
+    .filter((i) => {
+      const q = search.trim().toLowerCase()
+      return !q || (i.employeeName || '').toLowerCase().includes(q) || (i.subjectName || '').toLowerCase().includes(q)
+    })
   const overdue = items.filter((i) => i.days < 0)
   const dueSoon = items.filter((i) => i.days >= 0)
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-sm font-semibold text-gray-800 mb-1">Renewals — Visa, Passport, Contract & Insurance</h2>
-        <p className="text-xs text-gray-500">Everyone (staff or dependents) with a document expiring within {WINDOW_DAYS} days, or already overdue.</p>
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-800 mb-1">Renewals — Visa, Passport, Contract & Insurance</h2>
+          <p className="text-xs text-gray-500">Everyone (staff or dependents) with a document expiring within {WINDOW_DAYS} days, or already overdue.</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search people…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+          <select value={docFilter} onChange={(e) => setDocFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white">
+            <option value="all">All documents</option>
+            {docTypesPresent.map((d) => <option key={d} value={d}>{d}</option>)}
+          </select>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -77,7 +96,9 @@ export default function RenewalsReport({ employees, onViewEmployee }) {
 
       {items.length === 0 ? (
         <div className="text-sm text-gray-500 bg-white rounded-lg border border-gray-200 p-6 text-center">
-          Nothing due — no visas, passports, or contracts expiring in the next {WINDOW_DAYS} days.
+          {allItems.length === 0
+            ? `Nothing due — no visas, passports, or contracts expiring in the next ${WINDOW_DAYS} days.`
+            : 'No renewals match the current filters.'}
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">

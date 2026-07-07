@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, LogOut } from 'lucide-react'
 import logo from '../assets/alsuweidi-logo.svg'
+import NotificationsBell from './NotificationsBell'
 
 const ROLE_LABELS = {
   sales: 'Sales / Business Dev',
@@ -36,6 +37,7 @@ export default function Navbar({ user, onLogout, title, showBack }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <NotificationsBell />
           <div className="text-right hidden sm:block">
             <div className="text-sm font-medium text-gray-800">{user?.username}</div>
             <div className="text-xs text-gray-500">{ROLE_LABELS[user?.role] || user?.role}</div>

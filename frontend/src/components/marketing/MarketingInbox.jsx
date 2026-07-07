@@ -34,9 +34,21 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
   const [emailText, setEmailText] = useState('')
   const [photographerTask, setPhotographerTask] = useState(null)
   const [photographerForm, setPhotographerForm] = useState({ kind: 'External', name: '' })
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
 
-  const open = tasks.filter((t) => t.status === 'pending').sort((a, b) => a.createdDate.localeCompare(b.createdDate))
-  const done = tasks.filter((t) => t.status === 'done')
+  const statusesPresent = [...new Set(tasks.map((t) => t.status))]
+  const filtered = tasks
+    .filter((t) => statusFilter === 'all' || t.status === statusFilter)
+    .filter((t) => (!range.from || t.createdDate >= range.from) && (!range.to || t.createdDate <= range.to))
+    .filter((t) => {
+      const q = search.trim().toLowerCase()
+      return !q || (t.relatedName || '').toLowerCase().includes(q) || (t.notes || '').toLowerCase().includes(q) || (MARKETING_TASK_TYPES[t.type]?.label || t.type || '').toLowerCase().includes(q)
+    })
+  const hasFilters = search.trim() || statusFilter !== 'all' || range.from || range.to
+  const open = filtered.filter((t) => t.status === 'pending').sort((a, b) => a.createdDate.localeCompare(b.createdDate))
+  const done = filtered.filter((t) => t.status === 'done')
     .sort((a, b) => (b.completedDate || '').localeCompare(a.completedDate || '')).slice(0, 5)
 
   const projectFor = (task) => projects.find((p) => p.id === task.relatedId)
@@ -137,17 +149,32 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <Inbox size={15} className="text-brand" /> Inbox ({open.length})
-          </h2>
-          <p className="text-xs text-gray-500">
-            Everything waiting on Marketing — project descriptions, photography, headshots, and welcome emails — oldest first.
-          </p>
+        <div className="p-4 border-b border-gray-200 flex justify-between items-start gap-3 flex-wrap">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+              <Inbox size={15} className="text-brand" /> Inbox ({open.length})
+            </h2>
+            <p className="text-xs text-gray-500">
+              Everything waiting on Marketing — project descriptions, photography, headshots, and welcome emails — oldest first.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tasks…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52 focus:outline-none focus:ring-1 focus:ring-brand" />
+            <label className="text-xs text-gray-500">From</label>
+            <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand" />
+            <label className="text-xs text-gray-500">To</label>
+            <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand" />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand">
+              <option value="all">All statuses</option>
+              {statusesPresent.map((s) => <option key={s} value={s}>{s === 'pending' ? 'Open' : s === 'done' ? 'Done' : s}</option>)}
+            </select>
+          </div>
         </div>
 
         {open.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-400">Inbox zero — nothing waiting on Marketing.</div>
+          <div className="p-8 text-center text-sm text-gray-400">
+            {hasFilters ? 'No open tasks match these filters.' : 'Inbox zero — nothing waiting on Marketing.'}
+          </div>
         ) : (
           <div className="divide-y divide-gray-100">
             {/* Fixed-width columns (chip / description / age / action) so the eye can run down the queue */}

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Plus, Check, Trash2 } from 'lucide-react'
 import { daysUntil, formatDueLabel } from '../../data/crmData'
 
@@ -43,11 +44,26 @@ function Section({ title, tasks, contacts, companies, tone, onToggle, onDelete, 
 }
 
 export default function TasksView({ tasks, contacts, companies, onAddTask, onToggle, onDelete, onJumpToCompany }) {
-  const open = tasks.filter((t) => !t.done)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+
+  // Search + open/done filter applied before the date grouping.
+  const filtered = tasks
+    .filter((t) => statusFilter === 'all' || (statusFilter === 'done' ? t.done : !t.done))
+    .filter((t) => {
+      const q = search.trim().toLowerCase()
+      if (!q) return true
+      const contact = contacts.find((c) => c.id === t.contactId)
+      const company = companies.find((c) => c.id === contact?.companyId)
+      return [(t.title || ''), (contact?.name || ''), (company?.name || '')].some((f) => f.toLowerCase().includes(q))
+    })
+  const hasFilters = search.trim() || statusFilter !== 'all'
+
+  const open = filtered.filter((t) => !t.done)
   const overdue = open.filter((t) => daysUntil(t.dueDate) < 0).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
   const dueSoon = open.filter((t) => daysUntil(t.dueDate) >= 0 && daysUntil(t.dueDate) <= 7).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
   const later = open.filter((t) => daysUntil(t.dueDate) > 7).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
-  const done = tasks.filter((t) => t.done)
+  const done = filtered.filter((t) => t.done)
 
   return (
     <div className="space-y-6">
@@ -56,12 +72,20 @@ export default function TasksView({ tasks, contacts, companies, onAddTask, onTog
           <h2 className="text-sm font-semibold text-gray-800">Tasks & Reminders</h2>
           <p className="text-xs text-gray-500">Reconnect prompts tied to your contacts</p>
         </div>
-        <button
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title, contact, company…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52 focus:outline-none focus:ring-1 focus:ring-brand" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand">
+            <option value="all">All</option>
+            <option value="open">Open</option>
+            <option value="done">Done</option>
+          </select>
+          <button
           onClick={() => onAddTask(null)}
           className="bg-brand text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-brand-dark flex items-center gap-1"
         >
           <Plus size={14} /> New Task
-        </button>
+          </button>
+        </div>
       </div>
 
       <Section title="Overdue" tasks={overdue} contacts={contacts} companies={companies} tone="text-red-600" onToggle={onToggle} onDelete={onDelete} onJumpToCompany={onJumpToCompany} />
@@ -69,11 +93,15 @@ export default function TasksView({ tasks, contacts, companies, onAddTask, onTog
       <Section title="Later" tasks={later} contacts={contacts} companies={companies} tone="text-gray-500" onToggle={onToggle} onDelete={onDelete} onJumpToCompany={onJumpToCompany} />
       <Section title="Done" tasks={done} contacts={contacts} companies={companies} tone="text-gray-400" onToggle={onToggle} onDelete={onDelete} onJumpToCompany={onJumpToCompany} />
 
-      {tasks.length === 0 && (
+      {tasks.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-16 text-center text-gray-400">
           No tasks yet. Add a reminder to reconnect with someone.
         </div>
-      )}
+      ) : filtered.length === 0 && hasFilters ? (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-16 text-center text-gray-400">
+          No tasks match these filters.
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -14,6 +14,9 @@ const inputCls = 'border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:ou
 export default function StaffPlanningTab({ plans, projects = [], onAdd, onUpdate, onRemove, staffingRequests = [], onUpdateStaffingRequests }) {
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState({ projectRef: '', role: DESIGNATIONS[0].title, count: 1, neededBy: '', notes: '' })
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
 
   const daysTo = (d) => Math.ceil((parseLocalDate(d) - todayLocal()) / (1000 * 60 * 60 * 24))
   const urgent = (p) => p.status !== 'hired' && daysTo(p.neededBy) <= 45
@@ -29,6 +32,14 @@ export default function StaffPlanningTab({ plans, projects = [], onAdd, onUpdate
   ]
 
   const byProject = [...new Set(plans.map((p) => p.projectRef))]
+
+  const filteredPlans = plans
+    .filter((p) => statusFilter === 'all' || p.status === statusFilter)
+    .filter((p) => (!range.from || p.neededBy >= range.from) && (!range.to || p.neededBy <= range.to))
+    .filter((p) => {
+      const q = search.trim().toLowerCase()
+      return !q || (p.role || '').toLowerCase().includes(q) || (p.projectRef || '').toLowerCase().includes(q) || (p.notes || '').toLowerCase().includes(q)
+    })
 
   return (
     <div className="space-y-4">
@@ -149,9 +160,23 @@ export default function StaffPlanningTab({ plans, projects = [], onAdd, onUpdate
         </div>
       )}
 
+      {plans.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search plan…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white">
+            <option value="all">All statuses</option>
+            {[...new Set(plans.map((p) => p.status))].map((s) => <option key={s} value={s}>{STAFF_PLAN_STATUS[s]?.label || s}</option>)}
+          </select>
+          <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="Needed by from" />
+          <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="Needed by to" />
+        </div>
+      )}
+
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
         {plans.length === 0 ? (
           <div className="p-8 text-center text-sm text-gray-400">No planned hires yet.</div>
+        ) : filteredPlans.length === 0 ? (
+          <div className="p-8 text-center text-sm text-gray-400">No planned hires match the current filters.</div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
@@ -165,7 +190,7 @@ export default function StaffPlanningTab({ plans, projects = [], onAdd, onUpdate
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {[...plans].sort((a, b) => a.neededBy.localeCompare(b.neededBy)).map((p) => {
+              {[...filteredPlans].sort((a, b) => a.neededBy.localeCompare(b.neededBy)).map((p) => {
                 const meta = STAFF_PLAN_STATUS[p.status]
                 const d = daysTo(p.neededBy)
                 return (

@@ -243,6 +243,9 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
   // Table is the default lens (Sana: "a CLEAR table with aligned columns");
   // the grouped board stays one click away.
   const [lens, setLens] = useState('table')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [priorityFilter, setPriorityFilter] = useState('')
   const teamNames = phase.team.map((m) => m.name)
   const [form, setForm] = useState({ title: '', assignee: teamNames[0] || '', startDate: todayIso(), due: '', priority: 'normal' })
 
@@ -265,10 +268,24 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
     setForm({ title: '', assignee: teamNames[0] || '', startDate: todayIso(), due: '', priority: 'normal' }); setShowAdd(false)
   }
 
+  // Filter at the PARENT level: a parent stays visible if it or any of its
+  // subtasks matches, and a visible parent keeps ALL its children (no orphans).
+  const match = (t) => {
+    const q = search.trim().toLowerCase()
+    return (!statusFilter || t.status === statusFilter)
+      && (!priorityFilter || t.priority === priorityFilter)
+      && (!q || (t.title || '').toLowerCase().includes(q) || (t.assignee || '').toLowerCase().includes(q))
+  }
+  const visibleParentIds = new Set(phase.tasks
+    .filter((t) => t.parentId == null && (match(t) || subtasksOf(t, phase.tasks).some(match)))
+    .map((t) => t.id))
+  const visibleTasks = phase.tasks.filter((t) => t.parentId == null ? visibleParentIds.has(t.id) : visibleParentIds.has(t.parentId))
+  const anyFilter = search.trim() || statusFilter || priorityFilter
+
   // Only top-level tasks appear in the status groups; subtasks nest under parents.
   const groups = TASK_STATUSES.map((s) => ({
     ...s,
-    items: phase.tasks
+    items: visibleTasks
       .filter((t) => t.parentId == null && t.status === s.key)
       .sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999')),
   }))
@@ -306,10 +323,26 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
         </div>
       )}
 
+      <div className="flex items-center gap-2 flex-wrap">
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search task / person…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-52" />
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+          <option value="">All statuses</option>
+          {TASK_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+        </select>
+        <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+          <option value="">All priorities</option>
+          {TASK_PRIORITIES.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+        </select>
+      </div>
+
+      {anyFilter && phase.tasks.length > 0 && visibleTasks.length === 0 && (
+        <div className="bg-white rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400">No tasks match the filters.</div>
+      )}
+
       {lens === 'table' ? (
         <TaskTable
           groups={[{
-            phaseKey: phase.key, phaseLabel: phase.label, tasks: phase.tasks,
+            phaseKey: phase.key, phaseLabel: phase.label, tasks: visibleTasks,
             patchTask, addSubtask, onLogHours, defaultAssigner: phase.team[0]?.name,
           }]}
           currentUserName={currentUserName}

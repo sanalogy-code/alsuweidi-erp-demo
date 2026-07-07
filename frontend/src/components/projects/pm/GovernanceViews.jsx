@@ -22,6 +22,9 @@ const Empty = ({ label }) => (
 export function RisksView({ pm, onUpdate }) {
   const risks = pm.risks || []
   const [showAdd, setShowAdd] = useState(false)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
   const [form, setForm] = useState({ description: '', probability: 'medium', impact: 'medium', owner: '', mitigation: '' })
 
   const patch = (id, changes) => onUpdate({ ...pm, risks: risks.map((r) => (r.id === id ? { ...r, ...changes } : r)) })
@@ -38,11 +41,29 @@ export function RisksView({ pm, onUpdate }) {
   const realized = risks.filter((r) => r.status === 'realized')
   const worst = [...live].sort((a, b) => score(b) - score(a))[0]
 
+  const statusesPresent = RISK_STATUSES.filter((s) => risks.some((r) => r.status === s.key))
+  const filtered = risks
+    .filter((r) => statusFilter === 'all' || r.status === statusFilter)
+    .filter((r) => (!range.from || (r.reviewDate || '') >= range.from) && (!range.to || (r.reviewDate || '') <= range.to))
+    .filter((r) => {
+      const q = search.trim().toLowerCase()
+      return !q || (r.ref || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q) || (r.owner || '').toLowerCase().includes(q) || (r.mitigation || '').toLowerCase().includes(q)
+    })
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-sm font-semibold text-gray-700">Risk register</h2>
-        <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Log risk</button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-36" />
+          <label className="flex items-center gap-1 text-xs text-gray-500">From <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
+          <label className="flex items-center gap-1 text-xs text-gray-500">To <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+            <option value="all">All statuses</option>
+            {statusesPresent.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+          <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Log risk</button>
+        </div>
       </div>
 
       {risks.length > 0 && (
@@ -78,7 +99,8 @@ export function RisksView({ pm, onUpdate }) {
       )}
 
       {risks.length === 0 && !showAdd && <Empty label="No risks logged." />}
-      {[...risks].sort((a, b) => score(b) - score(a)).map((r) => {
+      {risks.length > 0 && filtered.length === 0 && <Empty label="No risks match the filters." />}
+      {[...filtered].sort((a, b) => score(b) - score(a)).map((r) => {
         const sMeta = riskStatusMeta(r.status)
         return (
           <div key={r.id} className="bg-white rounded-lg border border-gray-200 px-4 py-3 space-y-1.5">
@@ -111,6 +133,9 @@ export function MeetingsView({ pm, onUpdate }) {
   const [form, setForm] = useState({ title: '', date: todayISO(), attendees: '', notes: '' })
   const [actionDrafts, setActionDrafts] = useState({})
   const [editingNotes, setEditingNotes] = useState(null) // meeting id whose notes are being edited
+  const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'open_actions'
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
 
   const patchMeeting = (id, changes) => onUpdate({ ...pm, meetings: meetings.map((m) => (m.id === id ? { ...m, ...changes } : m)) })
   const add = () => {
@@ -127,14 +152,31 @@ export function MeetingsView({ pm, onUpdate }) {
 
   const openActions = meetings.flatMap((m) => m.actions.filter((a) => a.status !== 'done'))
 
+  const filtered = meetings
+    .filter((m) => statusFilter === 'all' || m.actions.some((a) => a.status !== 'done'))
+    .filter((m) => (!range.from || (m.date || '') >= range.from) && (!range.to || (m.date || '') <= range.to))
+    .filter((m) => {
+      const q = search.trim().toLowerCase()
+      return !q || (m.title || '').toLowerCase().includes(q) || (m.attendees || '').toLowerCase().includes(q) || (m.notes || '').toLowerCase().includes(q) || m.actions.some((a) => (a.text || '').toLowerCase().includes(q))
+    })
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-sm font-semibold text-gray-700">Meetings & actions</h2>
           <p className="text-xs text-gray-500">{openActions.length} open action{openActions.length === 1 ? '' : 's'} across {meetings.length} meeting{meetings.length === 1 ? '' : 's'}. Open actions appear in each owner's My Work.</p>
         </div>
-        <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Log meeting</button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-36" />
+          <label className="flex items-center gap-1 text-xs text-gray-500">From <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
+          <label className="flex items-center gap-1 text-xs text-gray-500">To <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+            <option value="all">All</option>
+            <option value="open_actions">With open actions</option>
+          </select>
+          <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Log meeting</button>
+        </div>
       </div>
 
       {showAdd && (
@@ -148,7 +190,8 @@ export function MeetingsView({ pm, onUpdate }) {
       )}
 
       {meetings.length === 0 && !showAdd && <Empty label="No meetings logged." />}
-      {meetings.map((m) => (
+      {meetings.length > 0 && filtered.length === 0 && <Empty label="No meetings match the filters." />}
+      {filtered.map((m) => (
         <div key={m.id} className="bg-white rounded-lg border border-gray-200 px-4 py-3 space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-xs text-gray-500">{m.ref}</span>
@@ -203,14 +246,34 @@ export function MeetingsView({ pm, onUpdate }) {
 // --- Payment certificates (IPC) --------------------------------------------------------
 export function PaymentsView({ pm, onUpdate }) {
   const ipcs = pm.ipcs || []
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const patch = (id, changes) => onUpdate({ ...pm, ipcs: ipcs.map((i) => (i.id === id ? { ...i, ...changes } : i)) })
   const NEXT = { draft: 'submitted', submitted: 'under_review', under_review: 'certified', certified: 'paid' }
 
+  const statusesPresent = IPC_STATUSES.filter((s) => ipcs.some((i) => i.status === s.key))
+  const filtered = ipcs
+    .filter((i) => statusFilter === 'all' || i.status === statusFilter)
+    .filter((i) => {
+      const q = search.trim().toLowerCase()
+      return !q || (i.ref || '').toLowerCase().includes(q) || (i.period || '').toLowerCase().includes(q) || (i.note || '').toLowerCase().includes(q)
+    })
+
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-semibold text-gray-700">Interim payment certificates</h2>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-sm font-semibold text-gray-700">Interim payment certificates</h2>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-36" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+            <option value="all">All statuses</option>
+            {statusesPresent.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+        </div>
+      </div>
       {ipcs.length === 0 && <Empty label="No payment certificates — typically starts with construction." />}
-      {ipcs.map((i) => {
+      {ipcs.length > 0 && filtered.length === 0 && <Empty label="No payment certificates match the filters." />}
+      {filtered.map((i) => {
         const meta = ipcStatusMeta(i.status)
         const deduction = i.amountCertified != null ? i.amountClaimed - i.amountCertified : null
         return (
@@ -246,6 +309,8 @@ export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProjec
   const [showAdd, setShowAdd] = useState(false)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [range, setRange] = useState({ from: '', to: '' })
   const [form, setForm] = useState({ type: 'discrepancy', issueIn: '', impact: FEEDBACK_IMPACTS[0], description: '', reason: '', improvement: '' })
 
   const patch = (id, changes) => onUpdate({ ...pm, constructionFeedback: items.map((f) => (f.id === id ? { ...f, ...changes } : f)) })
@@ -280,9 +345,11 @@ export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProjec
 
   const rows = items
     .filter((f) => !typeFilter || f.type === typeFilter)
+    .filter((f) => statusFilter === 'all' || f.status === statusFilter)
+    .filter((f) => (!range.from || (f.date || '') >= range.from) && (!range.to || (f.date || '') <= range.to))
     .filter((f) => {
       const q = search.trim().toLowerCase()
-      return !q || f.issueIn.toLowerCase().includes(q) || f.description.toLowerCase().includes(q) || (f.improvement || '').toLowerCase().includes(q)
+      return !q || (f.issueIn || '').toLowerCase().includes(q) || (f.description || '').toLowerCase().includes(q) || (f.improvement || '').toLowerCase().includes(q)
     })
 
   return (
@@ -298,6 +365,12 @@ export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProjec
             <option value="">All types</option>
             {FEEDBACK_ISSUE_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
           </select>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
+            <option value="all">All statuses</option>
+            {CONSTRUCTION_FEEDBACK_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+          <label className="flex items-center gap-1 text-xs text-gray-500">From <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
+          <label className="flex items-center gap-1 text-xs text-gray-500">To <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
           <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Raise feedback</button>
         </div>
       </div>
@@ -328,7 +401,8 @@ export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProjec
         </div>
       )}
 
-      {rows.length === 0 && !showAdd && <Empty label="No construction feedback logged." />}
+      {items.length === 0 && !showAdd && <Empty label="No construction feedback logged." />}
+      {items.length > 0 && rows.length === 0 && <Empty label="No feedback items match the filters." />}
       {rows.map((f) => {
         const tMeta = feedbackTypeMeta(f.type)
         const sMeta = cfStatusMeta(f.status)

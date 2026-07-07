@@ -39,6 +39,7 @@ export default function ContentCalendar({ items, projects = [], user, onAdd, onU
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [search, setSearch] = useState('')
   const [editing, setEditing] = useState(null) // null | 'new' | item
   const [form, setForm] = useState(emptyForm)
 
@@ -56,7 +57,13 @@ export default function ContentCalendar({ items, projects = [], user, onAdd, onU
   const leadBlanks = (firstDay.getDay() + 6) % 7
   const cells = [...Array(leadBlanks).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)]
 
-  const itemsOn = (day) => items.filter((c) => c.date === `${month}-${String(day).padStart(2, '0')}`)
+  // Search matches title, copy, and owner — applied to both the calendar grid and the list.
+  const matchesSearch = (c) => {
+    const q = search.trim().toLowerCase()
+    return !q || (c.title || '').toLowerCase().includes(q) || (c.copy || '').toLowerCase().includes(q) || (c.owner || '').toLowerCase().includes(q)
+  }
+
+  const itemsOn = (day) => items.filter((c) => c.date === `${month}-${String(day).padStart(2, '0')}`).filter(matchesSearch)
 
   // Custom From/To range — same pattern as CRM Pipeline/Reports.
   const inRange = (c) => {
@@ -69,6 +76,7 @@ export default function ContentCalendar({ items, projects = [], user, onAdd, onU
   const listItems = items
     .filter(inRange)
     .filter((c) => !statusFilter || c.status === statusFilter)
+    .filter(matchesSearch)
     .sort((a, b) => a.date.localeCompare(b.date))
 
   const listLabel = range === 'month'
@@ -125,6 +133,7 @@ export default function ContentCalendar({ items, projects = [], user, onAdd, onU
             <CalendarDays size={15} className="text-brand" /> Content calendar
           </h2>
           <div className="flex items-center gap-2 flex-wrap">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title, copy, owner…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52 focus:outline-none focus:ring-1 focus:ring-brand" />
             <select
               value={range}
               onChange={(e) => { setRange(e.target.value); if (e.target.value !== 'custom') { setCustomStart(''); setCustomEnd('') } }}

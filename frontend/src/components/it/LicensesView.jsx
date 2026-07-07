@@ -11,9 +11,15 @@ const labelCls = 'block text-xs font-medium text-gray-600 mb-1'
 export default function LicensesView({ licenses, onAdd }) {
   const [adding, setAdding] = useState(false)
   const [form, setForm] = useState({ name: '', owner: '', seats: '', seatsUsed: '', costAedYearly: '', renewalDate: '' })
+  const [search, setSearch] = useState('')
 
   const daysTo = (d) => Math.ceil((parseLocalDate(d) - todayLocal()) / (1000 * 60 * 60 * 24))
-  const rows = [...licenses].sort((a, b) => a.renewalDate.localeCompare(b.renewalDate))
+  const rows = [...licenses]
+    .sort((a, b) => a.renewalDate.localeCompare(b.renewalDate))
+    .filter((l) => {
+      const q = search.trim().toLowerCase()
+      return !q || (l.name || '').toLowerCase().includes(q) || (l.owner || '').toLowerCase().includes(q)
+    })
   const totalYearly = licenses.reduce((s, l) => s + (l.costAedYearly || 0), 0)
   const dueSoon = rows.filter((l) => daysTo(l.renewalDate) <= 60)
 
@@ -49,11 +55,14 @@ export default function LicensesView({ licenses, onAdd }) {
             <h2 className="text-sm font-semibold text-gray-800">Software licenses ({licenses.length})</h2>
             <p className="text-xs text-gray-500">Total AED {totalYearly.toLocaleString()} / year across all subscriptions.</p>
           </div>
-          {!adding && (
-            <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white hover:bg-brand-dark transition shrink-0">
-              <Plus size={13} /> Add license
-            </button>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, owner…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52 focus:outline-none focus:ring-1 focus:ring-brand" />
+            {!adding && (
+              <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white hover:bg-brand-dark transition">
+                <Plus size={13} /> Add license
+              </button>
+            )}
+          </div>
         </div>
 
         {adding && (
@@ -107,6 +116,9 @@ export default function LicensesView({ licenses, onAdd }) {
                   </tr>
                 )
               })}
+              {rows.length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-400">No licenses match</td></tr>
+              )}
             </tbody>
           </table>
         </div>

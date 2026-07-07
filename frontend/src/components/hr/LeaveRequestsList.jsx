@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CheckCircle, Clock, XCircle, Plus } from 'lucide-react'
 
 // Two-step chain: line manager first, then HR final approval.
@@ -13,6 +14,9 @@ const STATUS_STYLE = {
 // 'pending_manager'; HR acts on 'pending_hr' (and may step in on any pending).
 export default function LeaveRequestsList({ requests, onRequestNewLeave, onApprove, onDeny, actionable = ['pending', 'pending_manager', 'pending_hr'], approveLabel = 'Approve' }) {
   const canAct = !!onApprove && !!onDeny
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
   if (!requests || requests.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
@@ -27,19 +31,37 @@ export default function LeaveRequestsList({ requests, onRequestNewLeave, onAppro
     )
   }
 
+  const statusesPresent = [...new Set(requests.map((r) => r.status))]
+  const filtered = requests
+    .filter((r) => statusFilter === 'all' || r.status === statusFilter)
+    .filter((r) => (!range.from || r.startDate >= range.from) && (!range.to || r.startDate <= range.to))
+    .filter((r) => {
+      const q = search.trim().toLowerCase()
+      return !q || (r.employeeName || '').toLowerCase().includes(q) || (r.type || '').toLowerCase().includes(q) || (r.reason || '').toLowerCase().includes(q)
+    })
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+      <div className="p-4 border-b border-gray-200 flex justify-between items-center flex-wrap gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-gray-800">Leave Requests ({requests.length})</h2>
+          <h2 className="text-sm font-semibold text-gray-800">Leave Requests ({filtered.length})</h2>
           <p className="text-xs text-gray-500">Pending and approved leave requests.</p>
         </div>
-        <button
-          onClick={onRequestNewLeave}
-          className="bg-brand text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-brand-dark flex items-center gap-1"
-        >
-          <Plus size={14} /> Request Leave
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search requests…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white">
+            <option value="all">All statuses</option>
+            {statusesPresent.map((s) => <option key={s} value={s}>{STATUS_STYLE[s]?.label || s}</option>)}
+          </select>
+          <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="Start date from" />
+          <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="Start date to" />
+          <button
+            onClick={onRequestNewLeave}
+            className="bg-brand text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-brand-dark flex items-center gap-1"
+          >
+            <Plus size={14} /> Request Leave
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -56,7 +78,12 @@ export default function LeaveRequestsList({ requests, onRequestNewLeave, onAppro
             </tr>
           </thead>
           <tbody>
-            {requests.map((req) => {
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={canAct ? 7 : 6} className="px-4 py-8 text-center text-sm text-gray-400">No leave requests match the current filters.</td>
+              </tr>
+            )}
+            {filtered.map((req) => {
               const statusInfo = STATUS_STYLE[req.status] || STATUS_STYLE.pending
               const Icon = statusInfo.icon
               return (

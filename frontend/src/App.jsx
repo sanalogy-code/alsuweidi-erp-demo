@@ -13,6 +13,7 @@ import Finance from './pages/Finance'
 import Admin from './pages/Admin'
 import Office from './pages/Office'
 import TimesheetGate from './components/TimesheetGate'
+import { NotificationsProvider } from './components/NotificationsBell'
 import FeedbackButton, { INITIAL_FEEDBACK } from './components/SystemFeedback'
 import { INITIAL_STAFFING_REQUESTS } from './data/rfpData'
 import { PUBLIC_HOLIDAYS, EMPLOYEES } from './data/hrData'
@@ -163,8 +164,12 @@ export default function App() {
     )
   }
 
+  // Notification sources — one object per render is fine; the provider memoizes
+  // the composed feed on it.
+  const notificationSources = { projects, pmRecords, timesheets, marketingTasks, staffingRequests, systemFeedback }
+
   return (
-    <>
+    <NotificationsProvider user={user} sources={notificationSources}>
       <TimesheetGate user={user} timesheets={timesheets} />
       <FeedbackButton user={user} onSubmit={addFeedback} />
       <Routes>
@@ -183,6 +188,6 @@ export default function App() {
       <Route path="/office" element={<Office user={user} onLogout={handleLogout} />} />
       <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} />} />
       </Routes>
-    </>
+    </NotificationsProvider>
   )
 }

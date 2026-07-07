@@ -15,12 +15,24 @@ export default function ItRequestsView({ requests, user, mode = 'mine', onSubmit
   const [resolutionFor, setResolutionFor] = useState(null)
   const [resolutionText, setResolutionText] = useState('')
   const [resolutionStatus, setResolutionStatus] = useState('approved')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
 
   const myName = (user?.username || '').toLowerCase()
-  const rows = (mode === 'mine'
+  const base = (mode === 'mine'
     ? requests.filter((r) => r.requestedBy.toLowerCase() === myName)
     : [...requests]
   ).sort((a, b) => (a.status === 'pending' ? -1 : 1) - (b.status === 'pending' ? -1 : 1) || b.requestedDate.localeCompare(a.requestedDate))
+
+  const statusesPresent = [...new Set(requests.map((r) => r.status))]
+  const rows = mode === 'mine' ? base : base
+    .filter((r) => statusFilter === 'all' || r.status === statusFilter)
+    .filter((r) => (!range.from || r.requestedDate >= range.from) && (!range.to || r.requestedDate <= range.to))
+    .filter((r) => {
+      const q = search.trim().toLowerCase()
+      return !q || (r.item || '').toLowerCase().includes(q) || (r.requestedBy || '').toLowerCase().includes(q) || (r.justification || '').toLowerCase().includes(q)
+    })
 
   const submit = (e) => {
     e.preventDefault()
@@ -58,6 +70,19 @@ export default function ItRequestsView({ requests, user, mode = 'mine', onSubmit
               : 'Approve → procure → fulfil, or reject with a reason. Fulfilments should land in the asset registry.'}
           </p>
         </div>
+        {mode === 'queue' && (
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search item, requester…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52 focus:outline-none focus:ring-1 focus:ring-brand" />
+            <label className="text-xs text-gray-500">From</label>
+            <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand" />
+            <label className="text-xs text-gray-500">To</label>
+            <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand" />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-gray-200 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-brand">
+              <option value="all">All statuses</option>
+              {statusesPresent.map((s) => <option key={s} value={s}>{IT_REQUEST_STATUS[s]?.label || s}</option>)}
+            </select>
+          </div>
+        )}
         {mode === 'mine' && !adding && (
           <button onClick={() => setAdding(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white hover:bg-brand-dark transition shrink-0">
             <Plus size={13} /> New request
@@ -92,7 +117,7 @@ export default function ItRequestsView({ requests, user, mode = 'mine', onSubmit
 
       {rows.length === 0 ? (
         <div className="p-6 text-center text-sm text-gray-400">
-          {mode === 'mine' ? 'No requests yet — anything you need to work better?' : 'Queue is empty'}
+          {mode === 'mine' ? 'No requests yet — anything you need to work better?' : (search || statusFilter !== 'all' || range.from || range.to) ? 'No requests match these filters.' : 'Queue is empty'}
         </div>
       ) : (
         <div className="divide-y divide-gray-100">

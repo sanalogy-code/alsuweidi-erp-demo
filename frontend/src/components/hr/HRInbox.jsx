@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Inbox, FileText } from 'lucide-react'
 import { CERTIFICATE_TYPES, OPEN_POSITIONS } from '../../data/hrData'
 import { daysAgo } from '../../utils/date'
@@ -50,13 +51,24 @@ export function buildInboxItems({ leaveRequests, certificateRequests, complaints
 }
 
 export default function HRInbox({ leaveRequests, certificateRequests, complaints, candidates, businessCardRequests = [], newJoiners = [], onLeaveAction, onPrepareCert, onRejectCert, onAdvanceComplaint, onAdvanceCandidate, onFulfilCard, onReviewJoiner }) {
+  const [kindFilter, setKindFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
   const joinerItems = newJoiners.map((j) => ({
     key: `j${j.id}`, kind: 'joiner', date: j.submittedDate, ref: j,
     text: `${j.personal.firstName} ${j.personal.lastName}${j.positionTitle ? ` — ${j.positionTitle}` : ''} (profile submitted)`,
     sub: `${j.documents.length} documents uploaded — verify and complete the employment record`,
   }))
-  const items = [...buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates, businessCardRequests }), ...joinerItems]
+  const allItems = [...buildInboxItems({ leaveRequests, certificateRequests, complaints, candidates, businessCardRequests }), ...joinerItems]
     .sort((a, b) => a.date.localeCompare(b.date))
+  const kindsPresent = [...new Set(allItems.map((i) => i.kind))]
+  const items = allItems
+    .filter((i) => kindFilter === 'all' || i.kind === kindFilter)
+    .filter((i) => (!range.from || i.date >= range.from) && (!range.to || i.date <= range.to))
+    .filter((i) => {
+      const q = search.trim().toLowerCase()
+      return !q || (i.text || '').toLowerCase().includes(q) || (i.sub || '').toLowerCase().includes(q)
+    })
   const issuedLetters = certificateRequests
     .filter((r) => r.status === 'issued' && r.letterText)
     .sort((a, b) => (b.resolvedDate || '').localeCompare(a.resolvedDate || ''))
@@ -98,15 +110,28 @@ export default function HRInbox({ leaveRequests, certificateRequests, complaints
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-            <Inbox size={15} className="text-brand" /> Inbox ({items.length})
-          </h2>
-          <p className="text-xs text-gray-500">Everything waiting on HR — leave, certificates, business cards, concerns, and candidates — oldest first.</p>
+        <div className="p-4 border-b border-gray-200 flex items-start justify-between flex-wrap gap-2">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+              <Inbox size={15} className="text-brand" /> Inbox ({items.length})
+            </h2>
+            <p className="text-xs text-gray-500">Everything waiting on HR — leave, certificates, business cards, concerns, and candidates — oldest first.</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search inbox…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+            <select value={kindFilter} onChange={(e) => setKindFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white">
+              <option value="all">All types</option>
+              {kindsPresent.map((k) => <option key={k} value={k}>{KIND_LABEL[k] || k}</option>)}
+            </select>
+            <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="From" />
+            <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="To" />
+          </div>
         </div>
 
         {items.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-400">Inbox zero — nothing waiting on HR.</div>
+          <div className="p-8 text-center text-sm text-gray-400">
+            {allItems.length === 0 ? 'Inbox zero — nothing waiting on HR.' : 'No items match the current filters.'}
+          </div>
         ) : (
           <div className="divide-y divide-gray-100">
             {/* Fixed-width columns (chip / description / age / actions) so the eye can run down the queue */}

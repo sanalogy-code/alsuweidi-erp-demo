@@ -36,6 +36,9 @@ const certLabel = (v) => CERTIFICATE_TYPES.find((t) => t.value === v)?.label || 
 
 export default function MyRequests({ user, matchedEmployee, leaveRequests, certificateRequests, complaints, businessCardRequests = [], onNewLeave, onNewCertificate, onNewBusinessCard, onNewConcern }) {
   const [filter, setFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [range, setRange] = useState({ from: '', to: '' })
 
   const myNames = [user?.username, matchedEmployee?.name].filter(Boolean).map((n) => n.toLowerCase())
   const isMine = (name) => myNames.includes((name || '').toLowerCase())
@@ -58,7 +61,16 @@ export default function MyRequests({ user, matchedEmployee, leaveRequests, certi
       text: c.category,
     })),
   ]
+
+  const statusesPresent = [...new Set(items.map((i) => i.status))]
+  const filteredItems = items
     .filter((i) => filter === 'all' || i.kind === filter)
+    .filter((i) => statusFilter === 'all' || i.status === statusFilter)
+    .filter((i) => (!range.from || i.date >= range.from) && (!range.to || i.date <= range.to))
+    .filter((i) => {
+      const q = search.trim().toLowerCase()
+      return !q || (i.text || '').toLowerCase().includes(q)
+    })
     .sort((a, b) => b.date.localeCompare(a.date))
 
   return (
@@ -99,13 +111,24 @@ export default function MyRequests({ user, matchedEmployee, leaveRequests, certi
               </button>
             ))}
           </div>
+          <div className="w-full flex items-center gap-2 flex-wrap">
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search requests…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white">
+              <option value="all">All statuses</option>
+              {statusesPresent.map((s) => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
+            </select>
+            <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="From" />
+            <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white" title="To" />
+          </div>
         </div>
 
-        {items.length === 0 ? (
-          <div className="p-6 text-center text-sm text-gray-400">Nothing here yet — use the buttons above to submit a request.</div>
+        {filteredItems.length === 0 ? (
+          <div className="p-6 text-center text-sm text-gray-400">
+            {items.length === 0 ? 'Nothing here yet — use the buttons above to submit a request.' : 'No requests match the current filters.'}
+          </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {items.map((i) => {
+            {filteredItems.map((i) => {
               const kind = KIND_META[i.kind]
               const Icon = kind.icon
               return (

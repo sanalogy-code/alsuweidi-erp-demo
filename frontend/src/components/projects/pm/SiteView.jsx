@@ -16,7 +16,7 @@ const TABS = [
   { key: 'daily', label: 'Daily reports' },
 ]
 
-function WirRegister({ pm, onUpdate }) {
+function WirRegister({ pm, onUpdate, rows }) {
   const [expanded, setExpanded] = useState(null)
   const decide = (w, status, remark) => {
     // The rev bumps when the CONTRACTOR RESUBMITS (resubmit → pending_re), matching
@@ -32,9 +32,10 @@ function WirRegister({ pm, onUpdate }) {
     })
   }
   if (!pm.wirs.length) return <Empty label="No work inspection requests." />
+  if (!rows.length) return <Empty label="No WIRs match the filters." />
   return (
     <div className="space-y-2">
-      {pm.wirs.map((w) => {
+      {rows.map((w) => {
         const meta = wirStatusMeta(w.status)
         const open = expanded === w.id
         return (
@@ -91,12 +92,13 @@ function WirRegister({ pm, onUpdate }) {
   )
 }
 
-function MirRegister({ pm, onUpdate }) {
+function MirRegister({ pm, onUpdate, rows }) {
   if (!pm.mirs.length) return <Empty label="No material inspection requests." />
+  if (!rows.length) return <Empty label="No MIRs match the filters." />
   const decide = (m, status) => onUpdate({ ...pm, mirs: pm.mirs.map((x) => x.id === m.id ? { ...x, status } : x) })
   return (
     <div className="space-y-2">
-      {pm.mirs.map((m) => {
+      {rows.map((m) => {
         const meta = wirStatusMeta(m.status)
         return (
           <div key={m.id} className="bg-white rounded-lg border border-gray-200 px-4 py-3 flex items-center gap-3">
@@ -120,13 +122,14 @@ function MirRegister({ pm, onUpdate }) {
   )
 }
 
-function NcrRegister({ pm, onUpdate }) {
+function NcrRegister({ pm, onUpdate, rows }) {
   const [caDraft, setCaDraft] = useState({})
   const update = (n, patch) => onUpdate({ ...pm, ncrs: pm.ncrs.map((x) => x.id === n.id ? { ...x, ...patch } : x) })
   if (!pm.ncrs.length) return <Empty label="No non-conformance reports. Long may it last." />
+  if (!rows.length) return <Empty label="No NCRs match the filters." />
   return (
     <div className="space-y-2">
-      {pm.ncrs.map((n) => {
+      {rows.map((n) => {
         const meta = ncrStatusMeta(n.status)
         return (
           <div key={n.id} className="bg-white rounded-lg border border-gray-200 px-4 py-3 space-y-2">
@@ -160,7 +163,7 @@ function NcrRegister({ pm, onUpdate }) {
   )
 }
 
-function SiRegister({ pm, onUpdate }) {
+function SiRegister({ pm, onUpdate, rows }) {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ subject: '', costImpact: false, timeImpact: false })
   if (!pm.siteInstructions.length && !showAdd) return (
@@ -188,7 +191,8 @@ function SiRegister({ pm, onUpdate }) {
           <button onClick={add} className="px-2.5 py-1.5 rounded-md bg-brand text-white">Issue</button>
         </div>
       )}
-      {pm.siteInstructions.map((s) => (
+      {pm.siteInstructions.length > 0 && rows.length === 0 && <Empty label="No site instructions match the filters." />}
+      {rows.map((s) => (
         <div key={s.id} className="bg-white rounded-lg border border-gray-200 px-4 py-3 flex items-center gap-3">
           <span className="font-mono text-xs text-gray-500 w-16 shrink-0">{s.ref}</span>
           <span className="flex-1 min-w-0 text-sm text-gray-800 truncate">{s.subject}</span>
@@ -206,11 +210,12 @@ function SiRegister({ pm, onUpdate }) {
   )
 }
 
-function DailyLog({ pm }) {
+function DailyLog({ pm, rows }) {
   if (!pm.dailyReports.length) return <Empty label="No daily reports logged." />
+  if (!rows.length) return <Empty label="No daily reports match the filters." />
   return (
     <div className="space-y-2">
-      {pm.dailyReports.map((r) => (
+      {rows.map((r) => (
         <div key={r.id} className="bg-white rounded-lg border border-gray-200 px-4 py-3 text-xs text-gray-600 space-y-1">
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-800">{r.date}</span>
@@ -234,6 +239,26 @@ const Empty = ({ label }) => (
 
 export default function SiteView({ pm, onUpdate }) {
   const [tab, setTab] = useState('wir')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [range, setRange] = useState({ from: '', to: '' })
+  const switchTab = (k) => { setTab(k); setStatusFilter('all') }
+
+  // Shared filter row config per register: display rows only — updates still go through the full pm lists.
+  const cfg = {
+    wir: { rows: pm.wirs, dateField: 'requestedFor', text: ['ref', 'title', 'location'] },
+    mir: { rows: pm.mirs, dateField: 'deliveryDate', text: ['ref', 'title', 'supplier'] },
+    ncr: { rows: pm.ncrs, dateField: 'date', text: ['ref', 'description', 'location'] },
+    si: { rows: pm.siteInstructions, dateField: 'date', text: ['ref', 'subject'] },
+    daily: { rows: pm.dailyReports, dateField: 'date', text: ['workDone', 'plant'], noStatus: true },
+  }[tab]
+  const statuses = cfg.noStatus ? [] : [...new Set(cfg.rows.map((r) => r.status))]
+  const statusLabel = (s) => tab === 'ncr' ? ncrStatusMeta(s).label : (tab === 'wir' || tab === 'mir') ? wirStatusMeta(s).label : s
+  const filtered = cfg.rows
+    .filter((r) => cfg.noStatus || statusFilter === 'all' || r.status === statusFilter)
+    .filter((r) => (!range.from || (r[cfg.dateField] || '') >= range.from) && (!range.to || (r[cfg.dateField] || '') <= range.to))
+    .filter((r) => { const q = search.trim().toLowerCase(); return !q || cfg.text.some((f) => (r[f] || '').toLowerCase().includes(q)) })
+
   const counts = {
     wir: pm.wirs.filter((w) => w.status !== 'approved' && w.status !== 'approved_as_noted').length,
     mir: pm.mirs.filter((m) => m.status === 'pending_re').length,
@@ -245,16 +270,29 @@ export default function SiteView({ pm, onUpdate }) {
     <div className="space-y-3">
       <div className="flex flex-wrap gap-1 border-b border-gray-200">
         {TABS.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)} className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition ${tab === t.key ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+          <button key={t.key} onClick={() => switchTab(t.key)} className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition ${tab === t.key ? 'border-brand text-brand' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
             {t.label}{counts[t.key] > 0 && <span className="ml-1.5 text-[10px] bg-red-500 text-white rounded-full px-1.5 py-0.5">{counts[t.key]}</span>}
           </button>
         ))}
       </div>
-      {tab === 'wir' && <WirRegister pm={pm} onUpdate={onUpdate} />}
-      {tab === 'mir' && <MirRegister pm={pm} onUpdate={onUpdate} />}
-      {tab === 'ncr' && <NcrRegister pm={pm} onUpdate={onUpdate} />}
-      {tab === 'si' && <SiRegister pm={pm} onUpdate={onUpdate} />}
-      {tab === 'daily' && <DailyLog pm={pm} />}
+      <div className="flex items-center gap-2 flex-wrap">
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search register…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
+        <label className="text-xs text-gray-500">From</label>
+        <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
+        <label className="text-xs text-gray-500">To</label>
+        <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
+        {!cfg.noStatus && (
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white">
+            <option value="all">All statuses</option>
+            {statuses.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
+          </select>
+        )}
+      </div>
+      {tab === 'wir' && <WirRegister pm={pm} onUpdate={onUpdate} rows={filtered} />}
+      {tab === 'mir' && <MirRegister pm={pm} onUpdate={onUpdate} rows={filtered} />}
+      {tab === 'ncr' && <NcrRegister pm={pm} onUpdate={onUpdate} rows={filtered} />}
+      {tab === 'si' && <SiRegister pm={pm} onUpdate={onUpdate} rows={filtered} />}
+      {tab === 'daily' && <DailyLog pm={pm} rows={filtered} />}
     </div>
   )
 }
