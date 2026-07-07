@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Mails, BadgeCheck, Lock, CalendarClock, Package, Truck, Car, Hash } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import CorrespondenceView from '../components/office/CorrespondenceView'
@@ -20,7 +21,8 @@ import {
 
 export default function Office({ user, onLogout }) {
   const canView = OFFICE_VIEW_ROLES.includes(user?.role)
-  const [view, setView] = useState('correspondence')
+  const location = useLocation()
+  const [view, setView] = useState(location.state?.view || 'correspondence')
   const [letters, setLetters] = useState(CORRESPONDENCE)
   const [licenses, setLicenses] = useState(OFFICE_LICENSES)
   const [roomBookings, setRoomBookings] = useState(ROOM_BOOKINGS)
@@ -28,6 +30,11 @@ export default function Office({ user, onLogout }) {
   const [couriers, setCouriers] = useState(COURIER_LOG)
   const [vehicleBookings, setVehicleBookings] = useState(VEHICLE_BOOKINGS)
   const [salik, setSalik] = useState(SALIK_FINES)
+
+  useEffect(() => {
+    if (location.state?.view) setView(location.state.view)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key])
 
   const awaiting = letters.filter((l) => l.status === 'action_required').length
   const suppliesOpen = supplies.filter((s) => s.status === 'requested').length

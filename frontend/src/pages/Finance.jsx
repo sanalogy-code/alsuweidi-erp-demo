@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, FileText, ReceiptText, TrendingUp, Lock, CalendarRange, Calculator,
   Banknote, Wallet, Truck, ShieldCheck, CalendarCheck, History,
@@ -39,7 +40,8 @@ const nextRef = (list, field, prefix) =>
 
 export default function Finance({ user, onLogout }) {
   const canView = FINANCE_VIEW_ROLES.includes(user?.role)
-  const [view, setView] = useState('overview')
+  const location = useLocation()
+  const [view, setView] = useState(location.state?.view || 'overview')
   const [invoices, setInvoices] = useState(INVOICES)
   const [expenses, setExpenses] = useState(EXPENSES)
   const [receipts, setReceipts] = useState(RECEIPTS)
@@ -49,6 +51,11 @@ export default function Finance({ user, onLogout }) {
   const [supplierInvoices, setSupplierInvoices] = useState(SUPPLIER_INVOICES)
   const [checklists, setChecklists] = useState(MONTH_END_CHECKLISTS)
   const [activity, setActivity] = useState([])
+
+  useEffect(() => {
+    if (location.state?.view) setView(location.state.view)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key])
 
   const who = user?.username || 'Finance'
 

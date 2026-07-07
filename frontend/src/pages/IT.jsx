@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { ClipboardList, Inbox, Laptop, KeyRound, Timer, PackageCheck, Wrench, ShieldCheck, Activity } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ItRequestsView from '../components/it/ItRequestsView'
@@ -25,13 +26,19 @@ import { parseLocalDate, todayLocal } from '../utils/date'
 
 export default function IT({ user, onLogout }) {
   const canManage = IT_VIEW_ROLES.includes(user?.role)
-  const [view, setView] = useState(canManage ? 'queue' : 'mine')
+  const location = useLocation()
+  const [view, setView] = useState(location.state?.view || (canManage ? 'queue' : 'mine'))
   const [requests, setRequests] = useState(IT_REQUESTS)
   const [assets, setAssets] = useState(IT_ASSETS)
   const [licenses, setLicenses] = useState(SOFTWARE_LICENSES)
   const [installs, setInstalls] = useState(INSTALLED_SOFTWARE)
   const [maintenance, setMaintenance] = useState(MAINTENANCE_ITEMS)
   const [accessRequests, setAccessRequests] = useState(ACCESS_REQUESTS)
+
+  useEffect(() => {
+    if (location.state?.view) setView(location.state.view)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key])
 
   const pendingCount = requests.filter((r) => r.status === 'pending').length
   const licensesDue = licenses.filter(

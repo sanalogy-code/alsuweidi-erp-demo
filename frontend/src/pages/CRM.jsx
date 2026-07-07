@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus, Home, TrendingUp, Building2, Users, CheckSquare, BarChart3, FileText, FileSignature } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Modal from '../components/crm/Modal'
@@ -22,6 +22,7 @@ import { INITIAL_RFPS } from '../data/rfpData'
 
 export default function CRM({ user, onLogout, projects = [], onAddProject, deals, setDeals, onRequestStaffing }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [projectDeal, setProjectDeal] = useState(null)
   const [companies, setCompanies] = useState(INITIAL_COMPANIES)
   const [contacts, setContacts] = useState(INITIAL_CONTACTS)
@@ -29,13 +30,18 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
   const [interactions, setInteractions] = useState(INITIAL_INTERACTIONS)
   const [rfps, setRfps] = useState(INITIAL_RFPS)
 
-  const [tab, setTab] = useState('overview')
+  const [tab, setTab] = useState(location.state?.view || 'overview')
   const [selectedCompany, setSelectedCompany] = useState(null)
   const [search, setSearch] = useState('')
   const [viewContactId, setViewContactId] = useState(null)
   const [showExportContacts, setShowExportContacts] = useState(false)
   const [editingCompanyId, setEditingCompanyId] = useState(null)
   const [editingDealId, setEditingDealId] = useState(null)
+
+  useEffect(() => {
+    if (location.state?.view) setTab(location.state.view)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key])
 
   const [showAddCompany, setShowAddCompany] = useState(false)
   const [showAddContact, setShowAddContact] = useState(false)

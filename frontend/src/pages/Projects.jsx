@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge, FileBarChart, ShieldAlert } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -38,7 +38,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
   const navigate = useNavigate()
   // My Work is the daily-driver landing view (Batch 10) — the first thing a PM
   // or engineer sees is what's waiting on them, not a stats page.
-  const [view, setView] = useState('mywork')
+  const [view, setView] = useState(location.state?.view || 'mywork')
   // Project reviews lens: design (weekly, the old DMR) vs construction (monthly, the old CMR)
   const [reviewLens, setReviewLens] = useState('design')
   const openWorkspace = (p, target) => navigate(`/projects/${p.id}`, target ? { state: target } : undefined)
@@ -48,6 +48,11 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
   )
   const [selectedEmployee, setSelectedEmployee] = useState(null)
   const [showNewProject, setShowNewProject] = useState(false)
+
+  useEffect(() => {
+    if (location.state?.view) setView(location.state.view)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key])
 
   const canViewSensitive = SENSITIVE_VIEW_ROLES.includes(user?.role)
   const isHrStaff = HR_STAFF_ROLES.includes(user?.role)

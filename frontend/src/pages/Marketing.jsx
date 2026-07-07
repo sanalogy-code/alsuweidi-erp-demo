@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Inbox, CalendarDays, FolderKanban, Palette, LineChart, FileUser, Megaphone, BadgeCheck, Ticket, Trophy } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import MarketingInbox from '../components/marketing/MarketingInbox'
@@ -21,13 +22,19 @@ import { MARKETING_VIEW_ROLES, HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../d
 // visible to every employee (that's the whole point of a brand library).
 export default function Marketing({ user, onLogout, projects = [], onUpdateProject, deals = [], marketingTasks = [], onCompleteTask }) {
   const canManage = MARKETING_VIEW_ROLES.includes(user?.role)
-  const [view, setView] = useState(canManage ? 'inbox' : 'branding')
+  const location = useLocation()
+  const [view, setView] = useState(location.state?.view || (canManage ? 'inbox' : 'branding'))
   const [contentItems, setContentItems] = useState(CONTENT_ITEMS)
   const [campaigns, setCampaigns] = useState(CAMPAIGNS)
   const [events, setEvents] = useState(MARKETING_EVENTS)
   const [awards, setAwards] = useState(AWARD_SUBMISSIONS)
   const [packUsage, setPackUsage] = useState(PACK_USAGE_LOG)
   const [selectedEmployee, setSelectedEmployee] = useState(null)
+
+  useEffect(() => {
+    if (location.state?.view) setView(location.state.view)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key])
 
   const openTasks = marketingTasks.filter((t) => t.status === 'pending').length
   const missingDesc = projects.filter((p) => !p.marketingDescription && !p.confidential).length

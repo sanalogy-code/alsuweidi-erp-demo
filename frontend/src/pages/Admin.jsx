@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, MessageSquareWarning, Landmark } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AdminOverview from '../components/admin/AdminOverview'
@@ -18,9 +19,15 @@ import {
 
 export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback }) {
   const canView = ADMIN_VIEW_ROLES.includes(user?.role)
-  const [view, setView] = useState('overview')
+  const location = useLocation()
+  const [view, setView] = useState(location.state?.view || 'overview')
   const [users, setUsers] = useState(USER_ACCOUNTS)
   const [permissions, setPermissions] = useState(DEFAULT_PERMISSIONS)
+
+  useEffect(() => {
+    if (location.state?.view) setView(location.state.view)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key])
 
   const invitedCount = users.filter((u) => u.status === 'invited').length
 
