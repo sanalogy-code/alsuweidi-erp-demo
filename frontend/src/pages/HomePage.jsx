@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, ArrowRight, GitCommit, CalendarDays } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import { MyWeekPanel, KpiPanel } from '../components/HomeWidgets'
 import {
   ANNOUNCEMENTS, COMPANY_UPDATES, RECENT_PROJECTS, TEAM_MEMBERS,
   QUICK_LINKS, QUICK_ACTIONS, MODULES,
@@ -27,7 +28,7 @@ function greeting() {
   return 'Good evening'
 }
 
-export default function HomePage({ user, onLogout, holidays = [] }) {
+export default function HomePage({ user, onLogout, holidays = [], projects = [], pmRecords = {}, timesheets = [] }) {
   const navigate = useNavigate()
   const [slide, setSlide] = useState(0)
 
@@ -92,8 +93,14 @@ export default function HomePage({ user, onLogout, holidays = [] }) {
         {/* Welcome banner */}
         <div className="bg-white border-l-4 border-brand rounded-lg shadow-sm px-6 py-4 mb-6">
           <div className="text-xl font-semibold text-brand">{greeting()}, {user?.username}</div>
-          <div className="text-sm text-gray-500">{today} • 2 pending approvals</div>
+          <div className="text-sm text-gray-500">{today}</div>
         </div>
+
+        {/* My week — the personal cross-module strip; KPIs for management */}
+        <MyWeekPanel user={user} projects={projects} pmRecords={pmRecords} timesheets={timesheets} />
+        {(user?.role === 'management' || user?.role === 'admin') && (
+          <KpiPanel projects={projects} pmRecords={pmRecords} timesheets={timesheets} />
+        )}
 
         {/* Deployment info */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6 flex items-start gap-3">

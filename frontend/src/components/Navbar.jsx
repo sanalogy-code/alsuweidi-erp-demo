@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, LogOut } from 'lucide-react'
 import logo from '../assets/alsuweidi-logo.svg'
 import NotificationsBell from './NotificationsBell'
+import GlobalSearch from './GlobalSearch'
 
 const ROLE_LABELS = {
   sales: 'Sales / Business Dev',
@@ -37,6 +38,7 @@ export default function Navbar({ user, onLogout, title, showBack }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <GlobalSearch />
           <NotificationsBell />
           <div className="text-right hidden sm:block">
             <div className="text-sm font-medium text-gray-800">{user?.username}</div>

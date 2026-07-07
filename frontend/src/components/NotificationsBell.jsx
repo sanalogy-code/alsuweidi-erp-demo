@@ -108,7 +108,9 @@ export function NotificationsProvider({ user, sources, children }) {
   const markRead = (id) => persist(new Set([...readIds, id]))
   const markAllRead = () => persist(new Set([...readIds, ...items.map((i) => i.id)]))
   const unread = items.filter((i) => !readIds.has(i.id)).length
-  const value = useMemo(() => ({ items, readIds, unread, markRead, markAllRead }), [items, readIds]) // eslint-disable-line react-hooks/exhaustive-deps
+  // sources exposed so shell-level features (global search) can see the same
+  // lifted state without threading props through every page.
+  const value = useMemo(() => ({ items, readIds, unread, markRead, markAllRead, sources }), [items, readIds, sources]) // eslint-disable-line react-hooks/exhaustive-deps
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>
 }
 

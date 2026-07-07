@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, MessageSquareWarning } from 'lucide-react'
+import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, MessageSquareWarning, Landmark } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import AdminOverview from '../components/admin/AdminOverview'
 import UsersView from '../components/admin/UsersView'
 import RolesPermissionsView from '../components/admin/RolesPermissionsView'
 import AuditLogView from '../components/admin/AuditLogView'
+import GovernanceView from '../components/admin/GovernanceView'
 import { FeedbackQueue } from '../components/SystemFeedback'
 import {
   ADMIN_VIEW_ROLES, USER_ACCOUNTS, DEFAULT_PERMISSIONS, AUDIT_LOG,
@@ -27,6 +28,7 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback 
     { key: 'overview', label: 'Overview', icon: LayoutDashboard },
     { key: 'users', label: 'Users', icon: Users, badge: invitedCount },
     { key: 'roles', label: 'Roles & permissions', icon: ShieldCheck },
+    { key: 'governance', label: 'Authority & access', icon: Landmark },
     { key: 'feedback', label: 'System feedback', icon: MessageSquareWarning, badge: feedback.filter((f) => f.status === 'new').length },
     { key: 'log', label: 'Activity log', icon: ScrollText },
   ]
@@ -93,6 +95,7 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback 
           {view === 'roles' && (
             <RolesPermissionsView permissions={permissions} onChange={setPermissions} users={users} />
           )}
+          {view === 'governance' && <GovernanceView />}
           {view === 'feedback' && <FeedbackQueue items={feedback} onUpdate={onUpdateFeedback} />}
           {view === 'log' && (
             <AuditLogView log={AUDIT_LOG} users={users} />
