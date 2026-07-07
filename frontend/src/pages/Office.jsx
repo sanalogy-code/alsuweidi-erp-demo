@@ -1,9 +1,17 @@
 import { useState } from 'react'
-import { Mails, BadgeCheck, Lock } from 'lucide-react'
+import { Mails, BadgeCheck, Lock, CalendarClock, Package, Truck, Car, Hash } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import CorrespondenceView from '../components/office/CorrespondenceView'
+import RoomBookingsView from '../components/office/RoomBookingsView'
+import SuppliesView from '../components/office/SuppliesView'
+import CourierLogView from '../components/office/CourierLogView'
+import VehiclesView from '../components/office/VehiclesView'
+import DocNumberingView from '../components/office/DocNumberingView'
 import LicensesView, { OFFICE_LICENSES } from '../components/admin/LicensesView'
-import { CORRESPONDENCE, OFFICE_VIEW_ROLES } from '../data/officeData'
+import {
+  CORRESPONDENCE, OFFICE_VIEW_ROLES, ROOM_BOOKINGS, SUPPLY_REQUESTS,
+  COURIER_LOG, VEHICLE_BOOKINGS, SALIK_FINES,
+} from '../data/officeData'
 
 // Office Administration — the ADMIN STAFF workspace (7 Jul, Sana: office admin
 // and system admin are different jobs and don't share a module). Document
@@ -15,12 +23,23 @@ export default function Office({ user, onLogout }) {
   const [view, setView] = useState('correspondence')
   const [letters, setLetters] = useState(CORRESPONDENCE)
   const [licenses, setLicenses] = useState(OFFICE_LICENSES)
+  const [roomBookings, setRoomBookings] = useState(ROOM_BOOKINGS)
+  const [supplies, setSupplies] = useState(SUPPLY_REQUESTS)
+  const [couriers, setCouriers] = useState(COURIER_LOG)
+  const [vehicleBookings, setVehicleBookings] = useState(VEHICLE_BOOKINGS)
+  const [salik, setSalik] = useState(SALIK_FINES)
 
   const awaiting = letters.filter((l) => l.status === 'action_required').length
+  const suppliesOpen = supplies.filter((s) => s.status === 'requested').length
 
   const NAV = [
     { key: 'correspondence', label: 'Correspondence', icon: Mails, badge: awaiting },
     { key: 'licenses', label: 'Registrations & licenses', icon: BadgeCheck },
+    { key: 'rooms', label: 'Meeting rooms', icon: CalendarClock },
+    { key: 'supplies', label: 'Office supplies', icon: Package, badge: suppliesOpen },
+    { key: 'couriers', label: 'Courier & dispatch', icon: Truck },
+    { key: 'vehicles', label: 'Vehicles & Salik', icon: Car },
+    { key: 'numbering', label: 'Document numbering', icon: Hash },
   ]
 
   if (!canView) {
@@ -64,13 +83,20 @@ export default function Office({ user, onLogout }) {
             })}
           </div>
           <div className="hidden sm:block mt-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] leading-snug text-amber-700">
-            Demo data. Meeting rooms, supplies, couriers, and vehicle bookings are on the backlog (EVERYTHING list → Admin staff).
+            Demo data. Room bookings + supply requests open to all employees with the notifications/home phase (Phase 2).
           </div>
         </aside>
 
         <main className="flex-1 min-w-0 w-full">
           {view === 'correspondence' && <CorrespondenceView letters={letters} onChange={setLetters} />}
           {view === 'licenses' && <LicensesView items={licenses} onChange={setLicenses} />}
+          {view === 'rooms' && <RoomBookingsView bookings={roomBookings} onChange={setRoomBookings} user={user} />}
+          {view === 'supplies' && <SuppliesView requests={supplies} onChange={setSupplies} user={user} />}
+          {view === 'couriers' && <CourierLogView entries={couriers} onChange={setCouriers} />}
+          {view === 'vehicles' && (
+            <VehiclesView bookings={vehicleBookings} onChangeBookings={setVehicleBookings} salik={salik} onChangeSalik={setSalik} user={user} />
+          )}
+          {view === 'numbering' && <DocNumberingView letters={letters} />}
         </main>
       </div>
     </div>

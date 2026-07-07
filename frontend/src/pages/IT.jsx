@@ -1,10 +1,18 @@
 import { useState } from 'react'
-import { ClipboardList, Inbox, Laptop, KeyRound } from 'lucide-react'
+import { ClipboardList, Inbox, Laptop, KeyRound, Timer, PackageCheck, Wrench, ShieldCheck, Activity } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import ItRequestsView from '../components/it/ItRequestsView'
 import AssetRegistry from '../components/it/AssetRegistry'
 import LicensesView from '../components/it/LicensesView'
-import { IT_ASSETS, SOFTWARE_LICENSES, IT_REQUESTS } from '../data/itData'
+import ItSlaView from '../components/it/ItSlaView'
+import InstalledSoftwareView from '../components/it/InstalledSoftwareView'
+import MaintenanceView from '../components/it/MaintenanceView'
+import AccessRequestsView from '../components/it/AccessRequestsView'
+import SystemStatusBoard from '../components/it/SystemStatusBoard'
+import {
+  IT_ASSETS, SOFTWARE_LICENSES, IT_REQUESTS, SLA_TARGETS,
+  INSTALLED_SOFTWARE, MAINTENANCE_ITEMS, ACCESS_REQUESTS,
+} from '../data/itData'
 import { EMPLOYEES } from '../data/hrData'
 import { IT_VIEW_ROLES } from '../data/dashboardData'
 import { parseLocalDate, todayLocal } from '../utils/date'
@@ -21,19 +29,34 @@ export default function IT({ user, onLogout }) {
   const [requests, setRequests] = useState(IT_REQUESTS)
   const [assets, setAssets] = useState(IT_ASSETS)
   const [licenses, setLicenses] = useState(SOFTWARE_LICENSES)
+  const [installs, setInstalls] = useState(INSTALLED_SOFTWARE)
+  const [maintenance, setMaintenance] = useState(MAINTENANCE_ITEMS)
+  const [accessRequests, setAccessRequests] = useState(ACCESS_REQUESTS)
 
   const pendingCount = requests.filter((r) => r.status === 'pending').length
   const licensesDue = licenses.filter(
     (l) => (parseLocalDate(l.renewalDate) - todayLocal()) / (1000 * 60 * 60 * 24) <= 60
   ).length
+  const overSla = requests.filter((r) => {
+    if (r.status !== 'pending' && r.status !== 'approved') return false
+    const age = Math.round((todayLocal() - parseLocalDate(r.requestedDate)) / (1000 * 60 * 60 * 24))
+    return age > (SLA_TARGETS[r.type] ?? 3)
+  }).length
+  const maintOverdue = maintenance.filter((m) => parseLocalDate(m.nextDue) < todayLocal()).length
+  const accessPending = accessRequests.filter((r) => r.status === 'pending').length
 
   const NAV_MAIN = [
     { key: 'mine', label: 'My requests', icon: ClipboardList },
   ]
   const NAV_WORKSPACE = canManage ? [
     { key: 'queue', label: 'Request queue', icon: Inbox, badge: pendingCount },
+    { key: 'sla', label: 'SLA timers', icon: Timer, badge: overSla },
     { key: 'assets', label: 'Assets', icon: Laptop },
     { key: 'licenses', label: 'Licenses', icon: KeyRound, badge: licensesDue },
+    { key: 'software', label: 'Installed software', icon: PackageCheck },
+    { key: 'maintenance', label: 'Maintenance', icon: Wrench, badge: maintOverdue },
+    { key: 'access', label: 'Access requests', icon: ShieldCheck, badge: accessPending },
+    { key: 'status', label: 'System status', icon: Activity },
   ] : []
 
   const navButton = (item) => {
@@ -109,6 +132,20 @@ export default function IT({ user, onLogout }) {
               onAdd={(l) => setLicenses([...licenses, { ...l, id: Math.max(...licenses.map((x) => x.id), 0) + 1 }])}
             />
           )}
+
+          {view === 'sla' && canManage && <ItSlaView requests={requests} />}
+
+          {view === 'software' && canManage && (
+            <InstalledSoftwareView installs={installs} onChange={setInstalls} assets={assets} licenses={licenses} />
+          )}
+
+          {view === 'maintenance' && canManage && <MaintenanceView items={maintenance} onChange={setMaintenance} />}
+
+          {view === 'access' && canManage && (
+            <AccessRequestsView requests={accessRequests} onChange={setAccessRequests} user={user} />
+          )}
+
+          {view === 'status' && canManage && <SystemStatusBoard />}
         </main>
       </div>
     </div>
