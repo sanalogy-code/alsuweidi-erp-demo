@@ -96,7 +96,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
             <MyWorkView user={user} projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'pmdash' && (
-            <PmDashboard projects={projects} pmRecords={pmRecords} timesheets={timesheets} onOpenWorkspace={openWorkspace} />
+            <PmDashboard projects={projects} pmRecords={pmRecords} timesheets={timesheets} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} />
           )}
           {view === 'reviews' && (
             <div className="space-y-3">

@@ -5,8 +5,11 @@ import logo from '../assets/alsuweidi-logo.svg'
 import { ROLES } from '../data/dashboardData'
 
 export default function LoginPage({ onLogin }) {
-  const [username, setUsername] = useState('Sarah')
-  const [role, setRole] = useState('sales')
+  // Default = the show-everything demo login: Samir maps to a real employee
+  // (timesheets, My Work, approvals) and the management role opens every module,
+  // so a management walkthrough needs no switching back and forth.
+  const [username, setUsername] = useState('Samir Al Mazrouei')
+  const [role, setRole] = useState('management')
   const [isNewHire, setIsNewHire] = useState(false)
 
   const handleLogin = (e) => {

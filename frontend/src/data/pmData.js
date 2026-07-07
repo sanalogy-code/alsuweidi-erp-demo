@@ -321,7 +321,7 @@ export const phaseKeysFor = (project) => {
 
 export const emptyPmRecord = (project) => ({
   projectId: project?.id ?? null, fidicEdition: '1999',
-  method: 'waterfall', sprints: [],
+  method: project?.method || 'waterfall', sprints: [],
   phases: (project ? phaseKeysFor(project) : []).map((k) => emptyPhase(k)),
   claims: [], reports: [], authorities: [],
   risks: [], meetings: [], ipcs: [], handover: null,

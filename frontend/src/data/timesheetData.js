@@ -87,6 +87,13 @@ export const TIMESHEETS = [
     entries: [{ code: 8, hours: [0, 8, 8, 8, 8, 8, 2] }],
     status: 'submitted', submittedDate: '2026-06-27', approvedBy: null, approvedDate: null, rejectReason: null,
   },
+  // Samir is the default demo login — his last week is submitted so the
+  // timesheet lockout never interrupts a management walkthrough.
+  {
+    id: 6, employeeId: 10, employeeName: 'Samir Al Mazrouei', weekStart: '2026-06-28',
+    entries: [{ code: 8, hours: [0, 8, 8, 8, 8, 8, 0] }],
+    status: 'submitted', submittedDate: '2026-07-04', approvedBy: null, approvedDate: null, rejectReason: null,
+  },
   // Draft = started but never submitted — still counts as missing for payroll.
   {
     id: 5, employeeId: 7, employeeName: 'Fatima Al Mansouri', weekStart: '2026-06-21',

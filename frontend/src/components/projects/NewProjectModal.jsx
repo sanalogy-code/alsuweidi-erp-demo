@@ -23,6 +23,7 @@ export default function NewProjectModal({ employees, existingProjects, onClose, 
     contractType: 'Conventional',
     fund: 'Private',
     contractValue: '',
+    method: 'waterfall',
     dpmId: '', cpmId: '',
     description: '',
     confidential: '',
@@ -65,6 +66,7 @@ export default function NewProjectModal({ employees, existingProjects, onClose, 
       contractSigned: false,
       loaObtained: true,
       contractValue: Number(form.contractValue) || 0,
+      method: form.method,
       constructionCost: null,
       contractorName: null,
       dpmId: form.dpmId ? Number(form.dpmId) : null,
@@ -111,6 +113,13 @@ export default function NewProjectModal({ employees, existingProjects, onClose, 
             <label className={labelCls}>Scope</label>
             <select value={form.scope} onChange={set('scope')} className={inputCls}>
               {PROJECT_SCOPES.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Planning method (decided now, at setup)</label>
+            <select value={form.method} onChange={set('method')} className={inputCls}>
+              <option value="waterfall">Waterfall — phased plan on a timeline</option>
+              <option value="sprints">Sprints — iterations with a backlog</option>
             </select>
           </div>
           <div>

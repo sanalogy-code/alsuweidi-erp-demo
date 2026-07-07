@@ -14,7 +14,8 @@ import {
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
 
-export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, onLogHours, depth = 0, defaultOpen = false }) {
+// `compact` = board-column layout: title + chips stacked, no fixed-width columns.
+export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, onLogHours, depth = 0, defaultOpen = false, compact = false }) {
   const [open, setOpen] = useState(defaultOpen)
   const [comment, setComment] = useState('')
   const [newItem, setNewItem] = useState('')
@@ -61,6 +62,32 @@ export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, on
   return (
     <div className={depth ? 'ml-6' : ''}>
       <div className={`bg-white rounded-lg border ${blocked && t.status !== 'done' ? 'border-amber-300' : 'border-gray-200'}`}>
+        {compact ? (
+          <button onClick={() => setOpen((v) => !v)} className="w-full px-3 py-2.5 text-left space-y-1.5">
+            <div className="flex items-start gap-2">
+              {depth > 0 && <CornerDownRight size={12} className="text-gray-300 shrink-0 mt-0.5" />}
+              <span className="flex-1 min-w-0 text-sm text-gray-800 leading-snug">{t.title}</span>
+              {open ? <ChevronUp size={14} className="text-gray-400 shrink-0" /> : <ChevronDown size={14} className="text-gray-400 shrink-0" />}
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${pMeta.chip}`}>{pMeta.label}</span>
+              {blocked && t.status !== 'done' && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 flex items-center gap-0.5"><Lock size={9} /> blocked</span>
+              )}
+              {subs.length > 0 && <span className="text-[10px] text-gray-400">{subs.filter((s) => s.status === 'done').length}/{subs.length} sub</span>}
+              {(t.checklist || []).length > 0 && <span className="text-[10px] text-gray-400">☑ {doneCount}/{t.checklist.length}</span>}
+              {t.status !== 'done' && progress > 0 && <span className="text-[10px] text-gray-400">{progress}%</span>}
+            </div>
+            <div className="flex items-center gap-2 text-[10px] text-gray-400">
+              <span className="truncate">{t.assignee}</span>
+              {t.due && t.status !== 'done' && (
+                <span className={`ml-auto shrink-0 ${d < 0 ? 'text-red-600 font-semibold' : d <= 3 ? 'text-amber-600' : ''}`}>
+                  {d < 0 ? `${-d}d overdue` : d === 0 ? 'due today' : `due ${t.due}`}
+                </span>
+              )}
+            </div>
+          </button>
+        ) : (
         <button onClick={() => setOpen((v) => !v)} className="w-full flex items-center gap-3 px-4 py-3 text-left">
           {depth > 0 && <CornerDownRight size={12} className="text-gray-300 shrink-0" />}
           <span className={`text-[11px] px-2 py-0.5 rounded-full shrink-0 ${pMeta.chip}`}>{pMeta.label}</span>
@@ -85,6 +112,7 @@ export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, on
           )}
           {open ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
         </button>
+        )}
 
         {open && (
           <div className="border-t border-gray-100 px-4 py-3 space-y-3">
@@ -247,7 +275,7 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
 
   const card = (t) => (
     <div key={t.id}>
-      <TaskCardTree t={t} phase={phase} patchTask={patchTask} currentUserName={currentUserName} onAddSubtask={addSubtask} onLogHours={onLogHours} />
+      <TaskCardTree t={t} phase={phase} patchTask={patchTask} currentUserName={currentUserName} onAddSubtask={addSubtask} onLogHours={onLogHours} compact />
     </div>
   )
 
@@ -286,32 +314,37 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
           }]}
           currentUserName={currentUserName}
         />
-      ) : groups.map((g) => (
-        <div key={g.key} className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className={`text-[11px] px-2 py-0.5 rounded-full ${g.chip}`}>{g.label}</span>
-            <span className="text-xs text-gray-400">{g.items.length}</span>
-          </div>
-          {g.items.length === 0
-            ? <div className="text-xs text-gray-300 pl-1">—</div>
-            : g.items.map(card)}
+      ) : (
+        // A real board: one column per status, side by side.
+        <div className="grid gap-3 md:grid-cols-3 items-start">
+          {groups.map((g) => (
+            <div key={g.key} className="bg-slate-100 rounded-lg border border-slate-200 p-2 space-y-2 min-h-[80px]">
+              <div className="flex items-center gap-2 px-1">
+                <span className={`text-[11px] px-2 py-0.5 rounded-full ${g.chip}`}>{g.label}</span>
+                <span className="text-xs text-gray-400">{g.items.length}</span>
+              </div>
+              {g.items.length === 0
+                ? <div className="text-xs text-gray-300 pl-1 pb-1">—</div>
+                : g.items.map(card)}
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   )
 }
 
 // A parent card + its nested subtask cards, all patching through the same
 // phase-level task list. Used by the board here and the sprint board in PlanView.
-export function TaskCardTree({ t, phase, patchTask, currentUserName, onAddSubtask, onLogHours }) {
+export function TaskCardTree({ t, phase, patchTask, currentUserName, onAddSubtask, onLogHours, compact = false }) {
   const subs = subtasksOf(t, phase.tasks)
   return (
     <div>
-      <TaskCard t={t} allTasks={phase.tasks} patch={(c) => patchTask(t.id, c)} currentUserName={currentUserName} onAddSubtask={onAddSubtask} onLogHours={onLogHours} depth={0} />
+      <TaskCard t={t} allTasks={phase.tasks} patch={(c) => patchTask(t.id, c)} currentUserName={currentUserName} onAddSubtask={onAddSubtask} onLogHours={onLogHours} depth={0} compact={compact} />
       {subs.length > 0 && (
         <div className="mt-1.5 space-y-1.5">
           {subs.map((s) => (
-            <TaskCard key={s.id} t={s} allTasks={phase.tasks} patch={(c) => patchTask(s.id, c)} currentUserName={currentUserName} onAddSubtask={onAddSubtask} onLogHours={onLogHours} depth={1} />
+            <TaskCard key={s.id} t={s} allTasks={phase.tasks} patch={(c) => patchTask(s.id, c)} currentUserName={currentUserName} onAddSubtask={onAddSubtask} onLogHours={onLogHours} depth={compact ? 0 : 1} compact={compact} />
           ))}
         </div>
       )}

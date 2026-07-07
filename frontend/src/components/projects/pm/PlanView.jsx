@@ -19,21 +19,73 @@ function Gantt({ tasks, milestones }) {
   const ordered = tasks.filter((t) => t.parentId == null)
     .flatMap((t) => [t, ...tasks.filter((s) => s.parentId === t.id)])
   const dated = ordered.filter((t) => t.startDate && t.due)
+  // Domain = the working window: task dates + milestones still ahead. Achieved
+  // milestones from years back would stretch the scale until nothing reads.
   const points = [
     ...dated.flatMap((t) => [t.startDate, t.due]),
-    ...milestones.flatMap((m) => [m.baseline, m.forecast, m.actual]).filter(Boolean),
+    ...milestones.filter((m) => !m.actual).flatMap((m) => [m.baseline, m.forecast]).filter(Boolean),
   ].map((d) => parseLocalDate(d).getTime())
   if (!points.length) return <div className="text-xs text-gray-400 py-4 text-center">Give tasks start and due dates to see the timeline.</div>
   const today = todayLocal().getTime()
-  const min = Math.min(...points, today), max = Math.max(...points, today)
+  // Pad the domain to whole months so the scale reads as a calendar, not an
+  // arbitrary stretch (Sana: "it's all one line, not months or weeks").
+  const rawMin = new Date(Math.min(...points, today))
+  const rawMax = new Date(Math.max(...points, today))
+  const min = new Date(rawMin.getFullYear(), rawMin.getMonth(), 1).getTime()
+  const max = new Date(rawMax.getFullYear(), rawMax.getMonth() + 1, 1).getTime()
   const span = Math.max(1, max - min)
-  const pos = (iso) => ((parseLocalDate(iso).getTime() - min) / span) * 100
-  const todayPos = ((today - min) / span) * 100
+  const posT = (t) => ((t - min) / span) * 100
+  const pos = (iso) => posT(parseLocalDate(iso).getTime())
+  const todayPos = posT(today)
+
+  // One tick per month start; label every month unless that gets crowded.
+  const months = []
+  for (let d = new Date(min); d.getTime() < max; d.setMonth(d.getMonth() + 1)) months.push(new Date(d))
+  const labelEvery = months.length > 14 ? 3 : months.length > 8 ? 2 : 1
+  const showYear = months.some((m) => m.getFullYear() !== months[0].getFullYear())
+
+  const LABEL_W = 'w-52', RIGHT_W = 'w-24', NAME_W = 'w-28'
 
   return (
-    <div className="relative">
+    <div className="overflow-x-auto">
+    <div className="relative min-w-[680px]">
+      {/* month scale */}
+      <div className="flex items-center gap-2 mb-1">
+        <div className={`${LABEL_W} shrink-0`} />
+        <div className="flex-1 relative h-4">
+          {months.map((m, i) => (
+            <div key={i} className="absolute top-0 bottom-0" style={{ left: `${posT(m.getTime())}%` }}>
+              {i % labelEvery === 0 && (
+                <span className="absolute top-0 left-0.5 text-[9px] text-gray-400 whitespace-nowrap">
+                  {m.toLocaleDateString('en-GB', { month: 'short', ...(showYear && m.getMonth() === 0 ? { year: '2-digit' } : {}) })}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className={`${RIGHT_W} shrink-0`} />
+        <div className={`${NAME_W} shrink-0`} />
+      </div>
+      {/* month gridlines behind the bars */}
+      <div className="absolute inset-0 flex items-stretch gap-2 pointer-events-none">
+        <div className={`${LABEL_W} shrink-0`} />
+        <div className="flex-1 relative">
+          {months.map((m, i) => (
+            <div key={i} className="absolute top-4 bottom-0 w-px bg-gray-200/70" style={{ left: `${posT(m.getTime())}%` }} />
+          ))}
+        </div>
+        <div className={`${RIGHT_W} shrink-0`} />
+        <div className={`${NAME_W} shrink-0`} />
+      </div>
       {/* today line */}
-      <div className="absolute top-0 bottom-0 w-px bg-brand/60 z-10" style={{ left: `calc(${todayPos}% )` }} title="Today" />
+      <div className="absolute inset-0 flex items-stretch gap-2 pointer-events-none z-10">
+        <div className={`${LABEL_W} shrink-0`} />
+        <div className="flex-1 relative">
+          <div className="absolute top-0 bottom-0 w-px bg-brand/70" style={{ left: `${todayPos}%` }} title="Today" />
+        </div>
+        <div className={`${RIGHT_W} shrink-0`} />
+        <div className={`${NAME_W} shrink-0`} />
+      </div>
       <div className="space-y-1.5">
         {dated.map((t) => {
           const late = taskIsLate(t)
@@ -66,6 +118,8 @@ function Gantt({ tasks, milestones }) {
         })}
         {milestones.filter((m) => m.baseline || m.forecast).map((m) => {
           const iso = m.actual || m.forecast || m.baseline
+          const t = parseLocalDate(iso)?.getTime()
+          if (t == null || t < min || t > max) return null // outside the working window — listed below instead
           const slipped = !m.actual && m.forecast && m.baseline && m.forecast > m.baseline
           return (
             <div key={`ms-${m.id}`} className="flex items-center gap-2">
@@ -90,6 +144,7 @@ function Gantt({ tasks, milestones }) {
         <span className="flex items-center gap-1"><span className="w-2 h-2 rotate-45 bg-gray-500 inline-block" /> Milestone</span>
         <span className="flex items-center gap-1"><span className="w-px h-3 bg-brand inline-block" /> Today</span>
       </div>
+    </div>
     </div>
   )
 }
@@ -224,19 +279,21 @@ function SprintBoard({ pm, phase, onUpdatePhase, onUpdatePm, currentUserName, on
         <button onClick={addTask} className="px-3 py-1.5 text-xs rounded-md bg-brand text-white">Add</button>
       </div>
 
-      {TASK_STATUSES.map((g) => {
-        const items = inSprint.filter((t) => t.status === g.key)
-        return (
-          <div key={g.key} className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className={`text-[11px] px-2 py-0.5 rounded-full ${g.chip}`}>{g.label}</span>
-              <span className="text-xs text-gray-400">{items.length}</span>
+      <div className="grid gap-3 md:grid-cols-3 items-start">
+        {TASK_STATUSES.map((g) => {
+          const items = inSprint.filter((t) => t.status === g.key)
+          return (
+            <div key={g.key} className="bg-slate-100 rounded-lg border border-slate-200 p-2 space-y-2 min-h-[80px]">
+              <div className="flex items-center gap-2 px-1">
+                <span className={`text-[11px] px-2 py-0.5 rounded-full ${g.chip}`}>{g.label}</span>
+                <span className="text-xs text-gray-400">{items.length}</span>
+              </div>
+              {items.length === 0 ? <div className="text-xs text-gray-300 pl-1 pb-1">—</div>
+                : items.map((t) => <TaskCardTree key={t.id} t={t} phase={phase} patchTask={patchTask} currentUserName={currentUserName} onAddSubtask={addSubtask} onLogHours={onLogHours} compact />)}
             </div>
-            {items.length === 0 ? <div className="text-xs text-gray-300 pl-1">—</div>
-              : items.map((t) => <TaskCardTree key={t.id} t={t} phase={phase} patchTask={patchTask} currentUserName={currentUserName} onAddSubtask={addSubtask} onLogHours={onLogHours} />)}
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
 
       <div className="space-y-2 pt-2 border-t border-gray-200">
         <div className="flex items-center gap-2">
@@ -262,14 +319,25 @@ export default function PlanView({ pm, phase, onUpdatePhase, onUpdatePm, current
   return (
     <div className="space-y-4">
       <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 flex flex-wrap items-center gap-4">
+        {/* Methodology is a one-time setup choice (Sana: "we should choose one at
+            the beginning only") — displayed, not toggled; changing it mid-project
+            is deliberately behind a confirm. */}
         <div className="flex items-center gap-2 text-xs">
           <span className="text-gray-500">Method:</span>
-          {PM_METHODS.map((m) => (
-            <button key={m.key} onClick={() => onUpdatePm({ ...pm, method: m.key })} title={m.hint}
-              className={`px-2.5 py-1 rounded-md border transition ${pm.method === m.key ? 'border-brand text-brand bg-brand/5 font-semibold' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>
-              {m.label}
-            </button>
-          ))}
+          <span className="px-2.5 py-1 rounded-md border border-brand text-brand bg-brand/5 font-semibold" title={PM_METHODS.find((m) => m.key === pm.method)?.hint}>
+            {PM_METHODS.find((m) => m.key === pm.method)?.label || '—'}
+          </span>
+          <span className="text-[10px] text-gray-400">chosen at project setup</span>
+          <button
+            onClick={() => {
+              const other = PM_METHODS.find((m) => m.key !== pm.method)
+              if (window.confirm(`Switch this project's planning method to ${other.label}? This is normally decided once at project setup — tasks are kept, but the plan is re-presented as ${other.hint.toLowerCase()}.`)) {
+                onUpdatePm({ ...pm, method: other.key })
+              }
+            }}
+            className="text-[10px] text-gray-400 hover:text-brand underline">
+            change
+          </button>
         </div>
         {progress != null && (
           <div className="flex items-center gap-2 text-xs text-gray-500">

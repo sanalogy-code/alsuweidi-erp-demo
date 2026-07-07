@@ -1,16 +1,17 @@
 import { useState } from 'react'
-import { Diamond, AlertTriangle, Clock3, FolderKanban, ListTodo } from 'lucide-react'
+import { Diamond, AlertTriangle, Clock3, FolderKanban, ListTodo, Banknote } from 'lucide-react'
 import {
   projectProgress, projectHealth, lateTasksOf, nextMilestoneOf, worstSpiOf,
-  hoursUsedOn, manhourBudgetOf, daysUntil, PM_METHODS,
+  hoursUsedOn, manhourBudgetOf, daysUntil, PM_METHODS, SALARY_COST_PER_HOUR,
 } from '../../../data/pmData'
 import { scopeOf } from '../../../data/projectsData'
+import { INVOICES, fmtAED } from '../../../data/financeData'
 
 // Management dashboard (Batch 11): one row per active project — health (RAG),
 // % complete, late tasks, next milestone, SPI, hours used vs manhour budget.
 // The answer to "how are my projects doing?" in one screen.
 
-export default function PmDashboard({ projects, pmRecords, timesheets = [], onOpenWorkspace }) {
+export default function PmDashboard({ projects, pmRecords, timesheets = [], onOpenWorkspace, canViewSensitive = false }) {
   const [search, setSearch] = useState('')
   const rows = projects
     .filter((p) => p.generalStatus === 'In Progress' && pmRecords[p.id])
@@ -20,14 +21,18 @@ export default function PmDashboard({ projects, pmRecords, timesheets = [], onOp
     })
     .map((p) => {
       const pm = pmRecords[p.id]
+      const hours = hoursUsedOn(timesheets, p.id)
       return {
         p, pm,
+        cost: hours * SALARY_COST_PER_HOUR,
+        fee: pm.phases.reduce((s, ph) => s + ph.fees.stages.reduce((t, st) => t + st.fee, 0), 0),
+        invoiced: INVOICES.filter((i) => i.projectId === p.id && i.status !== 'draft').reduce((s, i) => s + i.amount, 0),
         health: projectHealth(pm),
         progress: projectProgress(pm),
         late: lateTasksOf(pm).length,
         milestone: nextMilestoneOf(pm),
         spi: worstSpiOf(pm),
-        hours: hoursUsedOn(timesheets, p.id),
+        hours,
         hoursBudget: manhourBudgetOf(pm),
       }
     })
@@ -38,15 +43,17 @@ export default function PmDashboard({ projects, pmRecords, timesheets = [], onOp
     atRisk: rows.filter((r) => r.health.key === 'red').length,
     late: rows.reduce((s, r) => s + r.late, 0),
     msThisMonth: rows.filter((r) => r.milestone && daysUntil(r.milestone.forecast || r.milestone.baseline) <= 31).length,
+    cost: rows.reduce((s, r) => s + r.cost, 0),
   }
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className={`grid grid-cols-2 ${canViewSensitive ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-3`}>
         <Stat icon={FolderKanban} label="Active projects" value={totals.projects} />
         <Stat icon={AlertTriangle} label="At risk" value={totals.atRisk} tone={totals.atRisk ? 'red' : 'gray'} />
         <Stat icon={ListTodo} label="Late tasks (portfolio)" value={totals.late} tone={totals.late ? 'amber' : 'gray'} />
         <Stat icon={Diamond} label="Milestones next 30 days" value={totals.msThisMonth} />
+        {canViewSensitive && <Stat icon={Banknote} label="Labour cost to date (est.)" value={fmtAED(totals.cost, { compact: true })} />}
       </div>
 
       <div className="flex justify-end">
@@ -64,11 +71,13 @@ export default function PmDashboard({ projects, pmRecords, timesheets = [], onOp
               <th className="text-left px-4 py-2">Next milestone</th>
               <th className="text-left px-4 py-2">SPI</th>
               <th className="text-left px-4 py-2">Hours</th>
+              {canViewSensitive && <th className="text-left px-4 py-2">Cost (est.)</th>}
+              {canViewSensitive && <th className="text-left px-4 py-2">Invoiced / fee</th>}
               <th className="text-left px-4 py-2">Method</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {rows.map(({ p, pm, health, progress, late, milestone, spi, hours, hoursBudget }) => (
+            {rows.map(({ p, pm, health, progress, late, milestone, spi, hours, hoursBudget, cost, fee, invoiced }) => (
               <tr key={p.id} className="hover:bg-blue-50 cursor-pointer transition" onClick={() => onOpenWorkspace(p)}>
                 <td className="px-4 py-3">
                   <div className="font-medium text-brand">{p.name}</div>
@@ -111,6 +120,16 @@ export default function PmDashboard({ projects, pmRecords, timesheets = [], onOp
                     {hours}h{hoursBudget ? <span className="text-gray-400"> / {hoursBudget.toLocaleString()}h</span> : null}
                   </div>
                 </td>
+                {canViewSensitive && (
+                  <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">{cost > 0 ? fmtAED(cost, { compact: true }) : <span className="text-gray-300">—</span>}</td>
+                )}
+                {canViewSensitive && (
+                  <td className="px-4 py-3 text-xs whitespace-nowrap">
+                    {fee > 0 ? (
+                      <span className="text-gray-600">{fmtAED(invoiced, { compact: true })} <span className="text-gray-400">/ {fmtAED(fee, { compact: true })} ({Math.round((invoiced / fee) * 100)}%)</span></span>
+                    ) : <span className="text-gray-300">—</span>}
+                  </td>
+                )}
                 <td className="px-4 py-3">
                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{PM_METHODS.find((m) => m.key === pm.method)?.label || '—'}</span>
                 </td>
@@ -120,7 +139,7 @@ export default function PmDashboard({ projects, pmRecords, timesheets = [], onOp
         </table>
       </div>
       <p className="text-[11px] text-gray-400">
-        Health: red = overdue claim deadline, 3+ late tasks, or SPI &lt; 0.85 · amber = any late task, overdue report, slipping milestone, or SPI &lt; 0.95 · green otherwise. Hours are timesheet actuals coded to the project (one seeded week in the demo). Click a row to open the workspace.
+        Health: red = overdue claim deadline, 3+ late tasks, or SPI &lt; 0.85 · amber = any late task, overdue report, slipping milestone, or SPI &lt; 0.95 · green otherwise. Hours are timesheet actuals coded to the project (one seeded week in the demo).{canViewSensitive && <> Cost = hours × AED {SALARY_COST_PER_HOUR}/h blended rate (per-person rates come with the Phase 2 payroll link); invoiced excludes drafts.</>} Click a row to open the workspace.
       </p>
     </div>
   )
