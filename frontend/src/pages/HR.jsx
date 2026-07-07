@@ -5,6 +5,7 @@ import {
   Home, ClipboardList, Briefcase, GraduationCap, Inbox, CalendarRange,
   CalendarClock, Fingerprint, Banknote, CalendarDays, Plane, FileText, ShieldAlert,
   UserMinus, Landmark, LineChart, TrendingUp, FileUser, Clock, ClipboardCheck, CreditCard,
+  Star, LogOut, BarChart3, Layers,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
@@ -36,6 +37,15 @@ import StaffPlanningTab from '../components/hr/StaffPlanningTab'
 import MyTimesheet from '../components/hr/MyTimesheet'
 import TimesheetApprovals from '../components/hr/TimesheetApprovals'
 import BusinessCardRequestModal from '../components/hr/BusinessCardRequestModal'
+import AppraisalsView from '../components/hr/AppraisalsView'
+import TrainingTab from '../components/hr/TrainingTab'
+import WarningsRegister from '../components/hr/WarningsRegister'
+import ExitInterviews from '../components/hr/ExitInterviews'
+import HeadcountDashboard from '../components/hr/HeadcountDashboard'
+import GradesBands from '../components/hr/GradesBands'
+import {
+  APPRAISALS, ENROLLMENTS, TRAINING_COURSES, WARNINGS, EXIT_INTERVIEWS,
+} from '../data/hrTalentData'
 import {
   HR_STATS, EMPLOYEES, LEAVE_REQUESTS, CERTIFICATE_REQUESTS, COMPLAINTS, OPEN_POSITIONS, CANDIDATES,
   ANNUAL_LEAVE_ENTITLEMENT, NEW_JOINERS, OFFBOARDINGS, PRO_TASKS, STAFF_PLANS, REFERRAL_BONUS_AED,
@@ -62,6 +72,10 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
   const [proTasks, setProTasks] = useState(PRO_TASKS)
   const [staffPlans, setStaffPlans] = useState(STAFF_PLANS)
   const [businessCardRequests, setBusinessCardRequests] = useState(BUSINESS_CARD_REQUESTS)
+  const [appraisals, setAppraisals] = useState(APPRAISALS)
+  const [enrollments, setEnrollments] = useState(ENROLLMENTS)
+  const [warnings, setWarnings] = useState(WARNINGS)
+  const [exits, setExits] = useState(EXIT_INTERVIEWS)
   const [referralBonuses, setReferralBonuses] = useState([])
   const [reviewJoiner, setReviewJoiner] = useState(null)
   const [showAddEmployee, setShowAddEmployee] = useState(false)
@@ -109,6 +123,46 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     businessCardRequests.filter((r) => r.employeeName.toLowerCase() === myName && r.status === 'pending').length +
     complaints.filter((c) => !c.anonymous && (c.submittedBy || '').toLowerCase() === myName && c.status !== 'resolved').length
 
+  // Talent & development badges/handlers (appraisals, training, warnings, exits)
+  const myAppraisalPending = matchedEmployee ? appraisals.filter((a) => a.employeeId === matchedEmployee.id && a.status === 'self').length : 0
+  const teamAppraisalsPending = appraisals.filter((a) => teamIds.has(a.employeeId) && a.status === 'manager').length
+  const hrSignoffPending = appraisals.filter((a) => a.status === 'hr').length
+  const trainingPending = enrollments.filter((e) => e.status === 'requested').length
+
+  const updateAppraisal = (a) => setAppraisals(appraisals.map((x) => (x.id === a.id ? a : x)))
+
+  const requestEnrollment = (courseId, justification) => {
+    setEnrollments([...enrollments, {
+      id: Math.max(...enrollments.map((e) => e.id), 0) + 1,
+      courseId,
+      employeeId: matchedEmployee?.id || null,
+      employeeName: matchedEmployee?.name || user?.username || 'Unknown',
+      justification,
+      status: 'requested',
+      requestedDate: new Date().toISOString().slice(0, 10),
+      decidedDate: null,
+      completedDate: null,
+    }])
+  }
+  const decideEnrollment = (id, approve) => {
+    setEnrollments(enrollments.map((e) => (e.id === id ? { ...e, status: approve ? 'approved' : 'declined', decidedDate: new Date().toISOString().slice(0, 10) } : e)))
+  }
+  // Completion auto-adds an accomplishment to the employee record (mapped to
+  // the existing ACCOMPLISHMENT_TYPES via the course's accomplishmentType).
+  const completeEnrollment = (id) => {
+    const en = enrollments.find((e) => e.id === id)
+    const course = TRAINING_COURSES.find((c) => c.id === en?.courseId)
+    const today = new Date().toISOString().slice(0, 10)
+    setEnrollments(enrollments.map((e) => (e.id === id ? { ...e, status: 'completed', completedDate: today } : e)))
+    if (en?.employeeId && course && employees.some((e) => e.id === en.employeeId)) {
+      handleAddAccomplishment(en.employeeId, { type: course.accomplishmentType, issuer: course.provider, date: today, expiryDate: null })
+    }
+  }
+
+  const issueWarning = (w) => setWarnings([...warnings, { ...w, id: Math.max(...warnings.map((x) => x.id), 0) + 1 }])
+  const acknowledgeWarning = (id) => setWarnings(warnings.map((w) => (w.id === id ? { ...w, acknowledged: true, acknowledgedDate: new Date().toISOString().slice(0, 10) } : w)))
+  const logExit = (rec) => setExits([...exits, { ...rec, id: Math.max(...exits.map((x) => x.id), 0) + 1 }])
+
   const nextHoliday = holidays
     .filter((h) => h.status === 'approved' && parseLocalDate(h.endDate || h.date) >= todayLocal())
     .sort((a, b) => a.date.localeCompare(b.date))[0]
@@ -136,7 +190,10 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     ...(isManager ? [
       { key: 'teamtimesheets', label: 'Team timesheets', icon: ClipboardCheck, badge: teamTimesheets.filter((t) => t.status === 'submitted').length },
       { key: 'teamleave', label: 'Team leave', icon: Plane, badge: teamLeavePending.length },
+      { key: 'teamappraisals', label: 'Team appraisals', icon: Star, badge: teamAppraisalsPending },
     ] : []),
+    { key: 'myappraisal', label: 'My appraisal', icon: Star, badge: myAppraisalPending },
+    { key: 'training', label: 'Training', icon: GraduationCap },
     { key: 'requests', label: 'My requests', icon: ClipboardList, badge: myPendingCount },
     { key: 'careers', label: 'Careers', icon: Briefcase },
     ...(isNewHire ? [
@@ -155,8 +212,14 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
       { key: 'attendance', label: 'Attendance', icon: Fingerprint },
       { key: 'payroll', label: 'Payroll', icon: Banknote },
       { key: 'staffplan', label: 'Staff planning', icon: LineChart },
+      { key: 'headcount', label: 'Headcount & attrition', icon: BarChart3 },
+      { key: 'gradesbands', label: 'Grades & bands', icon: Layers },
     ] : []),
     ...(isHrStaff ? [
+      { key: 'appraisalcycle', label: 'Appraisal cycle', icon: Star, badge: hrSignoffPending },
+      { key: 'trainingapprovals', label: 'Training approvals', icon: GraduationCap, badge: trainingPending },
+      { key: 'warnings', label: 'Disciplinary', icon: ShieldAlert },
+      { key: 'exitinterviews', label: 'Exit interviews', icon: LogOut },
       { key: 'offboarding', label: 'Offboarding', icon: UserMinus, badge: offboardings.filter((o) => o.status === 'in_progress').length },
       { key: 'protasks', label: 'PRO tasks', icon: Landmark, badge: proTasks.filter((t) => t.status !== 'done').length },
       { key: 'holidays', label: 'Holidays', icon: CalendarDays },
@@ -668,6 +731,37 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
           {view === 'payroll' && canViewSensitive && <PayrollTab employees={employees} offboardings={offboardings} referralBonuses={referralBonuses} timesheetHold={timesheetHold} onViewTimesheets={() => setView('timesheets')} />}
 
           {view === 'holidays' && isHrStaff && <HolidaysTab holidays={holidays} onUpdateHolidays={onUpdateHolidays} />}
+
+          {view === 'myappraisal' && (
+            <AppraisalsView mode="self" appraisals={appraisals} onUpdate={updateAppraisal} matchedEmployee={matchedEmployee} user={user} />
+          )}
+
+          {view === 'teamappraisals' && isManager && (
+            <AppraisalsView mode="manager" appraisals={appraisals} onUpdate={updateAppraisal} teamIds={teamIds} user={user} />
+          )}
+
+          {view === 'appraisalcycle' && isHrStaff && (
+            <AppraisalsView mode="hr" appraisals={appraisals} onUpdate={updateAppraisal} user={user} />
+          )}
+
+          {view === 'training' && (
+            <TrainingTab mode="self" enrollments={enrollments} onRequest={requestEnrollment} matchedEmployee={matchedEmployee} user={user} />
+          )}
+
+          {view === 'trainingapprovals' && isHrStaff && (
+            <TrainingTab mode="hr" enrollments={enrollments} onDecide={decideEnrollment} onComplete={completeEnrollment} user={user} />
+          )}
+
+          {/* Strictly HR-only, like complaints — a warning file may concern a manager. */}
+          {view === 'warnings' && isHrStaff && (
+            <WarningsRegister warnings={warnings} employees={employees} onIssue={issueWarning} onAcknowledge={acknowledgeWarning} user={user} />
+          )}
+
+          {view === 'exitinterviews' && isHrStaff && <ExitInterviews exits={exits} onLog={logExit} />}
+
+          {view === 'headcount' && canViewSensitive && <HeadcountDashboard employees={employees} exits={exits} />}
+
+          {view === 'gradesbands' && canViewSensitive && <GradesBands employees={employees} />}
         </main>
       </div>
 

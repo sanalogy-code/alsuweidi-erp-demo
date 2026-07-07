@@ -510,6 +510,14 @@ export default function EmployeeDetailModal({ employee, employees = [], user, is
           </div>
 
           <div>
+            <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">Grade</h3>
+            <div className="text-sm text-gray-700">
+              {employee.grade ? `${employee.grade} (provisional)` : 'Not assigned'}
+              <span className="block text-[11px] text-gray-400 mt-0.5">Pending management decision — field is optional until grades are confirmed.</span>
+            </div>
+          </div>
+
+          <div>
             <h3 className="text-xs uppercase tracking-wide font-semibold text-gray-500 mb-3">Other Benefits</h3>
             <div className="text-sm text-gray-700">{employee.compensation.otherBenefits}</div>
           </div>
