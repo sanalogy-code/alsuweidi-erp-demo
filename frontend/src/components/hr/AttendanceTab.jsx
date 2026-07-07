@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Fingerprint, MapPin, Plane, UserX } from 'lucide-react'
+import { useState, Fragment } from 'react'
+import { Fingerprint, MapPin, Plane, UserX, ChevronRight, ChevronDown } from 'lucide-react'
 import { ATTENDANCE_TODAY } from '../../data/hrData'
 
 const STATUS_META = {
@@ -28,8 +28,95 @@ const periodStats = (emp, days) => {
   }
 }
 
+const fmtMin = (mins) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`
+
+// Punch-level drill-down (Batch 16). Deterministic per-day in/break/resume/out
+// rows reconstructed so their counts reconcile with the summary row (same number
+// of worked days, lates and missed punches). The summary is the default daily
+// lens; the punch grid is the exception view you open per person. Real punches
+// arrive with the Phase 2 device feed.
+const dayPunches = (emp, from, to, summary) => {
+  const rows = []
+  const start = new Date(from), end = new Date(to)
+  for (let d = new Date(start); d <= end && rows.length < 40; d.setDate(d.getDate() + 1)) {
+    const dow = d.getDay() // 0 Sun .. 6 Sat
+    if (dow === 5 || dow === 6) continue // UAE weekend (Fri/Sat) — illustrative
+    rows.push({ date: new Date(d) })
+  }
+  // Assign leave to the last N working days, lates + one missed punch to the first worked days.
+  const worked = rows.slice(0, Math.max(0, rows.length - summary.leaveDays))
+  const leave = rows.slice(worked.length)
+  return [
+    ...worked.map((r, i) => {
+      const h = (n) => (emp.id * 37 + i * 13 + n * 7) % 97
+      const late = i < summary.lates
+      const missed = summary.missedPunches && i === Math.floor(worked.length / 2)
+      const inMin = 8 * 60 + (late ? 12 + (h(1) % 40) : -8 + (h(1) % 8)) // ~07:52–08:52
+      const breakMin = 12 * 60 + 30 + (h(2) % 20)
+      const resumeMin = breakMin + 25 + (h(3) % 15)
+      const outMin = missed ? null : 17 * 60 + 30 + (h(4) % 45)
+      const total = outMin == null ? null : (outMin - inMin - (resumeMin - breakMin)) / 60
+      return {
+        date: r.date, kind: 'worked', late, missed,
+        in: fmtMin(inMin), break: fmtMin(breakMin), resume: fmtMin(resumeMin),
+        out: outMin == null ? null : fmtMin(outMin), total,
+      }
+    }),
+    ...leave.map((r) => ({ date: r.date, kind: 'leave' })),
+  ]
+}
+
+function PunchDetail({ emp, from, to, summary }) {
+  const rows = dayPunches(emp, from, to, summary)
+  const fmtDate = (d) => d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })
+  return (
+    <div className="bg-gray-50/70 px-4 py-3">
+      <div className="text-[11px] font-medium text-gray-500 uppercase mb-1.5">Daily punches — {emp.name}</div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs min-w-[560px] bg-white rounded-md border border-gray-200">
+          <thead className="text-[10px] text-gray-400 uppercase border-b border-gray-100">
+            <tr>
+              <th className="text-left px-3 py-1.5">Date</th>
+              <th className="text-center px-3 py-1.5">In</th>
+              <th className="text-center px-3 py-1.5">Break</th>
+              <th className="text-center px-3 py-1.5">Resume</th>
+              <th className="text-center px-3 py-1.5">Out</th>
+              <th className="text-right px-3 py-1.5">Total</th>
+              <th className="text-right px-3 py-1.5">Flags</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {rows.map((r, i) => r.kind === 'leave' ? (
+              <tr key={i} className="text-gray-400">
+                <td className="px-3 py-1.5">{fmtDate(r.date)}</td>
+                <td className="px-3 py-1.5 text-center italic" colSpan={5}>On leave</td>
+                <td className="px-3 py-1.5 text-right"><span className="px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 text-[10px]">Leave</span></td>
+              </tr>
+            ) : (
+              <tr key={i} className="text-gray-700">
+                <td className="px-3 py-1.5">{fmtDate(r.date)}</td>
+                <td className={`px-3 py-1.5 text-center ${r.late ? 'text-red-600 font-medium' : ''}`}>{r.in}</td>
+                <td className="px-3 py-1.5 text-center text-gray-400">{r.break}</td>
+                <td className="px-3 py-1.5 text-center text-gray-400">{r.resume}</td>
+                <td className={`px-3 py-1.5 text-center ${r.missed ? 'text-amber-600' : ''}`}>{r.out || '—'}</td>
+                <td className="px-3 py-1.5 text-right">{r.total == null ? '—' : `${r.total.toFixed(1)}h`}</td>
+                <td className="px-3 py-1.5 text-right space-x-1">
+                  {r.late && <span className="px-1.5 py-0.5 rounded bg-red-100 text-red-700 text-[10px]">Late</span>}
+                  {r.missed && <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px]">Missed out</span>}
+                  {!r.late && !r.missed && <span className="text-gray-300">—</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 function PeriodReport({ employees }) {
   const [dept, setDept] = useState('')
+  const [open, setOpen] = useState(null) // employee id whose punch grid is expanded
   const [range, setRange] = useState({ from: '2026-06-01', to: '2026-07-06' })
   const days = 26 // working days in the range, illustrative
   const depts = [...new Set(employees.map((e) => e.dept))].sort()
@@ -49,6 +136,7 @@ function PeriodReport({ employees }) {
         <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-gray-50 text-[11px] text-gray-500 uppercase">
             <tr>
+              <th className="text-left px-4 py-2 w-8"></th>
               <th className="text-left px-4 py-2">Employee</th>
               <th className="text-right px-4 py-2">Days worked</th>
               <th className="text-right px-4 py-2">Leave</th>
@@ -62,26 +150,37 @@ function PeriodReport({ employees }) {
           <tbody className="divide-y divide-gray-100">
             {rows.map((e) => {
               const s = periodStats(e, days)
+              const isOpen = open === e.id
               return (
-                <tr key={e.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-2.5">
-                    <div className="font-medium text-gray-800">{e.name}</div>
-                    <div className="text-xs text-gray-500">{e.dept} · {e.location}</div>
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-gray-700">{s.worked}/{days}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-500">{s.leaveDays || '—'}</td>
-                  <td className={`px-4 py-2.5 text-right font-medium ${s.onTimePct >= 95 ? 'text-green-600' : s.onTimePct >= 85 ? 'text-amber-600' : 'text-red-600'}`}>{s.onTimePct}%</td>
-                  <td className={`px-4 py-2.5 text-right ${s.lates > 2 ? 'text-red-600 font-medium' : 'text-gray-500'}`}>{s.lates || '—'}</td>
-                  <td className={`px-4 py-2.5 text-right ${s.missedPunches ? 'text-amber-600 font-medium' : 'text-gray-400'}`}>{s.missedPunches || '—'}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-700">{s.avgHours}h</td>
-                  <td className="px-4 py-2.5 text-right text-gray-500">{s.ot ? `${s.ot}h` : '—'}</td>
-                </tr>
+                <Fragment key={e.id}>
+                  <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => setOpen(isOpen ? null : e.id)}>
+                    <td className="px-4 py-2.5 text-gray-400">{isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</td>
+                    <td className="px-4 py-2.5">
+                      <div className="font-medium text-gray-800">{e.name}</div>
+                      <div className="text-xs text-gray-500">{e.dept} · {e.location}</div>
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-gray-700">{s.worked}/{days}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{s.leaveDays || '—'}</td>
+                    <td className={`px-4 py-2.5 text-right font-medium ${s.onTimePct >= 95 ? 'text-green-600' : s.onTimePct >= 85 ? 'text-amber-600' : 'text-red-600'}`}>{s.onTimePct}%</td>
+                    <td className={`px-4 py-2.5 text-right ${s.lates > 2 ? 'text-red-600 font-medium' : 'text-gray-500'}`}>{s.lates || '—'}</td>
+                    <td className={`px-4 py-2.5 text-right ${s.missedPunches ? 'text-amber-600 font-medium' : 'text-gray-400'}`}>{s.missedPunches || '—'}</td>
+                    <td className="px-4 py-2.5 text-right text-gray-700">{s.avgHours}h</td>
+                    <td className="px-4 py-2.5 text-right text-gray-500">{s.ot ? `${s.ot}h` : '—'}</td>
+                  </tr>
+                  {isOpen && (
+                    <tr>
+                      <td colSpan={9} className="p-0 border-t border-gray-100">
+                        <PunchDetail emp={e} from={range.from} to={range.to} summary={s} />
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               )
             })}
           </tbody>
         </table>
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 text-[11px] text-gray-500">
-          Figures are illustrative until the Phase 2 device feed. Clicking through to per-day punches (in/breaks/out) comes with it — the summary row is the daily view; the punch grid is the exception view, not the default.
+          Click any row to drill into that person's daily punches (in / break / resume / out). The summary is the default lens; the punch grid is the exception view. Figures are illustrative until the Phase 2 device feed replaces them with real reader data.
         </div>
       </div>
     </div>
