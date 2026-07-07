@@ -104,11 +104,11 @@ missing studyType for Study/Advisory, memoize myWorkFor/dashboard/revenue rollup
 
 ## Batch 16 — NEXT (Sana's feedback, 6 Jul 2026 late night — agreed, not yet built)
 
-- [ ] **Construction feedback register** (screenshot: per-project "Feedback Required" screen) —
-  structured design-feedback from construction: issue type (Discrepancy / Missing Information /
-  Incorrect Information / Others), what it's in (e.g. approved materials list), impact measure
-  (e.g. D-Quality), description, issue reason, proposed improvement, reported by, status.
-  Feeds the Lessons tab / design QA. Place: project workspace, project-level section.
+- [x] ~~Construction feedback register~~ — **Shipped Batch 16b (7 Jul):** "Site feedback"
+  section on supervision projects — issue type / issue-in / impact / description / reason /
+  proposed improvement / reporter, workflow open → with design section → completed, and
+  completed items push into the project's **Lessons** tab (verified end-to-end). Search +
+  type filter + sidebar badge. Phase 2: route to a named design owner + notify.
 - [x] ~~Full task management~~ — **Shipped Batch 16a (7 Jul):** subtasks (parent/child with own
   assignee/dates/status, nested on the board/sprint/backlog, parent % rolls up), dependencies
   (`dependsOn` → blocked chip, status locked until predecessors done, amber Gantt bars,

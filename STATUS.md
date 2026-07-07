@@ -8,7 +8,10 @@ Quick-read companion to [SPEC.md](SPEC.md) — same facts, faster to skim. SPEC.
 
 **Phase 1 Status:** Eight modules live — CRM, full HR suite (incl. timesheets with manager approvals and a submission lockout), **Projects with a full project-controls workspace (new)**, IT & Assets, Marketing, Financials (first-pass, demo-grade), and Admin Center. Every home tile is live. Ready to show management. Real backend work starts after Phase 1 validation. For the "how long did this take" numbers to share with management, see [STATS.md](STATS.md).
 
-**Latest (7 Jul 2026 — Batch 16a, full task management):**
+**Latest (7 Jul 2026 — Batch 16b, construction feedback register):**
+- **Site feedback** (supervision projects, workspace sidebar with open-count badge) — the current ERP's "Feedback Required" screen absorbed: issue type (Discrepancy / Missing / Incorrect / Other), what it's in, impact (Quality/Cost/Time/Safety/Coordination), description, issue reason, proposed improvement, reporter. Workflow: open → with design section → completed, and completed items **push straight into the project's Lessons tab** — the site-to-design learning loop the old screen wanted to be. Seeds on Harbour Point (the "manufacturers not named in spec" story from Sana's screenshot).
+
+**Earlier (7 Jul 2026 — Batch 16a, full task management):**
 - **Subtasks**: real parent/child tasks (own assignee, dates, status, priority) nested under the parent on the board, sprint columns, and backlog; parent % complete rolls up from children.
 - **Dependencies**: "Blocked by" on any task — blocked tasks get an amber chip + lock, can't move past To-do until predecessors are done, and render amber on the Gantt. Add/remove dependencies from the card.
 - **Milestones are editable**: add, adjust forecast (red when slipping past baseline), "Achieved today" — on both waterfall and sprint plans.
