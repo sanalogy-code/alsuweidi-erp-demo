@@ -29,22 +29,61 @@
           },
           true,
         );
-        // Safety net: if nothing mounted into #root shortly after load, the bundle
-        // silently failed — recover. If it DID mount, clear the guard so a genuine
-        // failure later in the session can still trigger one recovery.
+        // Safety net: React replaces everything inside #root on mount, removing the
+        // #boot-loader below. If the loader is STILL there several seconds after
+        // load, the bundle never executed — recover once. If it's gone, the app
+        // mounted, so clear the guard for future failures.
         window.addEventListener('load', function () {
           setTimeout(function () {
-            var root = document.getElementById('root');
-            if (!root) return;
-            if (root.childElementCount === 0) recover();
+            if (document.getElementById('boot-loader')) recover();
             else sessionStorage.removeItem(KEY);
-          }, 4000);
+          }, 8000);
         });
       })();
     </script>
+    <style>
+      /* Instant, JS-free loading state so a cold first open never shows a blank
+         white page while the JS bundle downloads and parses. React unmounts it. */
+      #boot-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        background: #f8fafc;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        color: #475569;
+      }
+      #boot-loader .bl-spin {
+        width: 38px;
+        height: 38px;
+        border: 3px solid #cbd5e1;
+        border-top-color: #0f172a;
+        border-radius: 50%;
+        animation: bl-rot 0.7s linear infinite;
+      }
+      #boot-loader .bl-name {
+        font-size: 13px;
+        letter-spacing: 0.18em;
+        font-weight: 600;
+        color: #0f172a;
+      }
+      @keyframes bl-rot {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot-loader">
+        <div class="bl-name">AL SUWEIDI ERP</div>
+        <div class="bl-spin"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
