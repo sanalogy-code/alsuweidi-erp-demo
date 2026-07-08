@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import ErrorBoundary from './components/ErrorBoundary'
 import LoginPage from './pages/LoginPage'
 import DevDashboard from './pages/DevDashboard'
 import HomePage from './pages/HomePage'
@@ -92,6 +93,7 @@ export default function App() {
   // page) clears the moment the week is submitted inside the HR module.
   const [timesheets, setTimesheets] = useState(TIMESHEETS)
   const navigate = useNavigate()
+  const location = useLocation()
 
   // Auto-assigned to all of Marketing. Deduped: one open task per type per subject.
   const addMarketingTask = (task) => {
@@ -172,6 +174,10 @@ export default function App() {
   )
 
   return (
+    // resetKey = pathname so a crash on one screen clears itself the moment you
+    // navigate elsewhere — no hard refresh needed. Wraps the notifications
+    // provider too, since that shell code runs on every route.
+    <ErrorBoundary resetKey={location.pathname}>
     <NotificationsProvider user={user} sources={notificationSources}>
       <TimesheetGate user={user} timesheets={timesheets} />
       <FeedbackButton user={user} onSubmit={addFeedback} />
@@ -192,5 +198,6 @@ export default function App() {
       <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} />} />
       </Routes>
     </NotificationsProvider>
+    </ErrorBoundary>
   )
 }
