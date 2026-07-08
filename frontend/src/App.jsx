@@ -163,6 +163,17 @@ export default function App() {
     navigate('/')
   }
 
+  // Notification sources — memoized so the provider's feed composition (which
+  // walks every project × phase) only reruns when one of these actually changes.
+  // MUST stay above the `if (!user)` early return below: a hook called after a
+  // conditional return runs only when logged in, so the hook count changes when
+  // `user` toggles — that's React error #300 and the real cause of the
+  // blank-page-until-refresh crash. Rules of Hooks: all hooks, every render.
+  const notificationSources = useMemo(
+    () => ({ projects, pmRecords, timesheets, marketingTasks, staffingRequests, systemFeedback }),
+    [projects, pmRecords, timesheets, marketingTasks, staffingRequests, systemFeedback],
+  )
+
   // The dev dashboard is reachable without logging in (it's the point — a
   // "behind the curtain" link off the fake login page; nothing sensitive on it).
   if (!user) {
@@ -173,13 +184,6 @@ export default function App() {
       </Routes>
     )
   }
-
-  // Notification sources — memoized so the provider's feed composition (which
-  // walks every project × phase) only reruns when one of these actually changes.
-  const notificationSources = useMemo(
-    () => ({ projects, pmRecords, timesheets, marketingTasks, staffingRequests, systemFeedback }),
-    [projects, pmRecords, timesheets, marketingTasks, staffingRequests, systemFeedback],
-  )
 
   return (
     // resetKey = pathname so a crash on one screen clears itself the moment you
