@@ -5,6 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AL SUWEIDI ERP</title>
     <!-- Force rebuild v2 -->
+    <script>
+      // Self-recovery for the "blank white page until I manually refresh" symptom.
+      // Cause: after a deploy, a browser/edge sometimes reuses a cached index.html
+      // that points at an asset hash the new build renamed, so the bundle 404s and
+      // React never mounts. This reloads exactly ONCE (guarded so it can't loop) to
+      // pull fresh HTML, turning a dead page into a self-healing one.
+      (function () {
+        var KEY = 'erp_reload_recovery';
+        function recover() {
+          if (sessionStorage.getItem(KEY)) return; // already retried this load — don't loop
+          sessionStorage.setItem(KEY, String(Date.now()));
+          location.reload();
+        }
+        // Vite emits this when a (pre)loaded module fails to fetch.
+        window.addEventListener('vite:preloadError', recover);
+        // Resource-load errors don't bubble — listen in the capture phase.
+        window.addEventListener(
+          'error',
+          function (e) {
+            var t = e && e.target;
+            if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK')) recover();
+          },
+          true,
+        );
+        // Safety net: if nothing mounted into #root shortly after load, the bundle
+        // silently failed — recover. If it DID mount, clear the guard so a genuine
+        // failure later in the session can still trigger one recovery.
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            var root = document.getElementById('root');
+            if (!root) return;
+            if (root.childElementCount === 0) recover();
+            else sessionStorage.removeItem(KEY);
+          }, 4000);
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

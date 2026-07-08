@@ -27,8 +27,16 @@ import { MARKETING_TASKS } from './data/marketingData'
 
 export default function App() {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('erp_demo_user')
-    return saved ? JSON.parse(saved) : null
+    // Guard the parse: a corrupt/legacy value here would throw during the very
+    // first render — before any ErrorBoundary mounts — leaving a blank white page
+    // that a refresh can't fix. Bad data just drops us to the login screen.
+    try {
+      const saved = localStorage.getItem('erp_demo_user')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      localStorage.removeItem('erp_demo_user')
+      return null
+    }
   })
   // Lifted here (not HR-page state) so an HR approval shows up on the Home dashboard tile in the same session
   const [holidays, setHolidays] = useState(PUBLIC_HOLIDAYS)
