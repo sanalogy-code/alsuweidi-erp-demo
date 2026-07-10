@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Inbox, Camera, Mail, PenLine, Check, ChevronRight } from 'lucide-react'
 import Modal from '../crm/Modal'
 import { MARKETING_TASK_TYPES, PHOTO_WORKFLOW_STEPS } from '../../data/marketingData'
-import { daysAgo } from '../../utils/date'
+import { daysAgo, todayISO } from '../../utils/date'
 
 const fmt = (d) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
@@ -88,7 +88,7 @@ export default function MarketingInbox({ tasks, projects = [], onCompleteTask, o
         ...project,
         photoWorkflow: { ...project.photoWorkflow, step: PHOTO_WORKFLOW_STEPS.length },
         photosApproved: true,
-        photosApprovedDate: new Date().toISOString().slice(0, 10),
+        photosApprovedDate: todayISO(),
       })
       onCompleteTask(task.id, 'Photos reviewed, approved, and uploaded to the project record.')
       return

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, MessageSquareWarning, Landmark } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SidebarNav from '../components/SidebarNav'
 import AdminOverview from '../components/admin/AdminOverview'
 import UsersView from '../components/admin/UsersView'
 import RolesPermissionsView from '../components/admin/RolesPermissionsView'
@@ -9,7 +10,7 @@ import AuditLogView from '../components/admin/AuditLogView'
 import GovernanceView from '../components/admin/GovernanceView'
 import { FeedbackQueue } from '../components/SystemFeedback'
 import {
-  ADMIN_VIEW_ROLES, USER_ACCOUNTS, DEFAULT_PERMISSIONS, AUDIT_LOG,
+  ADMIN_VIEW_ROLES, USER_ACCOUNTS, DEFAULT_PERMISSIONS, AUDIT_LOG as AUDIT_SEED,
 } from '../data/adminData'
 
 // Admin Center — user accounts, role → module permissions, and an activity/usage
@@ -17,7 +18,7 @@ import {
 // login page stays password-less). The permissions matrix mirrors the app's
 // actual client-side gates and doubles as the Phase 2 RBAC spec.
 
-export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback }) {
+export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback, auditLog = AUDIT_SEED }) {
   const canView = ADMIN_VIEW_ROLES.includes(user?.role)
   const location = useLocation()
   const [view, setView] = useState(location.state?.view || 'overview')
@@ -39,26 +40,6 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback 
     { key: 'feedback', label: 'System feedback', icon: MessageSquareWarning, badge: feedback.filter((f) => f.status === 'new').length },
     { key: 'log', label: 'Activity log', icon: ScrollText },
   ]
-
-  const navButton = (item) => {
-    const Icon = item.icon
-    const active = view === item.key
-    return (
-      <button
-        key={item.key}
-        onClick={() => setView(item.key)}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
-      >
-        <Icon size={15} className="shrink-0" />
-        <span className="flex-1 truncate">{item.label}</span>
-        {item.badge > 0 && (
-          <span className="bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center shrink-0">
-            {item.badge}
-          </span>
-        )}
-      </button>
-    )
-  }
 
   if (!canView) {
     return (
@@ -83,18 +64,18 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback 
       <Navbar user={user} onLogout={onLogout} title="Admin Center" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <aside className="w-full sm:w-44 shrink-0 sm:sticky sm:top-6">
-          <div className="flex sm:flex-col flex-wrap gap-1">
-            {NAV.map(navButton)}
-          </div>
-          <div className="hidden sm:block mt-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] leading-snug text-amber-700">
-            Demo data — no real auth behind this yet. Real user management and RBAC are Phase 2.
-          </div>
-        </aside>
+        <SidebarNav
+          groups={[{ items: NAV }]} active={view} onSelect={setView}
+          footer={(
+            <div className="hidden sm:block mt-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] leading-snug text-amber-700">
+              Demo data — no real auth behind this yet. Real user management and RBAC are Phase 2.
+            </div>
+          )}
+        />
 
         <main className="flex-1 min-w-0 w-full">
           {view === 'overview' && (
-            <AdminOverview users={users} log={AUDIT_LOG} onJump={setView} />
+            <AdminOverview users={users} log={auditLog} onJump={setView} />
           )}
           {view === 'users' && (
             <UsersView users={users} onChange={setUsers} />
@@ -105,7 +86,7 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback 
           {view === 'governance' && <GovernanceView />}
           {view === 'feedback' && <FeedbackQueue items={feedback} onUpdate={onUpdateFeedback} />}
           {view === 'log' && (
-            <AuditLogView log={AUDIT_LOG} users={users} />
+            <AuditLogView log={auditLog} users={users} />
           )}
         </main>
       </div>

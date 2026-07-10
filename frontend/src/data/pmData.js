@@ -13,7 +13,7 @@
 //   - design & supervision are separate phase workspaces inside one project
 //   - Study/Advisory phases cover TIS / surveying / feasibility-type work
 
-import { parseLocalDate, todayLocal } from '../utils/date'
+import { parseLocalDate, todayLocal, daysUntil } from '../utils/date'
 import { scopeOf } from './projectsData'
 
 // --- FIDIC editions -------------------------------------------------------------
@@ -233,11 +233,8 @@ export const addDaysISO = (iso, days) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-export const daysUntil = (iso) => {
-  const d = parseLocalDate(iso)
-  if (!d) return null
-  return Math.round((d - todayLocal()) / (1000 * 60 * 60 * 24))
-}
+// Re-exported so existing `from '../data/pmData'` imports keep working.
+export { daysUntil }
 
 export const claimDeadlines = (claim, fidicKey) => {
   const ed = fidicOf(fidicKey)

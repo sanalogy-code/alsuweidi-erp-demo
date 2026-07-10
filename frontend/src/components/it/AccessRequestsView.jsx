@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Plus, ShieldCheck } from 'lucide-react'
 import { PERMISSION_MODULES, ACCESS_LEVELS, DEFAULT_PERMISSIONS } from '../../data/adminData'
 import { ROLES } from '../../data/dashboardData'
+import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 // Access-request workflow — tied to the Admin Center's role × module matrix.
 // Requesters ask for a level on a module; IT/admin approve or decline with the
@@ -26,8 +28,8 @@ export default function AccessRequestsView({ requests, onChange, user }) {
   const add = () => {
     if (!form.requestedBy.trim() || !form.justification.trim()) return
     onChange([{
-      id: Math.max(0, ...requests.map((r) => r.id)) + 1,
-      ...form, requestedDate: new Date().toISOString().slice(0, 10),
+      id: nextId(requests),
+      ...form, requestedDate: todayISO(),
       status: 'pending', decidedBy: null, decidedDate: null, decisionNote: null,
     }, ...requests])
     setForm({ requestedBy: user?.name || '', role: ROLES[0].value, module: PERMISSION_MODULES[0].key, level: 'view', justification: '' })
@@ -38,7 +40,7 @@ export default function AccessRequestsView({ requests, onChange, user }) {
     const note = window.prompt(status === 'approved' ? 'Approval note (optional)' : 'Reason for declining?')
     if (status === 'declined' && note === null) return
     onChange(requests.map((x) => (x.id === r.id ? {
-      ...x, status, decidedBy: user?.name || 'IT', decidedDate: new Date().toISOString().slice(0, 10), decisionNote: note || null,
+      ...x, status, decidedBy: user?.name || 'IT', decidedDate: todayISO(), decisionNote: note || null,
     } : x)))
   }
 

@@ -11,7 +11,7 @@ import { INVOICES, fmtAED } from '../../../data/financeData'
 // % complete, late tasks, next milestone, SPI, hours used vs manhour budget.
 // The answer to "how are my projects doing?" in one screen.
 
-export default function PmDashboard({ projects, pmRecords, timesheets = [], onOpenWorkspace, canViewSensitive = false }) {
+export default function PmDashboard({ projects, pmRecords, timesheets = [], onOpenWorkspace, canViewSensitive = false, invoices = INVOICES }) {
   const [search, setSearch] = useState('')
   const rows = projects
     .filter((p) => p.generalStatus === 'In Progress' && pmRecords[p.id])
@@ -26,7 +26,7 @@ export default function PmDashboard({ projects, pmRecords, timesheets = [], onOp
         p, pm,
         cost: hours * SALARY_COST_PER_HOUR,
         fee: pm.phases.reduce((s, ph) => s + ph.fees.stages.reduce((t, st) => t + st.fee, 0), 0),
-        invoiced: INVOICES.filter((i) => i.projectId === p.id && i.status !== 'draft').reduce((s, i) => s + i.amount, 0),
+        invoiced: invoices.filter((i) => i.projectId === p.id && i.status !== 'draft').reduce((s, i) => s + i.amount, 0),
         health: projectHealth(pm),
         progress: projectProgress(pm),
         late: lateTasksOf(pm).length,

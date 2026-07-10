@@ -1,4 +1,5 @@
 import { CheckCircle2, CircleDashed, CircleDot } from 'lucide-react'
+import { todayISO } from '../../../utils/date'
 
 // Stage-gated design reviews — the 30-60-90-final gate pattern with a
 // cross-discipline gate review at each milestone.
@@ -14,7 +15,7 @@ export default function DesignStagesView({ pm, onUpdate }) {
     onUpdate({
       ...pm,
       designStages: pm.designStages.map((s, i, arr) => {
-        if (s.key === key) return { ...s, status: 'passed', gateDate: s.gateDate || new Date().toISOString().slice(0, 10) }
+        if (s.key === key) return { ...s, status: 'passed', gateDate: s.gateDate || todayISO() }
         // Opening the next gate keeps the sequence honest.
         const idx = arr.findIndex((x) => x.key === key)
         if (i === idx + 1 && s.status === 'not_started') return { ...s, status: 'in_progress' }

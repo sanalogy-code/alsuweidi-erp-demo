@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { SUPPLY_STATUSES } from '../../data/officeData'
+import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 // Office supplies request register — requested → ordered → delivered, or
 // declined with a note. Admin staff fulfil; everyone-can-request lands with
@@ -14,9 +16,9 @@ export default function SuppliesView({ requests, onChange, user }) {
   const add = () => {
     if (!form.item.trim() || !form.requestedBy.trim()) return
     onChange([{
-      id: Math.max(0, ...requests.map((r) => r.id)) + 1,
+      id: nextId(requests),
       ...form, qty: Number(form.qty) || 1, neededBy: form.neededBy || null, note: form.note.trim() || null,
-      requestedDate: new Date().toISOString().slice(0, 10), status: 'requested',
+      requestedDate: todayISO(), status: 'requested',
     }, ...requests])
     setForm({ item: '', qty: 1, requestedBy: user?.name || '', neededBy: '', note: '' })
     setShowAdd(false)

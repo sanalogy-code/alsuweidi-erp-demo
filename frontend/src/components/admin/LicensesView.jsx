@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, ShieldCheck, AlertTriangle } from 'lucide-react'
 import { daysUntil } from '../../data/pmData'
+import { nextId } from '../../utils/id'
 
 // Office registrations & licenses (Batch 15) — the current ERP's licensing
 // tracker, redesigned: an expiry radar (matching HR's Renewals pattern) with
@@ -37,7 +38,7 @@ export default function LicensesView({ items, onChange }) {
 
   const add = () => {
     if (!form.title.trim() || !form.entity.trim()) return
-    setItems([{ id: Math.max(0, ...items.map((i) => i.id)) + 1, ...form, expiryDate: form.expiryDate || null, active: true }, ...items])
+    setItems([{ id: nextId(items), ...form, expiryDate: form.expiryDate || null, active: true }, ...items])
     setForm({ title: '', entity: '', expiryDate: '', owner: '', url: '', remarks: '' }); setShowAdd(false)
   }
 

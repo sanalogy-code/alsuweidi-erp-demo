@@ -10,6 +10,7 @@ import { fmtAED } from '../../../data/financeData'
 // on awareness evidence).
 
 import { todayISO } from '../../../utils/date'
+import { nextId } from '../../../utils/id'
 
 function Deadline({ label, iso, done }) {
   if (!iso) return null
@@ -43,7 +44,7 @@ export default function ClaimsView({ pm, onUpdate }) {
   const addRecord = (c, type) => {
     const note = (recordDraft[c.id] || '').trim()
     if (!note) return
-    update(c, { records: [...c.records, { id: Math.max(0, ...c.records.map((r) => r.id)) + 1, date: todayISO(), type, note }] })
+    update(c, { records: [...c.records, { id: nextId(c.records), date: todayISO(), type, note }] })
     setRecordDraft({ ...recordDraft, [c.id]: '' })
   }
 
@@ -52,7 +53,7 @@ export default function ClaimsView({ pm, onUpdate }) {
     onUpdate({
       ...pm,
       claims: [...pm.claims, {
-        id: Math.max(0, ...pm.claims.map((c) => c.id)) + 1,
+        id: nextId(pm.claims),
         ref: `CLM-${String(pm.claims.length + 1).padStart(2, '0')}`,
         ...form, eventDate: form.eventDate || form.awarenessDate,
         noticeDate: null, status: 'event_logged', timeImpactDays: 0, costImpact: 0, records: [],

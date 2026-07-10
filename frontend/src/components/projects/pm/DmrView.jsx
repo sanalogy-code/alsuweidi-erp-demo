@@ -93,7 +93,7 @@ function NoteBlock({ n, title, children }) {
   )
 }
 
-export default function DmrView({ projects, pmRecords, onOpenWorkspace }) {
+export default function DmrView({ projects, pmRecords, onOpenWorkspace, invoices = INVOICES, expenses = EXPENSES }) {
   // "PM" = anyone leading a design/study phase (DPM / Study Lead).
   const leads = useMemo(() => {
     const set = new Map()
@@ -124,10 +124,10 @@ export default function DmrView({ projects, pmRecords, onOpenWorkspace }) {
   }
 
   const { project, pm, phase } = sel
-  const subCost = EXPENSES.filter((e) => e.projectId === project.id && e.category === 'Subconsultant Fees' && e.status !== 'rejected').reduce((s, e) => s + e.amount, 0)
+  const subCost = expenses.filter((e) => e.projectId === project.id && e.category === 'Subconsultant Fees' && e.status !== 'rejected').reduce((s, e) => s + e.amount, 0)
   const prof = dmrProfitability(phase, subCost)
   const fee = phase.fees.stages.reduce((s, st) => s + st.fee, 0)
-  const projInvoices = INVOICES.filter((i) => i.projectId === project.id && i.status !== 'draft')
+  const projInvoices = invoices.filter((i) => i.projectId === project.id && i.status !== 'draft')
   const invoiced = projInvoices.reduce((s, i) => s + i.amount, 0)
   const received = projInvoices.reduce((s, i) => s + Math.min(i.amountPaid ?? 0, i.amount + (i.vatAmount ?? 0)), 0)
   const latest = phase.weeklyUpdates[0]

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Mails, BadgeCheck, Lock, CalendarClock, Package, Truck, Car, Hash } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SidebarNav from '../components/SidebarNav'
 import CorrespondenceView from '../components/office/CorrespondenceView'
 import RoomBookingsView from '../components/office/RoomBookingsView'
 import SuppliesView from '../components/office/SuppliesView'
@@ -72,27 +73,14 @@ export default function Office({ user, onLogout }) {
       <Navbar user={user} onLogout={onLogout} title="Office Administration" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <aside className="w-full sm:w-48 shrink-0 sm:sticky sm:top-6">
-          <div className="flex sm:flex-col flex-wrap gap-1">
-            {NAV.map((item) => {
-              const Icon = item.icon
-              const active = view === item.key
-              return (
-                <button key={item.key} onClick={() => setView(item.key)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}>
-                  <Icon size={15} className="shrink-0" />
-                  <span className="flex-1 truncate">{item.label}</span>
-                  {item.badge > 0 && (
-                    <span className="bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center shrink-0">{item.badge}</span>
-                  )}
-                </button>
-              )
-            })}
-          </div>
-          <div className="hidden sm:block mt-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] leading-snug text-amber-700">
-            Demo data. Room bookings + supply requests open to all employees with the notifications/home phase (Phase 2).
-          </div>
-        </aside>
+        <SidebarNav
+          groups={[{ items: NAV }]} active={view} onSelect={setView} width="sm:w-48"
+          footer={(
+            <div className="hidden sm:block mt-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] leading-snug text-amber-700">
+              Demo data. Room bookings + supply requests open to all employees with the notifications/home phase (Phase 2).
+            </div>
+          )}
+        />
 
         <main className="flex-1 min-w-0 w-full">
           {view === 'correspondence' && <CorrespondenceView letters={letters} onChange={setLetters} />}

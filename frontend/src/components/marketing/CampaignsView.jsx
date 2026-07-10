@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Megaphone, Plus, Link2 } from 'lucide-react'
 import { CAMPAIGN_STATUSES, CONTENT_STATUSES } from '../../data/marketingData'
+import { nextId } from '../../utils/id'
 
 // Campaigns — LIGHTWEIGHT FIRST SHAPE (backlog said "needs scoping").
 // A campaign is a name + goal + date range + status; content items attach to it
@@ -11,7 +12,7 @@ export default function CampaignsView({ campaigns, onUpdate, items, onUpdateItem
 
   const add = () => {
     if (!form.name.trim()) return
-    onUpdate([...campaigns, { ...form, name: form.name.trim(), goal: form.goal.trim(), owner: 'Marketing', id: Math.max(0, ...campaigns.map((c) => c.id)) + 1 }])
+    onUpdate([...campaigns, { ...form, name: form.name.trim(), goal: form.goal.trim(), owner: 'Marketing', id: nextId(campaigns) }])
     setForm({ name: '', goal: '', startDate: '', endDate: '', status: 'planning' })
     setShowAdd(false)
   }

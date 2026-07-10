@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus, Check, X, PackageCheck } from 'lucide-react'
 import { IT_REQUEST_TYPES, IT_REQUEST_STATUS } from '../../data/itData'
-import { daysAgo } from '../../utils/date'
+import { daysAgo, todayISO } from '../../utils/date'
 
 const inputCls = 'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand'
 const labelCls = 'block text-xs font-medium text-gray-600 mb-1'
@@ -42,7 +42,7 @@ export default function ItRequestsView({ requests, user, mode = 'mine', onSubmit
       type: form.type,
       item: form.item.trim(),
       justification: form.justification.trim() || null,
-      requestedDate: new Date().toISOString().slice(0, 10),
+      requestedDate: todayISO(),
       status: 'pending',
       resolution: null,
       resolvedDate: null,
@@ -52,7 +52,7 @@ export default function ItRequestsView({ requests, user, mode = 'mine', onSubmit
   }
 
   const resolve = (req) => {
-    onAction({ ...req, status: resolutionStatus, resolution: resolutionText.trim() || null, resolvedDate: new Date().toISOString().slice(0, 10) })
+    onAction({ ...req, status: resolutionStatus, resolution: resolutionText.trim() || null, resolvedDate: todayISO() })
     setResolutionFor(null)
     setResolutionText('')
   }

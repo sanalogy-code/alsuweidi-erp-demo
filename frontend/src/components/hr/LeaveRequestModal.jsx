@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Modal from '../crm/Modal'
 import { LEAVE_TYPES } from '../../data/hrData'
+import { todayISO } from '../../utils/date'
 
 export default function LeaveRequestModal({ employee, onClose, onSubmit }) {
   const [type, setType] = useState('Vacation')
@@ -36,7 +37,7 @@ export default function LeaveRequestModal({ employee, onClose, onSubmit }) {
       days,
       reason,
       status: 'pending',
-      requestedDate: new Date().toISOString().slice(0, 10),
+      requestedDate: todayISO(),
     })
     onClose()
   }

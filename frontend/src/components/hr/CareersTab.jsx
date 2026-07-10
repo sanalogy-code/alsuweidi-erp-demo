@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Briefcase, UserPlus, Send, Gift } from 'lucide-react'
 import Modal from '../crm/Modal'
 import { REFERRAL_BONUS_AED } from '../../data/hrData'
+import { todayISO } from '../../utils/date'
 
 const CAND_STATUS = {
   new: { label: 'New', color: 'bg-yellow-100 text-yellow-700' },
@@ -28,7 +29,7 @@ function CandidateModal({ kind, position, user, onClose, onSubmit }) {
       referredBy: kind === 'referral' ? user?.username : null,
       note: note.trim(),
       status: 'new',
-      submittedDate: new Date().toISOString().slice(0, 10),
+      submittedDate: todayISO(),
     })
     onClose()
   }

@@ -15,6 +15,7 @@ import { DESIGNATIONS } from '../../data/hrData'
 // project; the win rate feeds Marketing analytics in Phase 2.
 
 import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 const scoreTone = (n) => (n == null ? 'text-gray-300' : n >= 70 ? 'text-green-600' : n >= 50 ? 'text-amber-600' : 'text-red-600')
 
@@ -37,7 +38,7 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
   const [compForm, setCompForm] = useState({ name: '', sectors: '', notes: '' })
   const addCompetitor = () => {
     if (!compForm.name.trim()) return
-    setCompetitors([...competitors, { id: Math.max(0, ...competitors.map((c) => c.id)) + 1, name: compForm.name.trim(), sectors: compForm.sectors.trim(), notes: compForm.notes.trim() }])
+    setCompetitors([...competitors, { id: nextId(competitors), name: compForm.name.trim(), sectors: compForm.sectors.trim(), notes: compForm.notes.trim() }])
     setCompForm({ name: '', sectors: '', notes: '' })
   }
 
@@ -81,7 +82,7 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
     if (!form.name.trim() || !form.employer.trim()) return
     const company = companies.find((c) => c.name.toLowerCase() === form.employer.trim().toLowerCase())
     onUpdate([{
-      id: Math.max(0, ...rfps.map((r) => r.id)) + 1,
+      id: nextId(rfps),
       refNo: `RFP-2026-${String(Math.max(0, ...rfps.map((r) => Number(r.refNo.split('-')[2]) || 0)) + 1).padStart(3, '0')}`,
       ...form, shortName: form.shortName.trim() || form.name.slice(0, 40),
       goScore: Number(form.goScore) || null, winScore: Number(form.winScore) || null,
@@ -242,6 +243,7 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
 
       {rows.map((r) => {
         const meta = rfpStatusMeta(r.status)
+        const rec = bidRecommendation(r.goScore, r.winScore)
         const open = expanded === r.id
         const nextDue = r.status === 'invited' || r.status === 'preparing' ? (r.techSubmittal || r.commSubmittal) : null
         return (
@@ -301,10 +303,10 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
                   <div className="bg-blue-50/50 border border-blue-200 rounded-md px-3 py-2 space-y-1.5">
                     <div className="text-[11px] font-semibold text-gray-600">
                       Bid / no-bid gate — recommendation from scores:{' '}
-                      {bidRecommendation(r.goScore, r.winScore) === 'bid' && <span className="text-green-700">BID (go ≥ 70, win ≥ 50)</span>}
-                      {bidRecommendation(r.goScore, r.winScore) === 'no-bid' && <span className="text-red-600">NO-BID (go &lt; 50 or win &lt; 30)</span>}
-                      {bidRecommendation(r.goScore, r.winScore) === 'borderline' && <span className="text-amber-600">BORDERLINE — management call</span>}
-                      {bidRecommendation(r.goScore, r.winScore) === null && <span className="text-gray-400">no scores yet</span>}
+                      {rec === 'bid' && <span className="text-green-700">BID (go ≥ 70, win ≥ 50)</span>}
+                      {rec === 'no-bid' && <span className="text-red-600">NO-BID (go &lt; 50 or win &lt; 30)</span>}
+                      {rec === 'borderline' && <span className="text-amber-600">BORDERLINE — management call</span>}
+                      {rec === null && <span className="text-gray-400">no scores yet</span>}
                     </div>
                     {decisionFor === r.id ? (
                       <div className="flex flex-wrap items-center gap-2">
@@ -329,7 +331,7 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
                         <button onClick={() => setDecisionFor(null)} className="px-2.5 py-1 rounded-md border text-gray-500">Cancel</button>
                       </div>
                     ) : (
-                      <button onClick={() => { setDecisionFor(r.id); setDecisionForm({ decision: bidRecommendation(r.goScore, r.winScore) === 'no-bid' ? 'no-bid' : 'bid', by: currentUserName || '', rationale: '' }) }}
+                      <button onClick={() => { setDecisionFor(r.id); setDecisionForm({ decision: rec === 'no-bid' ? 'no-bid' : 'bid', by: currentUserName || '', rationale: '' }) }}
                         className="px-2.5 py-1 rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50">
                         Record bid decision
                       </button>
@@ -366,8 +368,8 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
                     <div className="px-3 py-1.5 border-b border-gray-100 text-[11px] font-semibold text-gray-600 flex items-center justify-between gap-2 flex-wrap">
                       <span className="flex items-center gap-1.5"><Clock size={12} /> Bid cost</span>
                       <span className="text-gray-500 font-normal">
-                        {(r.prepHours || []).reduce((s, h) => s + h.hours, 0)}h × {BID_HOURLY_RATE} AED + {(r.expenses || []).reduce((s, x) => s + x.amount, 0).toLocaleString()} AED expenses ={' '}
-                        <span className="font-semibold text-gray-700">{((r.prepHours || []).reduce((s, h) => s + h.hours, 0) * BID_HOURLY_RATE + (r.expenses || []).reduce((s, x) => s + x.amount, 0)).toLocaleString()} AED</span>
+                        {(r.prepHours || []).reduce((s, h) => s + h.hours, 0)}h × {BID_HOURLY_RATE} AED + {fmtAED((r.expenses || []).reduce((s, x) => s + x.amount, 0))} expenses ={' '}
+                        <span className="font-semibold text-gray-700">{fmtAED((r.prepHours || []).reduce((s, h) => s + h.hours, 0) * BID_HOURLY_RATE + (r.expenses || []).reduce((s, x) => s + x.amount, 0))}</span>
                       </span>
                     </div>
                     {(r.prepHours || []).map((h) => (
@@ -377,7 +379,7 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
                     ))}
                     {(r.expenses || []).map((x) => (
                       <div key={x.id} className="px-3 py-1 flex items-center gap-3 text-gray-500 border-b border-gray-50">
-                        <span className="flex-1 text-gray-700">{x.description}</span><span>{x.amount.toLocaleString()} AED</span>
+                        <span className="flex-1 text-gray-700">{x.description}</span><span>{fmtAED(x.amount)}</span>
                       </div>
                     ))}
                     <div className="px-3 py-2 flex flex-wrap items-center gap-1.5">
@@ -386,7 +388,7 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
                       <input type="date" value={hourForm.date} onChange={(e) => setHourForm({ ...hourForm, date: e.target.value })} className="border rounded px-1.5 py-1" />
                       <button onClick={() => {
                         if (!hourForm.person.trim() || !Number(hourForm.hours)) return
-                        patch(r.id, { prepHours: [...(r.prepHours || []), { id: Math.max(0, ...(r.prepHours || []).map((h) => h.id)) + 1, person: hourForm.person.trim(), hours: Number(hourForm.hours), date: hourForm.date || todayISO() }] })
+                        patch(r.id, { prepHours: [...(r.prepHours || []), { id: nextId((r.prepHours || [])), person: hourForm.person.trim(), hours: Number(hourForm.hours), date: hourForm.date || todayISO() }] })
                         setHourForm({ person: '', hours: '', date: '' })
                       }} className="px-2 py-1 rounded border border-gray-300 text-gray-600 hover:border-brand hover:text-brand">+ hours</button>
                       <span className="w-px h-4 bg-gray-200 mx-1" />
@@ -394,7 +396,7 @@ export default function RfpView({ rfps, onUpdate, companies, onRequestStaffing, 
                       <input type="number" min="0" value={expenseForm.amount} onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })} placeholder="AED" className="w-20 border rounded px-1.5 py-1 text-right" />
                       <button onClick={() => {
                         if (!expenseForm.description.trim() || !Number(expenseForm.amount)) return
-                        patch(r.id, { expenses: [...(r.expenses || []), { id: Math.max(0, ...(r.expenses || []).map((x) => x.id)) + 1, description: expenseForm.description.trim(), amount: Number(expenseForm.amount) }] })
+                        patch(r.id, { expenses: [...(r.expenses || []), { id: nextId((r.expenses || [])), description: expenseForm.description.trim(), amount: Number(expenseForm.amount) }] })
                         setExpenseForm({ description: '', amount: '' })
                       }} className="px-2 py-1 rounded border border-gray-300 text-gray-600 hover:border-brand hover:text-brand">+ expense</button>
                     </div>

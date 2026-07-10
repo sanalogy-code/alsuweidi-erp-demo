@@ -8,6 +8,7 @@ import {
   Star, LogOut, BarChart3, Layers,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SidebarNav from '../components/SidebarNav'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
 import EmployeeList from '../components/hr/EmployeeList'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
@@ -53,7 +54,8 @@ import {
 } from '../data/hrData'
 import { weekStartOf, addDays, toLocalISO } from '../data/timesheetData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
-import { parseLocalDate, todayLocal } from '../utils/date'
+import { parseLocalDate, todayLocal, todayISO } from '../utils/date'
+import { nextId } from '../utils/id'
 
 export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, projects = [], onEmployeeAdded, timesheets = [], setTimesheets, staffingRequests = [], onUpdateStaffingRequests }) {
   const location = useLocation()
@@ -133,35 +135,35 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
 
   const requestEnrollment = (courseId, justification) => {
     setEnrollments([...enrollments, {
-      id: Math.max(...enrollments.map((e) => e.id), 0) + 1,
+      id: nextId(enrollments),
       courseId,
       employeeId: matchedEmployee?.id || null,
       employeeName: matchedEmployee?.name || user?.username || 'Unknown',
       justification,
       status: 'requested',
-      requestedDate: new Date().toISOString().slice(0, 10),
+      requestedDate: todayISO(),
       decidedDate: null,
       completedDate: null,
     }])
   }
   const decideEnrollment = (id, approve) => {
-    setEnrollments(enrollments.map((e) => (e.id === id ? { ...e, status: approve ? 'approved' : 'declined', decidedDate: new Date().toISOString().slice(0, 10) } : e)))
+    setEnrollments(enrollments.map((e) => (e.id === id ? { ...e, status: approve ? 'approved' : 'declined', decidedDate: todayISO() } : e)))
   }
   // Completion auto-adds an accomplishment to the employee record (mapped to
   // the existing ACCOMPLISHMENT_TYPES via the course's accomplishmentType).
   const completeEnrollment = (id) => {
     const en = enrollments.find((e) => e.id === id)
     const course = TRAINING_COURSES.find((c) => c.id === en?.courseId)
-    const today = new Date().toISOString().slice(0, 10)
+    const today = todayISO()
     setEnrollments(enrollments.map((e) => (e.id === id ? { ...e, status: 'completed', completedDate: today } : e)))
     if (en?.employeeId && course && employees.some((e) => e.id === en.employeeId)) {
       handleAddAccomplishment(en.employeeId, { type: course.accomplishmentType, issuer: course.provider, date: today, expiryDate: null })
     }
   }
 
-  const issueWarning = (w) => setWarnings([...warnings, { ...w, id: Math.max(...warnings.map((x) => x.id), 0) + 1 }])
-  const acknowledgeWarning = (id) => setWarnings(warnings.map((w) => (w.id === id ? { ...w, acknowledged: true, acknowledgedDate: new Date().toISOString().slice(0, 10) } : w)))
-  const logExit = (rec) => setExits([...exits, { ...rec, id: Math.max(...exits.map((x) => x.id), 0) + 1 }])
+  const issueWarning = (w) => setWarnings([...warnings, { ...w, id: nextId(warnings) }])
+  const acknowledgeWarning = (id) => setWarnings(warnings.map((w) => (w.id === id ? { ...w, acknowledged: true, acknowledgedDate: todayISO() } : w)))
+  const logExit = (rec) => setExits([...exits, { ...rec, id: nextId(exits) }])
 
   const nextHoliday = holidays
     .filter((h) => h.status === 'approved' && parseLocalDate(h.endDate || h.date) >= todayLocal())
@@ -171,7 +173,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
   // count last week's non-submitters for the payroll hold flag.
   const saveTimesheet = (ts) => {
     if (ts.id) setTimesheets((prev) => prev.map((t) => (t.id === ts.id ? ts : t)))
-    else setTimesheets((prev) => [...prev, { ...ts, id: Math.max(...prev.map((t) => t.id), 0) + 1 }])
+    else setTimesheets((prev) => [...prev, { ...ts, id: nextId(prev) }])
   }
   const actionTimesheet = (ts) => {
     setTimesheets((prev) => prev.map((t) => (t.id === ts.id ? { ...ts, approvedBy: ts.status === 'approved' ? user?.username : null } : t)))
@@ -258,7 +260,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
         referrer: candidate.referredBy,
         candidate: candidate.candidateName,
         amount: REFERRAL_BONUS_AED,
-        awardedDate: new Date().toISOString().slice(0, 10),
+        awardedDate: todayISO(),
         status: 'pending_payroll',
       }])
     }
@@ -266,7 +268,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
 
   // Both paths that create an employee record notify Marketing (headshot + welcome email tasks).
   const addEmployeeRecord = (record) => {
-    const created = { ...record, id: Math.max(...employees.map((e) => e.id), 0) + 1 }
+    const created = { ...record, id: nextId(employees) }
     setEmployees([...employees, created])
     onEmployeeAdded?.(created)
     return created
@@ -279,49 +281,35 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
 
   // Two-step leave chain: line manager first, then HR final approval.
   const handleLeaveAction = (id, status) => {
-    setLeaveRequests(leaveRequests.map((r) => (r.id === id ? { ...r, status, approvedBy: status === 'approved' ? user?.username : null, approvedDate: new Date().toISOString().slice(0, 10) } : r)))
+    setLeaveRequests(leaveRequests.map((r) => (r.id === id
+      ? {
+          ...r, status, decidedDate: todayISO(),
+          approvedBy: status === 'approved' ? user?.username : null,
+          approvedDate: status === 'approved' ? todayISO() : null,
+        }
+      : r)))
   }
   // Manager step: approve forwards the request to HR; deny ends it.
   const handleManagerLeaveAction = (id, approve) => {
     setLeaveRequests(leaveRequests.map((r) => (r.id === id
       ? approve
-        ? { ...r, status: 'pending_hr', managerApprovedBy: user?.username, managerApprovedDate: new Date().toISOString().slice(0, 10) }
+        ? { ...r, status: 'pending_hr', managerApprovedBy: user?.username, managerApprovedDate: todayISO() }
         : { ...r, status: 'denied' }
       : r)))
   }
 
   const handleFulfilCard = (id) => {
-    setBusinessCardRequests(businessCardRequests.map((r) => (r.id === id ? { ...r, status: 'delivered', resolvedDate: new Date().toISOString().slice(0, 10) } : r)))
+    setBusinessCardRequests(businessCardRequests.map((r) => (r.id === id ? { ...r, status: 'delivered', resolvedDate: todayISO() } : r)))
   }
 
   const handleRejectCert = (id) => {
-    setCertificateRequests(certificateRequests.map((r) => (r.id === id ? { ...r, status: 'rejected', resolvedDate: new Date().toISOString().slice(0, 10) } : r)))
+    setCertificateRequests(certificateRequests.map((r) => (r.id === id ? { ...r, status: 'rejected', resolvedDate: todayISO() } : r)))
   }
 
   const handleSaveLetter = (requestId, letterText) => {
     setCertificateRequests(certificateRequests.map((r) => (r.id === requestId
-      ? { ...r, letterText, status: 'issued', resolvedDate: r.resolvedDate || new Date().toISOString().slice(0, 10) }
+      ? { ...r, letterText, status: 'issued', resolvedDate: r.resolvedDate || todayISO() }
       : r)))
-  }
-
-  const navButton = (item) => {
-    const Icon = item.icon
-    const active = view === item.key
-    return (
-      <button
-        key={item.key}
-        onClick={() => setView(item.key)}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
-      >
-        <Icon size={15} className="shrink-0" />
-        <span className="flex-1 truncate">{item.label}</span>
-        {item.badge > 0 && (
-          <span className="bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center shrink-0">
-            {item.badge}
-          </span>
-        )}
-      </button>
-    )
   }
 
   // The PRO company sees only its task queue — no employee data, no HR workspace.
@@ -345,19 +333,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
       <Navbar user={user} onLogout={onLogout} title="HR" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <aside className="w-full sm:w-44 shrink-0 sm:sticky sm:top-6">
-          <div className="flex sm:flex-col flex-wrap gap-1">
-            {NAV_MAIN.map(navButton)}
-          </div>
-          {NAV_HR.length > 0 && (
-            <>
-              <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 pt-4 pb-1 hidden sm:block">HR Workspace</div>
-              <div className="flex sm:flex-col flex-wrap gap-1 mt-1 sm:mt-0">
-                {NAV_HR.map(navButton)}
-              </div>
-            </>
-          )}
-        </aside>
+        <SidebarNav groups={[{ items: NAV_MAIN }, { label: 'HR Workspace', items: NAV_HR }]} active={view} onSelect={setView} />
 
         <main className="flex-1 min-w-0 w-full">
           {view === 'myhr' && (
@@ -580,7 +556,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
               candidates={candidates}
               user={user}
               isHrStaff={isHrStaff}
-              onSubmitCandidate={(c) => setCandidates([...candidates, { ...c, id: Math.max(...candidates.map((x) => x.id), 0) + 1 }])}
+              onSubmitCandidate={(c) => setCandidates([...candidates, { ...c, id: nextId(candidates) }])}
               onAdvanceCandidate={advanceCandidate}
               referralBonuses={referralBonuses}
             />
@@ -591,7 +567,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
           {view === 'profile' && isNewHire && (
             <NewJoinerWizard
               user={user}
-              onSubmit={(j) => setNewJoiners([...newJoiners, { ...j, id: Math.max(...newJoiners.map((x) => x.id), 0) + 1 }])}
+              onSubmit={(j) => setNewJoiners([...newJoiners, { ...j, id: nextId(newJoiners) }])}
             />
           )}
 
@@ -599,7 +575,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
             <OffboardingTab
               employees={employees}
               offboardings={offboardings}
-              onStart={(o) => setOffboardings([...offboardings, { ...o, id: Math.max(...offboardings.map((x) => x.id), 0) + 1 }])}
+              onStart={(o) => setOffboardings([...offboardings, { ...o, id: nextId(offboardings) }])}
               onUpdate={(o) => setOffboardings(offboardings.map((x) => (x.id === o.id ? o : x)))}
             />
           )}
@@ -609,7 +585,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
               tasks={proTasks}
               employees={employees}
               onUpdate={(t) => setProTasks(proTasks.map((x) => (x.id === t.id ? t : x)))}
-              onCreate={(t) => setProTasks([...proTasks, { ...t, id: Math.max(...proTasks.map((x) => x.id), 0) + 1 }])}
+              onCreate={(t) => setProTasks([...proTasks, { ...t, id: nextId(proTasks) }])}
             />
           )}
 
@@ -617,7 +593,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
             <StaffPlanningTab
               plans={staffPlans}
               projects={projects}
-              onAdd={(p) => setStaffPlans([...staffPlans, { ...p, id: Math.max(...staffPlans.map((x) => x.id), 0) + 1 }])}
+              onAdd={(p) => setStaffPlans([...staffPlans, { ...p, id: nextId(staffPlans) }])}
               onUpdate={(p) => setStaffPlans(staffPlans.map((x) => (x.id === p.id ? p : x)))}
               onRemove={(id) => setStaffPlans(staffPlans.filter((x) => x.id !== id))}
               staffingRequests={staffingRequests}
@@ -791,7 +767,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
               ...newRequest,
               status: leaveStatusForNew(matchedEmployee),
               managerApprovedBy: null, managerApprovedDate: null,
-              id: Math.max(...leaveRequests.map((r) => r.id), 0) + 1,
+              id: nextId(leaveRequests),
             }])
           }}
         />
@@ -803,7 +779,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
           employees={employees}
           onClose={() => setShowCardModal(false)}
           onSubmit={(req) => {
-            setBusinessCardRequests([...businessCardRequests, { ...req, id: Math.max(...businessCardRequests.map((r) => r.id), 0) + 1 }])
+            setBusinessCardRequests([...businessCardRequests, { ...req, id: nextId(businessCardRequests) }])
           }}
         />
       )}
@@ -814,7 +790,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
           employees={employees}
           onClose={() => setShowCertModal(false)}
           onSubmit={(newRequest) => {
-            setCertificateRequests([...certificateRequests, { ...newRequest, id: Math.max(...certificateRequests.map((r) => r.id), 0) + 1 }])
+            setCertificateRequests([...certificateRequests, { ...newRequest, id: nextId(certificateRequests) }])
           }}
         />
       )}
@@ -823,7 +799,7 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
         <ComplaintModal
           user={user}
           onClose={() => setShowConcernModal(false)}
-          onSubmit={(c) => setComplaints([...complaints, { ...c, id: Math.max(...complaints.map((x) => x.id), 0) + 1 }])}
+          onSubmit={(c) => setComplaints([...complaints, { ...c, id: nextId(complaints) }])}
         />
       )}
 

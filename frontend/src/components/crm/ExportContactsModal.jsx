@@ -1,3 +1,4 @@
+import { todayISO } from '../../utils/date'
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { FileSpreadsheet, FileText, ChevronDown } from 'lucide-react'
 import Modal from './Modal'
@@ -150,14 +151,14 @@ export default function ExportContactsModal({ contacts, companies, onClose }) {
     const ws = XLSX.utils.json_to_sheet(buildRows())
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Contacts')
-    XLSX.writeFile(wb, `alsuweidi-contacts-${new Date().toISOString().slice(0, 10)}.xlsx`)
+    XLSX.writeFile(wb, `alsuweidi-contacts-${todayISO()}.xlsx`)
   }
 
   async function exportCsv() {
     const XLSX = await import('xlsx')
     const ws = XLSX.utils.json_to_sheet(buildRows())
     const csv = XLSX.utils.sheet_to_csv(ws)
-    downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `alsuweidi-contacts-${new Date().toISOString().slice(0, 10)}.csv`)
+    downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `alsuweidi-contacts-${todayISO()}.csv`)
   }
 
   return (

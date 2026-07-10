@@ -1,3 +1,4 @@
+import { todayISO } from '../../utils/date'
 import { useState } from 'react'
 import { Star, CheckCircle, Send } from 'lucide-react'
 import {
@@ -245,7 +246,7 @@ export default function AppraisalsView({ mode, appraisals, onUpdate, matchedEmpl
                   {chip(a.status)}
                   {a.status === 'hr' && (
                     <button
-                      onClick={() => onUpdate({ ...a, status: 'complete', signedOffBy: user?.username, signedOffDate: new Date().toISOString().slice(0, 10) })}
+                      onClick={() => onUpdate({ ...a, status: 'complete', signedOffBy: user?.username, signedOffDate: todayISO() })}
                       className="px-3 py-1.5 text-xs font-medium text-white bg-brand rounded-md hover:bg-brand-dark inline-flex items-center gap-1"
                     >
                       <CheckCircle size={13} /> Sign off

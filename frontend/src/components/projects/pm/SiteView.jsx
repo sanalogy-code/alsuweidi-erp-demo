@@ -7,6 +7,8 @@ import { wirStatusMeta, ncrStatusMeta, NCR_PRIORITIES } from '../../../data/pmDa
 // approved WIRs are the verification basis for interim payment certificates.
 
 import { todayISO } from '../../../utils/date'
+import { nextId } from '../../../utils/id'
+import { useRegisterFilter, RegisterFilterBar } from '../../RegisterFilter'
 
 const TABS = [
   { key: 'wir', label: 'WIRs' },
@@ -174,8 +176,8 @@ function SiRegister({ pm, onUpdate, rows }) {
   )
   const add = () => {
     if (!form.subject.trim()) return
-    const nextNo = Math.max(0, ...pm.siteInstructions.map((s) => parseInt(s.ref.split('-')[1], 10) || 0)) + 1
-    onUpdate({ ...pm, siteInstructions: [...pm.siteInstructions, { id: Math.max(0, ...pm.siteInstructions.map((s) => s.id)) + 1, ref: `SI-${String(nextNo).padStart(3, '0')}`, date: todayISO(), status: 'issued', ...form }] })
+    const nextNo = nextId(pm.siteInstructions.map((s) => parseInt(s.ref.split('-')[1], 10) || 0)) + 1
+    onUpdate({ ...pm, siteInstructions: [...pm.siteInstructions, { id: Math.max(0, ...pm.siteInstructions), ref: `SI-${String(nextNo).padStart(3, '0')}`, date: todayISO(), status: 'issued', ...form }] })
     setForm({ subject: '', costImpact: false, timeImpact: false }); setShowAdd(false)
   }
   return (
@@ -239,12 +241,6 @@ const Empty = ({ label }) => (
 
 export default function SiteView({ pm, onUpdate }) {
   const [tab, setTab] = useState('wir')
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [range, setRange] = useState({ from: '', to: '' })
-  // Reset ALL filters on tab switch — each register filters different text and
-  // DATE fields, so a WIR date range silently hiding every NCR was a trap.
-  const switchTab = (k) => { setTab(k); setStatusFilter('all'); setSearch(''); setRange({ from: '', to: '' }) }
 
   // Shared filter row config per register: display rows only — updates still go through the full pm lists.
   const cfg = {
@@ -254,12 +250,13 @@ export default function SiteView({ pm, onUpdate }) {
     si: { rows: pm.siteInstructions, dateField: 'date', text: ['ref', 'subject'] },
     daily: { rows: pm.dailyReports, dateField: 'date', text: ['workDone', 'plant'], noStatus: true },
   }[tab]
+  const f = useRegisterFilter(cfg.rows, { text: cfg.text, dateField: cfg.dateField })
+  // Reset ALL filters on tab switch — each register filters different text and
+  // DATE fields, so a WIR date range silently hiding every NCR was a trap.
+  const switchTab = (k) => { setTab(k); f.reset() }
   const statuses = cfg.noStatus ? [] : [...new Set(cfg.rows.map((r) => r.status))]
   const statusLabel = (s) => tab === 'ncr' ? ncrStatusMeta(s).label : (tab === 'wir' || tab === 'mir') ? wirStatusMeta(s).label : s
-  const filtered = cfg.rows
-    .filter((r) => cfg.noStatus || statusFilter === 'all' || r.status === statusFilter)
-    .filter((r) => (!range.from || (r[cfg.dateField] || '') >= range.from) && (!range.to || (r[cfg.dateField] || '') <= range.to))
-    .filter((r) => { const q = search.trim().toLowerCase(); return !q || cfg.text.some((f) => (r[f] || '').toLowerCase().includes(q)) })
+  const filtered = f.rows
 
   const counts = {
     wir: pm.wirs.filter((w) => w.status !== 'approved' && w.status !== 'approved_as_noted').length,
@@ -277,19 +274,7 @@ export default function SiteView({ pm, onUpdate }) {
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-2 flex-wrap">
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search register…" className="text-sm border border-gray-300 rounded-md px-2.5 py-1.5 bg-white w-52" />
-        <label className="text-xs text-gray-500">From</label>
-        <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
-        <label className="text-xs text-gray-500">To</label>
-        <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white" />
-        {!cfg.noStatus && (
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white">
-            <option value="all">All statuses</option>
-            {statuses.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
-          </select>
-        )}
-      </div>
+      <RegisterFilterBar f={f} statuses={statuses} statusLabel={statusLabel} showStatus={!cfg.noStatus} searchPlaceholder="Search register…" />
       {tab === 'wir' && <WirRegister pm={pm} onUpdate={onUpdate} rows={filtered} />}
       {tab === 'mir' && <MirRegister pm={pm} onUpdate={onUpdate} rows={filtered} />}
       {tab === 'ncr' && <NcrRegister pm={pm} onUpdate={onUpdate} rows={filtered} />}

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import TaskTable from './TaskTable'
 import { TASK_STATUSES, TASK_PRIORITIES, taskIsLate } from '../../../data/pmData'
+import { todayISO } from '../../../utils/date'
+import { nextId } from '../../../utils/id'
 
 // Every task on the project in ONE table, across all phases (Sana, 7 Jul:
 // "I need all tasks together with status tags, priority, sorting by date,
@@ -35,9 +37,9 @@ export default function AllTasksView({ pm, onUpdatePm, currentUserName, onLogHou
       addSubtask: (parent, title) => updatePhase(ph.key, {
         ...ph,
         tasks: [...ph.tasks, {
-          id: Math.max(0, ...ph.tasks.map((t) => t.id)) + 1,
+          id: nextId(ph.tasks),
           parentId: parent.id, title, assignee: parent.assignee, createdBy: currentUserName || null,
-          startDate: new Date().toISOString().slice(0, 10), due: parent.due || null,
+          startDate: todayISO(), due: parent.due || null,
           effortHours: 0, pctComplete: 0, sprintId: parent.sprintId ?? null,
           priority: parent.priority, status: 'open', checklist: [], comments: [],
         }],

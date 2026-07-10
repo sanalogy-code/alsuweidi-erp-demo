@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { FileCheck, Upload, AlertCircle, X, RefreshCw } from 'lucide-react'
+import { todayISO } from '../utils/date'
 
 // Typed document slots: every upload declares what it is, required slots are
 // enforced by the parent (missingRequiredDocs helper below). Upload is mocked —
@@ -45,7 +46,7 @@ export default function DocumentChecklist({ docTypes, documents, onChange, readO
   const handleFile = (e) => {
     const file = e.target.files?.[0]
     if (file && pendingType) {
-      const fresh = { type: pendingType, fileName: file.name, uploadedDate: new Date().toISOString().slice(0, 10), status: 'pending', reviewedBy: null, reviewedDate: null, rejectReason: null }
+      const fresh = { type: pendingType, fileName: file.name, uploadedDate: todayISO(), status: 'pending', reviewedBy: null, reviewedDate: null, rejectReason: null }
       onChange(replacing ? documents.map((d) => (d === replacing ? fresh : d)) : [...documents, fresh])
     }
     e.target.value = ''
@@ -57,7 +58,7 @@ export default function DocumentChecklist({ docTypes, documents, onChange, readO
 
   const review = (doc, status, reason = null) => {
     onChange(documents.map((d) => (d === doc
-      ? { ...d, status, rejectReason: reason, reviewedBy: reviewerName || 'HR', reviewedDate: new Date().toISOString().slice(0, 10) }
+      ? { ...d, status, rejectReason: reason, reviewedBy: reviewerName || 'HR', reviewedDate: todayISO() }
       : d)))
     setRejecting(null)
     setRejectReason('')

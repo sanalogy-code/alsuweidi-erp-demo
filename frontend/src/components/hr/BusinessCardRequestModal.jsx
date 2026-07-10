@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Modal from '../crm/Modal'
+import { todayISO } from '../../utils/date'
 
 // Self-service business card request — same request → HR inbox → fulfil shape
 // as certificates. HR marks it printed & delivered to close it.
@@ -25,7 +26,7 @@ export default function BusinessCardRequestModal({ user, employees = [], onClose
       mobile: mobile.trim(),
       notes: notes.trim(),
       status: 'pending',
-      requestedDate: new Date().toISOString().slice(0, 10),
+      requestedDate: todayISO(),
       resolvedDate: null,
     })
     onClose()

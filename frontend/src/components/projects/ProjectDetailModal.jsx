@@ -6,6 +6,7 @@ import StagePipeline from './StagePipeline'
 import EditProjectModal from './EditProjectModal'
 import DocumentChecklist from '../DocumentChecklist'
 import { PROJECT_DOCUMENT_TYPES, yearStartedOf, yearCompletedOf } from '../../data/projectsData'
+import { INVOICES } from '../../data/financeData'
 
 const fmtAed = (n) => (n || n === 0 ? `${n.toLocaleString()} AED` : '—')
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-AE') : '—')
@@ -27,7 +28,7 @@ function Field({ label, children }) {
   )
 }
 
-export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee, onUpdateProject, onAddMarketingTask, onOpenWorkspace }) {
+export default function ProjectDetailModal({ project, employees = [], canViewSensitive = false, onClose, onViewEmployee, onUpdateProject, onAddMarketingTask, onOpenWorkspace, invoices = INVOICES }) {
   const [tab, setTab] = useState('overview')
   const [editing, setEditing] = useState(false)
   const [editingProgress, setEditingProgress] = useState(false)
@@ -344,6 +345,23 @@ export default function ProjectDetailModal({ project, employees = [], canViewSen
             <Field label="Contract Value (fees)">{fmtAed(project.contractValue)}</Field>
             <Field label="Construction Cost">{fmtAed(project.constructionCost)}</Field>
           </div>
+          {/* Billing progress next to delivery progress (BACKLOG.md good-to-have) */}
+          {(() => {
+            const invoiced = invoices.filter((i) => i.projectId === project.id && i.status !== 'draft').reduce((s, i) => s + i.amount, 0)
+            const pct = project.contractValue ? Math.round((invoiced / project.contractValue) * 100) : null
+            return (
+              <div className="bg-gray-50 rounded-lg p-3 space-y-1.5 text-sm">
+                <div className="text-xs uppercase tracking-wide font-semibold text-gray-500">Billing progress</div>
+                <div className="flex justify-between"><span className="text-gray-600">Fees invoiced (net):</span><span className="font-medium">{fmtAed(invoiced)}{pct != null && <span className="text-gray-400 font-normal"> — {pct}% of fee</span>}</span></div>
+                {pct != null && (
+                  <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+                    <div className={`h-full ${pct >= 100 ? 'bg-emerald-500' : 'bg-brand'}`} style={{ width: `${Math.min(100, pct)}%` }} />
+                  </div>
+                )}
+                <div className="text-[11px] text-gray-400">From issued (non-draft) invoices in Financials.</div>
+              </div>
+            )
+          })()}
           {project.design && (
             <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
               <div className="text-xs uppercase tracking-wide font-semibold text-gray-500">Design Fees</div>

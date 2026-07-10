@@ -3,6 +3,7 @@ import { Plus, ChevronDown, ChevronUp } from 'lucide-react'
 import { CAPACITY_HOURS_PER_WEEK } from '../../../data/pmData'
 import { toLocalISO, weekStartOf, addDays } from '../../../data/timesheetData'
 import { parseLocalDate } from '../../../utils/date'
+import { nextId } from '../../../utils/id'
 
 // Resource PLANNING (Batch 12) — the person × week capacity heatmap from
 // PM_RESEARCH.md §5: planned hours per person per project per week vs a 40h
@@ -66,7 +67,7 @@ export default function ResourcePlannerView({ projects, pmRecords, employees, ti
         ? allocations.map((a) => (a.id === existing.id ? { ...a, hours } : a))
         : allocations.filter((a) => a.id !== existing.id))
     } else if (hours > 0) {
-      onUpdateAllocations([...allocations, { id: Math.max(0, ...allocations.map((a) => a.id)) + 1, name, employeeId, projectId, weekStart, hours }])
+      onUpdateAllocations([...allocations, { id: nextId(allocations), name, employeeId, projectId, weekStart, hours }])
     }
   }
 

@@ -4,6 +4,7 @@ import { getStatusColor, formatCurrency, daysSince, todayISO, COMPANY_TAGS, COMP
 import { PROJECTS } from '../../data/projectsData'
 import InteractionIcon from './InteractionIcon'
 import NotesList from './NotesList'
+import { nextId } from '../../utils/id'
 
 function TagChips({ tags, size = 'text-[10px]' }) {
   if (!tags?.length) return null
@@ -50,7 +51,7 @@ export default function CompaniesView({
   function addHistoryRecord(e) {
     e.preventDefault()
     if (!historyForm.projectId || !historyForm.scope.trim()) return
-    const id = Math.max(0, ...projectHistory.map((r) => r.id)) + 1
+    const id = nextId(projectHistory)
     onUpdateCompany(company.id, {
       projectHistory: [...projectHistory, {
         id,
@@ -110,7 +111,10 @@ export default function CompaniesView({
                 >
                   <div className="font-semibold text-gray-800 text-sm">{comp.name}</div>
                   <div className="text-xs text-gray-500">{comp.industry}</div>
-                  <div className="mt-1.5"><TagChips tags={comp.tags} /></div>
+                  <div className="mt-1.5 flex flex-wrap gap-1 items-center">
+                    {comp.kind === 'individual' && <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-teal-100 text-teal-700">Individual</span>}
+                    <TagChips tags={comp.tags} />
+                  </div>
                   <div className="flex justify-between items-center mt-2">
                     <span className="text-xs text-gray-400">{comp.location}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getStatusColor(comp.status)}`}>{comp.status}</span>

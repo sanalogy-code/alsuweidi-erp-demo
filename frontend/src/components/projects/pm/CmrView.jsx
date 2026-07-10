@@ -19,7 +19,7 @@ const Fact = ({ label, value, warn }) => (
   </div>
 )
 
-export default function CmrView({ projects, pmRecords, onOpenWorkspace, canViewSensitive }) {
+export default function CmrView({ projects, pmRecords, onOpenWorkspace, canViewSensitive, invoices = INVOICES }) {
   const entries = projects
     .filter((p) => p.generalStatus !== 'Completed')
     .flatMap((p) => (pmRecords[p.id]?.phases || [])
@@ -36,7 +36,7 @@ export default function CmrView({ projects, pmRecords, onOpenWorkspace, canViewS
   const progress = phaseProgress(phase)
   const spi = spiOf(phase.progressCurve)
   const planned = [...phase.progressCurve].reverse().find((c) => c.actual != null)?.planned ?? null
-  const projInvoices = INVOICES.filter((i) => i.projectId === project.id && i.status !== 'draft')
+  const projInvoices = invoices.filter((i) => i.projectId === project.id && i.status !== 'draft')
   const invoiced = projInvoices.reduce((s, i) => s + i.amount, 0)
   const received = projInvoices.reduce((s, i) => s + Math.min(i.amountPaid ?? 0, i.amount + (i.vatAmount ?? 0)), 0)
   const openWirs = (phase.wirs || []).filter((w) => w.status !== 'approved' && w.status !== 'approved_as_noted')

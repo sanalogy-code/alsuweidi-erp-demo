@@ -19,11 +19,14 @@ import FeedbackButton, { INITIAL_FEEDBACK } from './components/SystemFeedback'
 import { INITIAL_STAFFING_REQUESTS } from './data/rfpData'
 import { PUBLIC_HOLIDAYS, EMPLOYEES } from './data/hrData'
 import { TIMESHEETS, weekStartOf, toLocalISO } from './data/timesheetData'
-import { parseLocalDate } from './utils/date'
+import { parseLocalDate, todayISO } from './utils/date'
 import { PROJECTS } from './data/projectsData'
 import { getPmRecord, emptyPmRecord, INITIAL_ALLOCATIONS } from './data/pmData'
 import { INITIAL_DEALS } from './data/crmData'
 import { MARKETING_TASKS } from './data/marketingData'
+import { nextId } from './utils/id'
+import { useFinanceState } from './state/financeState'
+import { useAuditLog } from './state/auditLog'
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -51,11 +54,11 @@ export default function App() {
   // System feedback (bugs/feature requests) — reported from anywhere via the
   // floating button, triaged in the Admin Center.
   const [systemFeedback, setSystemFeedback] = useState(INITIAL_FEEDBACK)
-  const addFeedback = (f) => setSystemFeedback((prev) => [{ ...f, id: Math.max(0, ...prev.map((x) => x.id)) + 1 }, ...prev])
+  const addFeedback = (f) => setSystemFeedback((prev) => [{ ...f, id: nextId(prev) }, ...prev])
   // Pipeline staffing requests: raised on an RFP in CRM, triaged in HR Staff
   // planning (Batch 16c). Lifted here because it crosses the CRM↔HR boundary.
   const [staffingRequests, setStaffingRequests] = useState(INITIAL_STAFFING_REQUESTS)
-  const addStaffingRequest = (r) => setStaffingRequests((prev) => [{ ...r, id: Math.max(0, ...prev.map((x) => x.id)) + 1, date: new Date().toISOString().slice(0, 10), status: 'requested' }, ...prev])
+  const addStaffingRequest = (r) => setStaffingRequests((prev) => [{ ...r, id: nextId(prev), date: todayISO(), status: 'requested' }, ...prev])
 
   // Task-hours → timesheet (Batch 16): logging hours on a project task writes
   // them into the assignee's weekly timesheet under that project's code, so the
@@ -76,7 +79,7 @@ export default function App() {
       const ts = prev.find((t) => t.employeeId === emp.id && t.weekStart === weekStart)
       if (!ts) {
         return [...prev, {
-          id: Math.max(0, ...prev.map((t) => t.id)) + 1,
+          id: nextId(prev),
           employeeId: emp.id, employeeName: emp.name, weekStart,
           entries: [{ code: projectId, hours: Array.from({ length: 7 }, (_, i) => (i === dayIdx ? hours : 0)) }],
           status: 'draft', submittedDate: null, approvedBy: null, approvedDate: null, rejectReason: null,
@@ -100,6 +103,12 @@ export default function App() {
   // Lifted so the timesheet reminder/lockout gate (rendered here, above every
   // page) clears the moment the week is submitted inside the HR module.
   const [timesheets, setTimesheets] = useState(TIMESHEETS)
+  // ONE audit trail for the whole app — Admin's Activity log shows everything,
+  // Finance's Activity view filters to its own module.
+  const audit = useAuditLog()
+  // Finance state lifted (code-quality item): Home KPIs, PM dashboards and the
+  // project workspace read the same session invoices/expenses Finance edits.
+  const finance = useFinanceState(user, audit.record)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -110,23 +119,26 @@ export default function App() {
       if (exists) return prev
       return [...prev, {
         dueDate: null, notes: '', status: 'pending',
-        createdDate: new Date().toISOString().slice(0, 10), completedDate: null,
+        createdDate: todayISO(), completedDate: null,
         ...task,
-        id: Math.max(0, ...prev.map((t) => t.id)) + 1,
+        id: nextId(prev),
       }]
     })
   }
 
   const completeMarketingTask = (id, note) => {
     setMarketingTasks((prev) => prev.map((t) => (t.id === id
-      ? { ...t, status: 'done', completedDate: new Date().toISOString().slice(0, 10), notes: note || t.notes }
+      ? { ...t, status: 'done', completedDate: todayISO(), notes: note || t.notes }
       : t)))
   }
 
   const addProject = (project) => {
-    const created = { ...project, id: Math.max(0, ...projects.map((p) => p.id)) + 1 }
+    const created = { ...project, id: nextId(projects) }
     setProjects([...projects, created])
     setPmRecords((prev) => ({ ...prev, [created.id]: emptyPmRecord(created) }))
+    // Auto-draft a mobilization invoice in Finance (draft only — accountant
+    // reviews and sends), mirroring the won-deal → marketing-task wiring.
+    finance.draftInvoiceFromProject(created)
     // Every new project owes Marketing a portfolio description — it can't be
     // marked Completed without one.
     if (!created.marketingDescription) {
@@ -195,17 +207,17 @@ export default function App() {
       <FeedbackButton user={user} onSubmit={addFeedback} />
       <Routes>
       <Route path="/dev" element={<DevDashboard />} />
-      <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} />} />
-      <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} />} />
+      <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} invoices={finance.invoices} />} />
+      <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} invoices={finance.invoices} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} onRequestStaffing={addStaffingRequest} />} />
-      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} onUpdateAllocations={setAllocations} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} />} />
-      <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} onLogTaskHours={logTaskHours} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} />} />
+      <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} onUpdateAllocations={setAllocations} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} invoices={finance.invoices} expenses={finance.expenses} />} />
+      <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} onLogTaskHours={logTaskHours} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} invoices={finance.invoices} />} />
       <Route path="/hr" element={<HR user={user} onLogout={handleLogout} holidays={holidays} onUpdateHolidays={setHolidays} projects={projects} onEmployeeAdded={handleEmployeeAdded} timesheets={timesheets} setTimesheets={setTimesheets} staffingRequests={staffingRequests} onUpdateStaffingRequests={setStaffingRequests} />} />
       <Route path="/it" element={<IT user={user} onLogout={handleLogout} />} />
-      <Route path="/finance" element={<Finance user={user} onLogout={handleLogout} />} />
+      <Route path="/finance" element={<Finance user={user} onLogout={handleLogout} finance={finance} auditEntries={audit.entries} />} />
       <Route path="/marketing" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/content" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
-      <Route path="/admin" element={<Admin user={user} onLogout={handleLogout} feedback={systemFeedback} onUpdateFeedback={setSystemFeedback} />} />
+      <Route path="/admin" element={<Admin user={user} onLogout={handleLogout} feedback={systemFeedback} onUpdateFeedback={setSystemFeedback} auditLog={audit.entries} />} />
       <Route path="/office" element={<Office user={user} onLogout={handleLogout} />} />
       <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} />} />
       </Routes>

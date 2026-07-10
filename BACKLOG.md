@@ -4,7 +4,12 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-07 night — **THE EVERYTHING LIST below is BUILT.** Batches 16d +
+**Last updated:** 2026-07-11 — **Batch 20 shipped: everything non-Phase-2 on this list.** The
+entire code-quality consolidation section, all four good-to-have ideas, the PRO dashboard
+default, and an individuals-as-clients default (needs sign-off) — see the struck sections
+below. What remains open: decision items awaiting Sana/management (Campaigns scope, grades,
+PRO tenant question, Financials/GL scoping, individuals sign-off, appraisal model), Phase 2
+backend work, TBD-scope prioritization, and the standing non-code actions. Earlier: 2026-07-07 night — **THE EVERYTHING LIST below is BUILT.** Batches 16d +
 18a–g shipped as one parallel sweep: punch drill-down; search/status/date-range on ~24 more
 registers; the notifications center (bell + badge everywhere); global search (Ctrl+K); My Week
 strip + management Company-KPI home with board-pack print; delegation-of-authority matrix +
@@ -322,10 +327,10 @@ missing studyType for Study/Advisory, memoize myWorkFor/dashboard/revenue rollup
   form gets a location field). Timesheet grid, approval breakdown, and leave-calendar rows all
   shade the employee's own weekend. Seeds: Naseeb moved to Amman office (Sun–Thu), Samir on the
   site week; seed timesheet hours shifted to match.
-- [ ] **PRO dashboard & visibility** — right now PRO sees only its task queue. Add a dashboard
-  showing task velocity (open/done per week), overdue tasks, and maybe client/project breakdowns
-  so the PRO company can run itself. (Depends on decision: is PRO a separate tenant / org or just
-  a role within ALSUWEIDI?)
+- [x] ~~PRO dashboard & visibility~~ — **Default shipped Batch 20 (11 Jul):** PRO login now gets
+  a dashboard above its queue — open/overdue/completed/avg-queue-age cards, created-vs-completed
+  weekly velocity (6 wks), by-task-type breakdown; done tasks now stamp `doneDate`. Labelled
+  on-screen as the role-within-ALSUWEIDI default — the separate-tenant question stays open.
 - [ ] **Grade field decision** — the old form's Grade was dropped from the redesigned employee form
   (seniority covers the demo). If the company genuinely uses pay grades, add it back as an
   HR-side field. **Ask management which.**
@@ -420,17 +425,19 @@ missing studyType for Study/Advisory, memoize myWorkFor/dashboard/revenue rollup
   candidates (stale-tab in CompaniesView, legacy `pending` leave bypass) were refuted against the
   actual code/seeds.
 
-## New good-to-have ideas (noticed while building Financials — not yet agreed)
+## New good-to-have ideas — ✅ ALL SHIPPED (Batch 20, 11 Jul 2026)
 
-- [ ] **Auto-draft invoices from project events** — when a project hits a billing milestone (or a
-  deal is won), auto-create a draft invoice in Financials, mirroring the won-deal → project →
-  marketing-task wiring already in place.
-- [ ] **Invoiced % on the project record** — surface fees invoiced vs contract value on each
-  project so PMs see billing progress next to delivery progress.
-- [ ] **Receivables aging report** — 30/60/90-day buckets on outstanding invoices (what Finance
-  actually chases).
-- [ ] **Payroll total feeds the P&L** — pull the monthly WPS run total from HR into the P&L
-  payroll line instead of a mock figure.
+- [x] ~~Auto-draft invoices from project events~~ — **Shipped Batch 20 (11 Jul):** creating a
+  project (won deal or direct award) auto-creates a DRAFT mobilization invoice (10% of fee,
+  5% VAT) in Financials; the accountant reviews/sends — nothing goes out automatically.
+- [x] ~~Invoiced % on the project record~~ — **Shipped Batch 20 (11 Jul):** "Billing progress"
+  block on the record's Financials tab (sensitive roles): fees invoiced (net, non-draft), % of
+  contract value, progress bar — reads the LIVE lifted finance state.
+- [x] ~~Receivables aging report~~ — shipped 7 Jul (Accountant view); Batch 20 added per-invoice
+  credit-note netting to it.
+- [x] ~~Payroll total feeds the P&L~~ — **Shipped Batch 20 (11 Jul):** P&L payroll line now
+  computed from HR employee records (standing monthly gross = basic + allowances for active
+  staff); per-month pro-rating stays in the HR payroll run, noted on screen.
 
 ## Shipped — Batch 2 (3 Jul 2026, night)
 
@@ -461,10 +468,10 @@ the naming question still open — folded into it below.
   decide/scope: chart of accounts + GL, receipts register (payment dates/references),
   per-expense VAT + non-recoverable categories, billing-milestone model, WPS/payroll → P&L,
   FTA filing calendar, and **who owns the module** (dedicated `finance` role?).
-- [ ] **Individuals as CRM clients** (3 Jul, split off from "Companies" naming) — the naming
-  half is resolved (see Next batch: relationship tags, multi-select). Still open: should an
-  individual client be allowed as a company record flagged `kind: individual`, or handled some
-  other way? Decide before building.
+- [ ] **Individuals as CRM clients** (3 Jul) — **default built Batch 20 (11 Jul), needs
+  sign-off:** company records can be flagged `kind: 'individual'` (toggle on the New-Client form,
+  teal "Individual" chip in list/detail, website/size hidden; seed: Khalid Al Marzooqi, private
+  villa). Same pipeline/contacts/deals. Confirm this is the wanted shape or adjust.
 
 ### Resolved 3 Jul
 
@@ -528,31 +535,33 @@ the naming question still open — folded into it below.
 - [ ] Email/notifications, Zoho Sign integration, global search
 - [ ] Appraisals module (awaiting spec: cycle, reviewers, rating model)
 
-## Code quality (fold into any batch when touching those files)
+## Code quality — ✅ ALL SHIPPED (Batch 20, 11 Jul 2026)
 
-- [ ] Shared `SidebarNav` component — CRM/HR/Projects each carry a near-identical copy that has
-  already drifted
-- [ ] Shared date/currency helpers — `fmtShortDate`, holiday-range formatting, AED formatting exist
-  in 3–6 copies. **`todayISO()` is now a shared local-safe helper in `utils/date.js` (18h) and the
-  15 per-view UTC copies were swapped for imports** — remaining: the ~35 inline
-  `new Date().toISOString().slice(0,10)` call sites and the finance-view `fmtDate` ×5 copies.
-- [ ] `nextId()` helper — max+1 id generation is hand-rolled at ~13+ call sites in two variants
-  (Finance.jsx has one; lift it to a shared util)
-- [ ] Shared `<RegisterFilterBar>` / `useRegisterFilter` — the 18a sweep hand-rolled the
-  search+status+date-range trio ~10× (GovernanceViews alone has 4 copies); SiteView's cfg map is
-  the shape to generalize. Also: `countBy` helper for HeadcountDashboard's 3 identical rollups,
-  hoist DeliverablesView's filter IIFE, call `bidRecommendation` once per row in RfpView,
-  GovernanceView/EventsView/RfpView should use `fmtAED`.
-- [ ] Finance state (invoices/expenses/receipts) is module-local — Home KPIs and global search
-  read seeds, so same-session finance edits don't reach them (labelled on-screen). Lift to App
-  with the other cross-module state when it next matters.
-- [ ] Per-invoice credit-note netting in statements/aging + a CN-aware `invoiceOutstanding`
-  (CNs are capped at outstanding since 18h, so views can't disagree by more than the cap);
-  refunds against paid invoices = Phase 2 GL.
-- [ ] One audit-log mechanism — Finance's session Activity log vs Admin's AUDIT_LOG are two
-  shapes; generalize before a third module copies either.
-- [ ] Denied leave requests get an `approvedDate` stamped — harmless today (nothing displays it),
-  rename/split the field before anything does
+- [x] ~~Shared `SidebarNav` component~~ — **Shipped Batch 20:** `components/SidebarNav.jsx`
+  (groups, badges, footer note, width variant); CRM/HR/Projects/Finance/Marketing/IT/Admin/Office
+  all use it. ProjectWorkspace keeps its structurally different phase-grouped sidebar.
+- [x] ~~Shared date/currency helpers~~ — **Shipped Batch 20:** all ~60 inline
+  `new Date().toISOString().slice(0,10)` sites swapped for `todayISO()`; `fmtShortDate` added to
+  `utils/date.js` (the finance `fmtDate` ×5 copies now alias it); `daysUntil` is one local-safe
+  copy in `utils/date.js` re-exported by pmData/crmData; GovernanceView/EventsView/RfpView use
+  `fmtAED`.
+- [x] ~~`nextId()` helper~~ — **Shipped Batch 20:** `utils/id.js`, ~36 hand-rolled max+1 sites
+  swapped (both spellings).
+- [x] ~~Shared `<RegisterFilterBar>` / `useRegisterFilter`~~ — **Shipped Batch 20:**
+  `components/RegisterFilter.jsx` (text fields or extractor fns, date field, custom status
+  predicate); SiteView + GovernanceViews' 4 copies + DeliverablesView (IIFE hoisted) refactored;
+  `countBy` in HeadcountDashboard; `bidRecommendation` computed once per RfpView row.
+- [x] ~~Finance state module-local~~ — **Shipped Batch 20:** `state/financeState.js` hook lifted
+  to App — Home KPIs, PmDashboard, DMR/CMR, project workspace fees/overview and the record's new
+  Billing progress all read the live session invoices/expenses.
+- [x] ~~Per-invoice credit-note netting~~ — **Shipped Batch 20:** `invoiceOutstandingNet` +
+  `creditNotesAgainst` in financeData; aging buckets and statement balances net linked CNs
+  per invoice (unallocated CNs net the statement total); refunds against paid invoices = Phase 2 GL.
+- [x] ~~One audit-log mechanism~~ — **Shipped Batch 20:** `state/auditLog.js` — canonical Admin
+  shape `{ts, user, module, kind, detail}`; Finance actions record into it, Finance → Activity is
+  the module filter, Admin → Activity log shows everything.
+- [x] ~~Denied leave `approvedDate`~~ — **Shipped Batch 20:** decisions stamp `decidedDate`;
+  `approvedBy/approvedDate` only set on approval, nulled on denial.
 
 ## Standing items (not code)
 

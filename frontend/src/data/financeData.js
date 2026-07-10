@@ -47,6 +47,16 @@ export const invoiceStatusMeta = (key) =>
 export const invoiceTotal = (inv) => inv.amount + (inv.vatAmount ?? 0)
 export const invoiceOutstanding = (inv) => Math.max(0, invoiceTotal(inv) - (inv.amountPaid ?? 0))
 
+// Credit notes issued against a specific invoice.
+export const creditNotesAgainst = (creditNotes, invoiceId) =>
+  creditNotes.filter((c) => c.invoiceId === invoiceId).reduce((s, c) => s + c.amount, 0)
+
+// CN-aware outstanding: what the client actually still owes on this invoice —
+// total minus receipts minus credit notes linked to it. This is the number the
+// aging report and client statements chase.
+export const invoiceOutstandingNet = (inv, creditNotes = []) =>
+  Math.max(0, invoiceTotal(inv) - (inv.amountPaid ?? 0) - creditNotesAgainst(creditNotes, inv.id))
+
 // Illustrative of the Phase 2 rule: an unpaid/partly-paid invoice past its due date is
 // overdue. Demo seeds set status explicitly; this exists so the logic is documented.
 export const deriveInvoiceStatus = (inv, todayISO) => {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Send, Download, Plus } from 'lucide-react'
 
 import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 // Asset usage tracking — who sent/downloaded which portfolio pack, to whom.
 // Rendered under the Portfolio packs card. Manual "Log a send" for now:
@@ -15,7 +16,7 @@ export default function PackUsageLog({ packs, usage, onLog, companies = [] }) {
     const pack = packs.find((p) => p.id === Number(form.packId))
     if (!pack || !form.by.trim()) return
     onLog({
-      id: Math.max(0, ...usage.map((u) => u.id)) + 1,
+      id: nextId(usage),
       packId: pack.id, packName: pack.fileName, action: form.action,
       by: form.by.trim(), date: todayISO(), client: form.client.trim(), note: form.note.trim(),
     })

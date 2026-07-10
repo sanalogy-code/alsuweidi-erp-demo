@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MessageSquareWarning, X } from 'lucide-react'
 import { MODULES } from '../data/dashboardData'
+import { todayISO } from '../utils/date'
 
 // System feedback loop (7 Jul goal sweep): any employee can report a bug or
 // request a feature from anywhere via the floating button; the queue lives in
@@ -31,7 +32,7 @@ export default function FeedbackButton({ user, onSubmit }) {
 
   const submit = () => {
     if (!form.text.trim()) return
-    onSubmit({ ...form, text: form.text.trim(), by: user?.username || 'Anonymous', date: new Date().toISOString().slice(0, 10), status: 'new' })
+    onSubmit({ ...form, text: form.text.trim(), by: user?.username || 'Anonymous', date: todayISO(), status: 'new' })
     setForm({ type: 'bug', module: MODULES[0]?.label || '', text: '' })
     setSent(true)
     setTimeout(() => { setSent(false); setOpen(false) }, 1400)

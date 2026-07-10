@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { Send, CheckCircle2, FileText, Plus, Banknote, Paperclip, FileMinus2 } from 'lucide-react'
 import { PROJECTS } from '../../data/projectsData'
-import { parseLocalDate } from '../../utils/date'
+import { parseLocalDate, todayISO, fmtShortDate as fmtDate } from '../../utils/date'
 import {
   INVOICE_STATUSES, invoiceStatusMeta, invoiceTotal, invoiceOutstanding, fmtAED, VAT_RATE,
 } from '../../data/financeData'
-
-const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
 
 export default function InvoicesView({ invoices, onUpdate, onAdd, creditNotes = [], onAddCreditNote, onPayment }) {
   const [statusFilter, setStatusFilter] = useState('all')
@@ -31,7 +29,7 @@ export default function InvoicesView({ invoices, onUpdate, onAdd, creditNotes = 
       invoiceNo: `INV-2026-${String(Math.max(0, ...invoices.map((i) => Number(i.invoiceNo.split('-')[2]) || 0)) + 1).padStart(3, '0')}`,
       projectId: proj?.id ?? null, companyId: proj?.companyId ?? null,
       clientName: form.clientName.trim(), description: form.description.trim() || 'Consultancy fees',
-      issueDate: form.issueDate || new Date().toISOString().slice(0, 10),
+      issueDate: form.issueDate || todayISO(),
       dueDate: form.dueDate || null,
       amount: net, vatAmount: Math.round(net * VAT_RATE), amountPaid: 0, status: 'draft', dealId: null,
       attachment: form.attachment.trim() || null,
@@ -66,7 +64,7 @@ export default function InvoicesView({ invoices, onUpdate, onAdd, creditNotes = 
     const amt = Number(cnForm.amount)
     if (!onAddCreditNote || !amt || amt <= 0 || !cnForm.reason.trim()) return
     onAddCreditNote({
-      invoiceId: inv.id, clientName: inv.clientName, date: new Date().toISOString().slice(0, 10),
+      invoiceId: inv.id, clientName: inv.clientName, date: todayISO(),
       amount: Math.min(amt, cnMax(inv)), reason: cnForm.reason.trim(),
     })
     setCreditingId(null); setCnForm({ amount: '', reason: '' })

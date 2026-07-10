@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { ClipboardList, Inbox, Laptop, KeyRound, Timer, PackageCheck, Wrench, ShieldCheck, Activity } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SidebarNav from '../components/SidebarNav'
 import ItRequestsView from '../components/it/ItRequestsView'
 import AssetRegistry from '../components/it/AssetRegistry'
 import LicensesView from '../components/it/LicensesView'
@@ -17,6 +18,7 @@ import {
 import { EMPLOYEES } from '../data/hrData'
 import { IT_VIEW_ROLES } from '../data/dashboardData'
 import { parseLocalDate, todayLocal } from '../utils/date'
+import { nextId } from '../utils/id'
 
 // IT & Assets — every employee can raise hardware/software requests; the
 // workspace (requests queue, asset registry, license radar) is owned by the IT
@@ -66,44 +68,12 @@ export default function IT({ user, onLogout }) {
     { key: 'status', label: 'System status', icon: Activity },
   ] : []
 
-  const navButton = (item) => {
-    const Icon = item.icon
-    const active = view === item.key
-    return (
-      <button
-        key={item.key}
-        onClick={() => setView(item.key)}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
-      >
-        <Icon size={15} className="shrink-0" />
-        <span className="flex-1 truncate">{item.label}</span>
-        {item.badge > 0 && (
-          <span className="bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center shrink-0">
-            {item.badge}
-          </span>
-        )}
-      </button>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar user={user} onLogout={onLogout} title="IT & Assets" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <aside className="w-full sm:w-44 shrink-0 sm:sticky sm:top-6">
-          <div className="flex sm:flex-col flex-wrap gap-1">
-            {NAV_MAIN.map(navButton)}
-          </div>
-          {NAV_WORKSPACE.length > 0 && (
-            <>
-              <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 pt-4 pb-1 hidden sm:block">IT Workspace</div>
-              <div className="flex sm:flex-col flex-wrap gap-1 mt-1 sm:mt-0">
-                {NAV_WORKSPACE.map(navButton)}
-              </div>
-            </>
-          )}
-        </aside>
+        <SidebarNav groups={[{ items: NAV_MAIN }, { label: 'IT Workspace', items: NAV_WORKSPACE }]} active={view} onSelect={setView} />
 
         <main className="flex-1 min-w-0 w-full">
           {view === 'mine' && (
@@ -111,7 +81,7 @@ export default function IT({ user, onLogout }) {
               requests={requests}
               user={user}
               mode="mine"
-              onSubmit={(r) => setRequests([...requests, { ...r, id: Math.max(...requests.map((x) => x.id), 0) + 1 }])}
+              onSubmit={(r) => setRequests([...requests, { ...r, id: nextId(requests) }])}
             />
           )}
 
@@ -128,7 +98,7 @@ export default function IT({ user, onLogout }) {
             <AssetRegistry
               assets={assets}
               employees={EMPLOYEES}
-              onAdd={(a) => setAssets([...assets, { ...a, id: Math.max(...assets.map((x) => x.id), 0) + 1 }])}
+              onAdd={(a) => setAssets([...assets, { ...a, id: nextId(assets) }])}
               onUpdate={(a) => setAssets(assets.map((x) => (x.id === a.id ? a : x)))}
             />
           )}
@@ -136,7 +106,7 @@ export default function IT({ user, onLogout }) {
           {view === 'licenses' && canManage && (
             <LicensesView
               licenses={licenses}
-              onAdd={(l) => setLicenses([...licenses, { ...l, id: Math.max(...licenses.map((x) => x.id), 0) + 1 }])}
+              onAdd={(l) => setLicenses([...licenses, { ...l, id: nextId(licenses) }])}
             />
           )}
 

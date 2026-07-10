@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Ticket, Plus } from 'lucide-react'
 import { EVENT_TYPES, EVENT_STATUSES } from '../../data/marketingData'
+import { fmtAED } from '../../data/financeData'
+import { nextId } from '../../utils/id'
 
 // Event / exhibition tracker — the register of exhibitions, conferences and
 // client events, with budget and outcomes (leads count + note) after the fact.
@@ -16,7 +18,7 @@ export default function EventsView({ events, onUpdate }) {
     onUpdate([...events, {
       ...form, name: form.name.trim(), venue: form.venue.trim(), owner: form.owner.trim() || 'Marketing',
       budget: Number(form.budget) || 0, outcomes: '', leadsCount: 0,
-      id: Math.max(0, ...events.map((e) => e.id)) + 1,
+      id: nextId(events),
     }])
     setForm({ name: '', dates: '', venue: '', type: EVENT_TYPES[0], owner: '', budget: '', status: 'planned' })
     setShowAdd(false)
@@ -38,7 +40,7 @@ export default function EventsView({ events, onUpdate }) {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2"><Ticket size={15} className="text-brand" /> Events & exhibitions</h2>
-          <p className="text-xs text-gray-500">{events.length} tracked · {committed.toLocaleString()} AED committed · {totalLeads} leads captured</p>
+          <p className="text-xs text-gray-500">{events.length} tracked · {fmtAED(committed)} committed · {totalLeads} leads captured</p>
         </div>
         <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Add event</button>
       </div>
@@ -81,7 +83,7 @@ export default function EventsView({ events, onUpdate }) {
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-sm text-gray-800 font-medium flex-1 min-w-0">{ev.name}</span>
                 <span className="text-xs text-gray-400">{ev.dates}</span>
-                {ev.budget > 0 && <span className="text-xs text-gray-500">{ev.budget.toLocaleString()} AED</span>}
+                {ev.budget > 0 && <span className="text-xs text-gray-500">{fmtAED(ev.budget)}</span>}
                 <span className={`text-[11px] px-2 py-0.5 rounded-full ${meta.chip}`}>{meta.label}</span>
                 <select value={ev.status} onChange={(e) => patch(ev.id, { status: e.target.value })} className="text-xs border border-gray-200 rounded-md px-1.5 py-1 bg-white">
                   {Object.entries(EVENT_STATUSES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}

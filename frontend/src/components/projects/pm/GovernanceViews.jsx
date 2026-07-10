@@ -14,6 +14,8 @@ import { fmtAED } from '../../../data/financeData'
 // Certificate with snagging).
 
 import { todayISO } from '../../../utils/date'
+import { nextId } from '../../../utils/id'
+import { useRegisterFilter, RegisterFilterBar } from '../../RegisterFilter'
 const Empty = ({ label }) => (
   <div className="bg-white rounded-lg border border-dashed border-gray-300 p-8 text-center text-sm text-gray-400">{label}</div>
 )
@@ -22,15 +24,13 @@ const Empty = ({ label }) => (
 export function RisksView({ pm, onUpdate }) {
   const risks = pm.risks || []
   const [showAdd, setShowAdd] = useState(false)
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [search, setSearch] = useState('')
-  const [range, setRange] = useState({ from: '', to: '' })
+  const f = useRegisterFilter(risks, { text: ['ref', 'description', 'owner', 'mitigation'], dateField: 'reviewDate' })
   const [form, setForm] = useState({ description: '', probability: 'medium', impact: 'medium', owner: '', mitigation: '' })
 
   const patch = (id, changes) => onUpdate({ ...pm, risks: risks.map((r) => (r.id === id ? { ...r, ...changes } : r)) })
   const add = () => {
     if (!form.description.trim()) return
-    onUpdate({ ...pm, risks: [...risks, { id: Math.max(0, ...risks.map((r) => r.id)) + 1, ref: `R-${String(risks.length + 1).padStart(2, '0')}`, ...form, status: 'open', reviewDate: null }] })
+    onUpdate({ ...pm, risks: [...risks, { id: nextId(risks), ref: `R-${String(risks.length + 1).padStart(2, '0')}`, ...form, status: 'open', reviewDate: null }] })
     setForm({ description: '', probability: 'medium', impact: 'medium', owner: '', mitigation: '' }); setShowAdd(false)
   }
   const score = (r) => riskLevelMeta(r.probability).score * riskLevelMeta(r.impact).score
@@ -42,28 +42,15 @@ export function RisksView({ pm, onUpdate }) {
   const worst = [...live].sort((a, b) => score(b) - score(a))[0]
 
   const statusesPresent = RISK_STATUSES.filter((s) => risks.some((r) => r.status === s.key))
-  const filtered = risks
-    .filter((r) => statusFilter === 'all' || r.status === statusFilter)
-    .filter((r) => (!range.from || (r.reviewDate || '') >= range.from) && (!range.to || (r.reviewDate || '') <= range.to))
-    .filter((r) => {
-      const q = search.trim().toLowerCase()
-      return !q || (r.ref || '').toLowerCase().includes(q) || (r.description || '').toLowerCase().includes(q) || (r.owner || '').toLowerCase().includes(q) || (r.mitigation || '').toLowerCase().includes(q)
-    })
+  const filtered = f.rows
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-sm font-semibold text-gray-700">Risk register</h2>
-        <div className="flex items-center gap-2 flex-wrap">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-36" />
-          <label className="flex items-center gap-1 text-xs text-gray-500">From <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
-          <label className="flex items-center gap-1 text-xs text-gray-500">To <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
-            <option value="all">All statuses</option>
-            {statusesPresent.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-          </select>
+        <RegisterFilterBar f={f} statuses={statusesPresent.map((s) => s.key)} statusLabel={(k) => riskStatusMeta(k).label}>
           <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Log risk</button>
-        </div>
+        </RegisterFilterBar>
       </div>
 
       {risks.length > 0 && (
@@ -133,32 +120,29 @@ export function MeetingsView({ pm, onUpdate }) {
   const [form, setForm] = useState({ title: '', date: todayISO(), attendees: '', notes: '' })
   const [actionDrafts, setActionDrafts] = useState({})
   const [editingNotes, setEditingNotes] = useState(null) // meeting id whose notes are being edited
-  const [statusFilter, setStatusFilter] = useState('all') // 'all' | 'open_actions'
-  const [search, setSearch] = useState('')
-  const [range, setRange] = useState({ from: '', to: '' })
+  // "status" here means: does the meeting still have open actions?
+  const f = useRegisterFilter(meetings, {
+    text: ['title', 'attendees', 'notes', (m) => m.actions.map((a) => a.text).join(' ')],
+    dateField: 'date',
+    status: (m) => m.actions.some((a) => a.status !== 'done'),
+  })
 
   const patchMeeting = (id, changes) => onUpdate({ ...pm, meetings: meetings.map((m) => (m.id === id ? { ...m, ...changes } : m)) })
   const add = () => {
     if (!form.title.trim()) return
-    onUpdate({ ...pm, meetings: [{ id: Math.max(0, ...meetings.map((m) => m.id)) + 1, ref: `MTG-${String(meetings.length + 1).padStart(2, '0')}`, ...form, actions: [] }, ...meetings] })
+    onUpdate({ ...pm, meetings: [{ id: nextId(meetings), ref: `MTG-${String(meetings.length + 1).padStart(2, '0')}`, ...form, actions: [] }, ...meetings] })
     setForm({ title: '', date: todayISO(), attendees: '', notes: '' }); setShowAdd(false)
   }
   const addAction = (m) => {
     const d = actionDrafts[m.id] || {}
     if (!(d.text || '').trim()) return
-    patchMeeting(m.id, { actions: [...m.actions, { id: Math.max(0, ...m.actions.map((a) => a.id)) + 1, text: d.text.trim(), owner: d.owner || '', due: d.due || null, status: 'open' }] })
+    patchMeeting(m.id, { actions: [...m.actions, { id: nextId(m.actions), text: d.text.trim(), owner: d.owner || '', due: d.due || null, status: 'open' }] })
     setActionDrafts({ ...actionDrafts, [m.id]: {} })
   }
 
   const openActions = meetings.flatMap((m) => m.actions.filter((a) => a.status !== 'done'))
 
-  const filtered = meetings
-    .filter((m) => statusFilter === 'all' || m.actions.some((a) => a.status !== 'done'))
-    .filter((m) => (!range.from || (m.date || '') >= range.from) && (!range.to || (m.date || '') <= range.to))
-    .filter((m) => {
-      const q = search.trim().toLowerCase()
-      return !q || (m.title || '').toLowerCase().includes(q) || (m.attendees || '').toLowerCase().includes(q) || (m.notes || '').toLowerCase().includes(q) || m.actions.some((a) => (a.text || '').toLowerCase().includes(q))
-    })
+  const filtered = f.rows
 
   return (
     <div className="space-y-3">
@@ -167,16 +151,9 @@ export function MeetingsView({ pm, onUpdate }) {
           <h2 className="text-sm font-semibold text-gray-700">Meetings & actions</h2>
           <p className="text-xs text-gray-500">{openActions.length} open action{openActions.length === 1 ? '' : 's'} across {meetings.length} meeting{meetings.length === 1 ? '' : 's'}. Open actions appear in each owner's My Work.</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-36" />
-          <label className="flex items-center gap-1 text-xs text-gray-500">From <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
-          <label className="flex items-center gap-1 text-xs text-gray-500">To <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
-            <option value="all">All</option>
-            <option value="open_actions">With open actions</option>
-          </select>
+        <RegisterFilterBar f={f} statusOptions={<><option value="all">All</option><option value="open_actions">With open actions</option></>}>
           <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Log meeting</button>
-        </div>
+        </RegisterFilterBar>
       </div>
 
       {showAdd && (
@@ -246,30 +223,18 @@ export function MeetingsView({ pm, onUpdate }) {
 // --- Payment certificates (IPC) --------------------------------------------------------
 export function PaymentsView({ pm, onUpdate }) {
   const ipcs = pm.ipcs || []
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [search, setSearch] = useState('')
+  const f = useRegisterFilter(ipcs, { text: ['ref', 'period', 'note'] })
   const patch = (id, changes) => onUpdate({ ...pm, ipcs: ipcs.map((i) => (i.id === id ? { ...i, ...changes } : i)) })
   const NEXT = { draft: 'submitted', submitted: 'under_review', under_review: 'certified', certified: 'paid' }
 
   const statusesPresent = IPC_STATUSES.filter((s) => ipcs.some((i) => i.status === s.key))
-  const filtered = ipcs
-    .filter((i) => statusFilter === 'all' || i.status === statusFilter)
-    .filter((i) => {
-      const q = search.trim().toLowerCase()
-      return !q || (i.ref || '').toLowerCase().includes(q) || (i.period || '').toLowerCase().includes(q) || (i.note || '').toLowerCase().includes(q)
-    })
+  const filtered = f.rows
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-sm font-semibold text-gray-700">Interim payment certificates</h2>
-        <div className="flex items-center gap-2 flex-wrap">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-36" />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
-            <option value="all">All statuses</option>
-            {statusesPresent.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-          </select>
-        </div>
+        <RegisterFilterBar f={f} showDates={false} statuses={statusesPresent.map((s) => s.key)} statusLabel={(k) => ipcStatusMeta(k).label} />
       </div>
       {ipcs.length === 0 && <Empty label="No payment certificates — typically starts with construction." />}
       {ipcs.length > 0 && filtered.length === 0 && <Empty label="No payment certificates match the filters." />}
@@ -307,10 +272,8 @@ export function PaymentsView({ pm, onUpdate }) {
 export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProject, currentUserName }) {
   const items = pm.constructionFeedback || []
   const [showAdd, setShowAdd] = useState(false)
-  const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [range, setRange] = useState({ from: '', to: '' })
+  const f = useRegisterFilter(items, { text: ['issueIn', 'description', 'improvement'] })
   const [form, setForm] = useState({ type: 'discrepancy', issueIn: '', impact: FEEDBACK_IMPACTS[0], description: '', reason: '', improvement: '' })
 
   const patch = (id, changes) => onUpdate({ ...pm, constructionFeedback: items.map((f) => (f.id === id ? { ...f, ...changes } : f)) })
@@ -319,7 +282,7 @@ export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProjec
     onUpdate({
       ...pm,
       constructionFeedback: [{
-        id: Math.max(0, ...items.map((f) => f.id)) + 1, ...form,
+        id: nextId(items), ...form,
         issueIn: form.issueIn.trim(), description: form.description.trim(),
         reason: form.reason.trim(), improvement: form.improvement.trim(),
         reportedBy: currentUserName || 'Site team', date: todayISO(), status: 'open',
@@ -335,7 +298,7 @@ export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProjec
     onUpdateProject({
       ...project,
       lessons: [...lessons, {
-        id: Math.max(0, ...lessons.map((l) => l.id)) + 1,
+        id: nextId(lessons),
         text: `${f.issueIn}: ${f.improvement || f.description}`,
         date: todayISO(), author: f.reportedBy,
       }],
@@ -343,14 +306,7 @@ export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProjec
     patch(f.id, { inLessons: true })
   }
 
-  const rows = items
-    .filter((f) => !typeFilter || f.type === typeFilter)
-    .filter((f) => statusFilter === 'all' || f.status === statusFilter)
-    .filter((f) => (!range.from || (f.date || '') >= range.from) && (!range.to || (f.date || '') <= range.to))
-    .filter((f) => {
-      const q = search.trim().toLowerCase()
-      return !q || (f.issueIn || '').toLowerCase().includes(q) || (f.description || '').toLowerCase().includes(q) || (f.improvement || '').toLowerCase().includes(q)
-    })
+  const rows = f.rows.filter((x) => !typeFilter || x.type === typeFilter)
 
   return (
     <div className="space-y-3">
@@ -359,20 +315,13 @@ export function ConstructionFeedbackView({ pm, onUpdate, project, onUpdateProjec
           <h2 className="text-sm font-semibold text-gray-700">Construction feedback → design</h2>
           <p className="text-xs text-gray-500">Issues found on site that design should fix at the source — {items.filter((f) => f.status !== 'completed').length} open. Completed items with an improvement can be pushed to the project's Lessons.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search…" className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white w-36" />
+        <RegisterFilterBar f={f} statuses={CONSTRUCTION_FEEDBACK_STATUSES.map((s) => s.key)} statusLabel={(k) => cfStatusMeta(k).label}>
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
             <option value="">All types</option>
             {FEEDBACK_ISSUE_TYPES.map((t) => <option key={t.key} value={t.key}>{t.label}</option>)}
           </select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white">
-            <option value="all">All statuses</option>
-            {CONSTRUCTION_FEEDBACK_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
-          </select>
-          <label className="flex items-center gap-1 text-xs text-gray-500">From <input type="date" value={range.from} onChange={(e) => setRange({ ...range, from: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
-          <label className="flex items-center gap-1 text-xs text-gray-500">To <input type="date" value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white" /></label>
           <button onClick={() => setShowAdd((v) => !v)} className="flex items-center gap-1 text-xs font-medium text-brand hover:underline"><Plus size={13} /> Raise feedback</button>
-        </div>
+        </RegisterFilterBar>
       </div>
 
       {showAdd && (
@@ -458,7 +407,7 @@ export function HandoverView({ pm, onUpdate }) {
   const openSnags = h.snags.filter((s) => s.status !== 'closed')
   const addSnag = () => {
     if (!snagDraft.trim()) return
-    patch({ snags: [...h.snags, { id: Math.max(0, ...h.snags.map((s) => s.id)) + 1, ref: `SNAG-${String(h.snags.length + 1).padStart(3, '0')}`, description: snagDraft.trim(), status: 'open', closedDate: null }] })
+    patch({ snags: [...h.snags, { id: nextId(h.snags), ref: `SNAG-${String(h.snags.length + 1).padStart(3, '0')}`, description: snagDraft.trim(), status: 'open', closedDate: null }] })
     setSnagDraft('')
   }
 

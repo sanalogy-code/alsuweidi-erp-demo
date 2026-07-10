@@ -49,7 +49,7 @@ export const MyWeekPanel = memo(function MyWeekPanel({ user, projects = [], pmRe
   )
 })
 
-export const KpiPanel = memo(function KpiPanel({ projects = [], pmRecords = {}, timesheets = [] }) {
+export const KpiPanel = memo(function KpiPanel({ projects = [], pmRecords = {}, timesheets = [], invoices = INVOICES }) {
   const navigate = useNavigate()
 
   // Utilization: logged hours vs 40h capacity across employees with timesheets, last 4 weeks present in state
@@ -63,8 +63,8 @@ export const KpiPanel = memo(function KpiPanel({ projects = [], pmRecords = {}, 
   const decided = INITIAL_RFPS.filter((r) => r.status === 'awarded' || r.status === 'lost')
   const winRate = decided.length ? Math.round((decided.filter((r) => r.status === 'awarded').length / decided.length) * 100) : 0
 
-  // Receivables from the finance seed register (live finance state is module-local — Phase 2 lifts it)
-  const receivables = INVOICES.filter((i) => i.status !== 'draft').reduce((s, i) => s + invoiceOutstanding(i), 0)
+  // Receivables from the lifted finance state (falls back to seeds if not passed)
+  const receivables = invoices.filter((i) => i.status !== 'draft').reduce((s, i) => s + invoiceOutstanding(i), 0)
 
   // Project health: red if SPI < 0.85 or 3+ late tasks (mirrors the management dashboard rule)
   const active = projects.filter((p) => p.status !== 'Completed')
@@ -109,7 +109,7 @@ export const KpiPanel = memo(function KpiPanel({ projects = [], pmRecords = {}, 
         ))}
       </div>
       <div className="text-[10px] text-gray-400 mt-2">
-        Composed from timesheets, RFPs, the invoice register and project SPI/late-task health. Receivables read the seed register until finance state is lifted (Phase 2). Board pack = your browser's print of this page.
+        Composed from timesheets, RFPs, the live invoice register and project SPI/late-task health. Board pack = your browser's print of this page.
       </div>
     </div>
   )

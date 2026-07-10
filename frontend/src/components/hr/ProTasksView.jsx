@@ -3,7 +3,7 @@ import { Landmark, Plus } from 'lucide-react'
 import Modal from '../crm/Modal'
 import DocumentChecklist from '../DocumentChecklist'
 import { PRO_TASK_TYPES, EMPLOYEE_DOCUMENT_TYPES } from '../../data/hrData'
-import { parseLocalDate, todayLocal } from '../../utils/date'
+import { parseLocalDate, todayLocal, todayISO } from '../../utils/date'
 
 // Government-services queue. HR creates tasks; the PRO company logs in with the
 // 'PRO / Government Services' role and works them directly here — status, notes,
@@ -48,7 +48,7 @@ function NewTaskModal({ employees, onClose, onCreate }) {
           <button
             onClick={() => {
               if (!form.employeeName.trim()) { alert('Employee name is required'); return }
-              onCreate({ ...form, status: 'open', createdDate: new Date().toISOString().slice(0, 10), documents: [], notes: '' })
+              onCreate({ ...form, status: 'open', createdDate: todayISO(), documents: [], notes: '' })
               onClose()
             }}
             className="flex-1 px-4 py-2 text-sm font-medium text-white bg-brand rounded-md hover:bg-brand-dark"
@@ -58,6 +58,91 @@ function NewTaskModal({ employees, onClose, onCreate }) {
         </div>
       </div>
     </Modal>
+  )
+}
+
+// PRO dashboard (default shape pending the tenant-vs-role decision: PRO is
+// currently a ROLE within ALSUWEIDI, not a separate org). Task velocity, overdue
+// pressure and a by-type breakdown so the PRO company can run itself.
+function ProDashboard({ tasks, openTasks, doneTasks, overdue }) {
+  const overdueCount = openTasks.filter(overdue).length
+  // Age of the open queue (days since created), worst first.
+  const ages = openTasks.map((t) => Math.max(0, Math.floor((todayLocal() - parseLocalDate(t.createdDate)) / 86400000)))
+  const avgAge = ages.length ? Math.round(ages.reduce((s, a) => s + a, 0) / ages.length) : 0
+  // Velocity: created vs completed per ISO week over the last 6 weeks.
+  const weekOf = (iso) => {
+    const d = parseLocalDate(iso)
+    if (!d) return null
+    d.setDate(d.getDate() - d.getDay()) // week starts Sunday, matching timesheets
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+  const weeks = []
+  {
+    const d = todayLocal(); d.setDate(d.getDate() - d.getDay())
+    for (let i = 5; i >= 0; i--) {
+      const w = new Date(d); w.setDate(w.getDate() - i * 7)
+      weeks.push(`${w.getFullYear()}-${String(w.getMonth() + 1).padStart(2, '0')}-${String(w.getDate()).padStart(2, '0')}`)
+    }
+  }
+  const velocity = weeks.map((w) => ({
+    week: w.slice(5),
+    created: tasks.filter((t) => weekOf(t.createdDate) === w).length,
+    done: tasks.filter((t) => t.status === 'done' && weekOf(t.doneDate) === w).length,
+  }))
+  const maxV = Math.max(1, ...velocity.flatMap((v) => [v.created, v.done]))
+  const byType = [...tasks.reduce((m, t) => m.set(t.taskType, (m.get(t.taskType) || 0) + 1), new Map()).entries()]
+    .map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value)
+  const maxType = Math.max(1, ...byType.map((r) => r.value))
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: 'Open tasks', value: openTasks.length },
+          { label: 'Overdue', value: overdueCount, bad: overdueCount > 0 },
+          { label: 'Completed (all time)', value: doneTasks.length },
+          { label: 'Avg age of open queue', value: `${avgAge}d` },
+        ].map((s) => (
+          <div key={s.label} className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="text-xs text-gray-500">{s.label}</div>
+            <div className={`text-2xl font-bold ${s.bad ? 'text-red-600' : 'text-gray-800'}`}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+      <div className="grid lg:grid-cols-2 gap-3">
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Task velocity — last 6 weeks</div>
+          <div className="flex items-end gap-2 h-24">
+            {velocity.map((v) => (
+              <div key={v.week} className="flex-1 flex flex-col items-center gap-1">
+                <div className="flex items-end gap-0.5 h-16 w-full justify-center">
+                  <div className="w-3 bg-brand/70 rounded-t" style={{ height: `${(v.created / maxV) * 100}%` }} title={`${v.created} created`} />
+                  <div className="w-3 bg-emerald-400 rounded-t" style={{ height: `${(v.done / maxV) * 100}%` }} title={`${v.done} completed`} />
+                </div>
+                <div className="text-[10px] text-gray-400">{v.week}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-4 mt-2 text-[10px] text-gray-500">
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-brand/70 rounded-sm inline-block" /> Created</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-emerald-400 rounded-sm inline-block" /> Completed</span>
+          </div>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">By task type</div>
+          <div className="space-y-1.5">
+            {byType.map((r) => (
+              <div key={r.label} className="flex items-center gap-2 text-xs">
+                <div className="w-40 shrink-0 text-gray-600 truncate" title={r.label}>{r.label}</div>
+                <div className="flex-1 h-3.5 bg-gray-50 rounded"><div className="h-3.5 rounded bg-brand/70" style={{ width: `${(r.value / maxType) * 100}%` }} /></div>
+                <div className="w-6 text-right font-medium text-gray-700">{r.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <p className="text-[11px] text-gray-400">Default shape — PRO runs as a role within ALSUWEIDI for now; a separate-tenant portal (own org, own users) is the open decision with management.</p>
+    </div>
   )
 }
 
@@ -71,6 +156,7 @@ export default function ProTasksView({ tasks, employees = [], isPro = false, onU
 
   return (
     <div className="space-y-4">
+      {isPro && <ProDashboard tasks={tasks} openTasks={openTasks} doneTasks={doneTasks} overdue={overdue} />}
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2"><Landmark size={15} className="text-brand" /> PRO tasks ({openTasks.length} open)</h2>
@@ -126,7 +212,7 @@ export default function ProTasksView({ tasks, employees = [], isPro = false, onU
                 </div>
                 {meta.next && (
                   <button
-                    onClick={() => onUpdate({ ...t, status: meta.next })}
+                    onClick={() => onUpdate({ ...t, status: meta.next, ...(meta.next === 'done' ? { doneDate: todayISO() } : {}) })}
                     className="text-xs font-medium text-white bg-brand px-3 py-1.5 rounded-md hover:bg-brand-dark"
                   >
                     {meta.nextLabel}

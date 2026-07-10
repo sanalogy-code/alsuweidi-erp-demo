@@ -28,7 +28,7 @@ function greeting() {
   return 'Good evening'
 }
 
-export default function HomePage({ user, onLogout, holidays = [], projects = [], pmRecords = {}, timesheets = [] }) {
+export default function HomePage({ user, onLogout, holidays = [], projects = [], pmRecords = {}, timesheets = [], invoices }) {
   const navigate = useNavigate()
   const [slide, setSlide] = useState(0)
 
@@ -99,7 +99,7 @@ export default function HomePage({ user, onLogout, holidays = [], projects = [],
         {/* My week — the personal cross-module strip; KPIs for management */}
         <MyWeekPanel user={user} projects={projects} pmRecords={pmRecords} timesheets={timesheets} />
         {(user?.role === 'management' || user?.role === 'admin') && (
-          <KpiPanel projects={projects} pmRecords={pmRecords} timesheets={timesheets} />
+          <KpiPanel projects={projects} pmRecords={pmRecords} timesheets={timesheets} invoices={invoices} />
         )}
 
         {/* Deployment info */}

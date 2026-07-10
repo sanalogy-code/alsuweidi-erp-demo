@@ -1,3 +1,4 @@
+import { todayISO } from '../../utils/date'
 import { useRef, useState } from 'react'
 import { FileCheck, Upload } from 'lucide-react'
 import Modal from '../crm/Modal'
@@ -73,7 +74,7 @@ export default function NewProjectModal({ employees, existingProjects, onClose, 
       cpmId: form.cpmId ? Number(form.cpmId) : null,
       stagesInvolved,
       currentStage: stagesInvolved[0],
-      documents: [{ type: 'loa', fileName: loaFile, uploadedDate: new Date().toISOString().slice(0, 10) }],
+      documents: [{ type: 'loa', fileName: loaFile, uploadedDate: todayISO() }],
       design: hasDesign
         ? { sow: [], status: 'Not Started', outputFormat: null, startYear: new Date().getFullYear(), completionYear: null, financialStatus: 'Open - Managed by DPM', payStatus: 'Not Due' }
         : null,

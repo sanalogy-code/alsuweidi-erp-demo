@@ -5,7 +5,9 @@ import { COMPANY_TAGS, COMPANY_TAG_COLOR, COMPANY_SIZES } from '../../data/crmDa
 
 export default function CompanyEditModal({ company, onClose, onSave, onDelete }) {
   const [editing, setEditing] = useState(false)
+  const isIndividual = company.kind === 'individual'
   const initialForm = () => ({
+    kind: company.kind || 'company',
     name: company.name,
     industry: company.industry,
     location: company.location,
@@ -79,6 +81,8 @@ export default function CompanyEditModal({ company, onClose, onSave, onDelete })
               />
             </div>
           </div>
+          {/* Website / size don't apply to an individual client */}
+          {form.kind !== 'individual' && (
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Website</label>
@@ -101,6 +105,7 @@ export default function CompanyEditModal({ company, onClose, onSave, onDelete })
               </select>
             </div>
           </div>
+          )}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Relationship Tags</label>
             <div className="flex flex-wrap gap-1.5">
@@ -157,6 +162,11 @@ export default function CompanyEditModal({ company, onClose, onSave, onDelete })
         </form>
       ) : (
         <div className="space-y-4">
+          {isIndividual && (
+            <span className="inline-block text-xs px-2.5 py-1 rounded-full font-medium bg-teal-100 text-teal-700">
+              Individual client — same record, no company fields (default pending the individuals-as-clients decision)
+            </span>
+          )}
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <div className="text-xs text-gray-500 mb-1">Industry</div>
@@ -170,20 +180,24 @@ export default function CompanyEditModal({ company, onClose, onSave, onDelete })
               <div className="text-xs text-gray-500 mb-1">Status</div>
               <div className="font-medium text-gray-800">{company.status}</div>
             </div>
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Website</div>
-              <div className="font-medium text-gray-800 truncate">
-                {company.website ? (
-                  <a href={company.website} target="_blank" rel="noreferrer" className="text-brand hover:underline">
-                    {company.website.replace(/^https?:\/\/(www\.)?/, '')}
-                  </a>
-                ) : '—'}
+            {!isIndividual && (
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Website</div>
+                <div className="font-medium text-gray-800 truncate">
+                  {company.website ? (
+                    <a href={company.website} target="_blank" rel="noreferrer" className="text-brand hover:underline">
+                      {company.website.replace(/^https?:\/\/(www\.)?/, '')}
+                    </a>
+                  ) : '—'}
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Company Size</div>
-              <div className="font-medium text-gray-800">{company.size ? `${company.size} employees` : '—'}</div>
-            </div>
+            )}
+            {!isIndividual && (
+              <div>
+                <div className="text-xs text-gray-500 mb-1">Company Size</div>
+                <div className="font-medium text-gray-800">{company.size ? `${company.size} employees` : '—'}</div>
+              </div>
+            )}
           </div>
 
           <div>

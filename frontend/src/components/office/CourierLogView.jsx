@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Plus, ArrowDownLeft, ArrowUpRight, Search } from 'lucide-react'
 import { COURIER_COMPANIES, COURIER_STATUSES } from '../../data/officeData'
+import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 // Courier / dispatch log — the physical twin of the correspondence register:
 // every package in or out with waybill, party, and an optional related ref
@@ -10,17 +12,17 @@ export default function CourierLogView({ entries, onChange }) {
   const [search, setSearch] = useState('')
   const [direction, setDirection] = useState('')
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ direction: 'out', date: new Date().toISOString().slice(0, 10), company: COURIER_COMPANIES[0], waybill: '', party: '', ref: '', contents: '' })
+  const [form, setForm] = useState({ direction: 'out', date: todayISO(), company: COURIER_COMPANIES[0], waybill: '', party: '', ref: '', contents: '' })
 
   const add = () => {
     if (!form.party.trim() || !form.contents.trim()) return
     onChange([{
-      id: Math.max(0, ...entries.map((c) => c.id)) + 1,
+      id: nextId(entries),
       ...form, waybill: form.waybill.trim() || '—', ref: form.ref.trim() || null,
       status: form.direction === 'out' ? 'sent' : 'received',
       receivedBy: null,
     }, ...entries])
-    setForm({ direction: 'out', date: new Date().toISOString().slice(0, 10), company: COURIER_COMPANIES[0], waybill: '', party: '', ref: '', contents: '' })
+    setForm({ direction: 'out', date: todayISO(), company: COURIER_COMPANIES[0], waybill: '', party: '', ref: '', contents: '' })
     setShowAdd(false)
   }
 

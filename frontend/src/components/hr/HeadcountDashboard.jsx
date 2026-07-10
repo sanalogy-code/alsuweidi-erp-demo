@@ -6,6 +6,10 @@ import { parseLocalDate, todayLocal } from '../../utils/date'
 // exit-interview log; the monthly joiners/leavers series is deterministic mock
 // (the seed only carries current staff) and labelled as such on screen.
 
+// Count rows per key → sorted {label, value} bars.
+const countBy = (rows, keyFn) => [...rows.reduce((m, r) => m.set(keyFn(r), (m.get(keyFn(r)) || 0) + 1), new Map()).entries()]
+  .map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value)
+
 function BarList({ rows, color = 'bg-brand/70' }) {
   const max = Math.max(...rows.map((r) => r.value), 1)
   return (
@@ -25,8 +29,7 @@ export default function HeadcountDashboard({ employees, exits }) {
   const active = employees.filter((e) => e.status === 'active')
 
   // Headcount by department
-  const byDept = [...active.reduce((m, e) => m.set(e.dept, (m.get(e.dept) || 0) + 1), new Map()).entries()]
-    .map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value)
+  const byDept = countBy(active, (e) => e.dept)
 
   // Tenure distribution (from startDate — real data)
   const now = todayLocal()
@@ -41,10 +44,8 @@ export default function HeadcountDashboard({ employees, exits }) {
   const avgTenure = tenures.length ? tenures.reduce((s, t) => s + t, 0) / tenures.length : 0
 
   // Nationality & employment-type mix (EMPLOYEES carries both)
-  const byNat = [...active.reduce((m, e) => m.set(e.nationality, (m.get(e.nationality) || 0) + 1), new Map()).entries()]
-    .map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value)
-  const byType = [...active.reduce((m, e) => m.set(e.employmentType, (m.get(e.employmentType) || 0) + 1), new Map()).entries()]
-    .map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value)
+  const byNat = countBy(active, (e) => e.nationality)
+  const byType = countBy(active, (e) => e.employmentType)
 
   // Attrition: leavers YTD (2026 exit records) annualized over average headcount
   const leavers2026 = exits.filter((e) => e.lastWorkingDay.startsWith('2026')).length

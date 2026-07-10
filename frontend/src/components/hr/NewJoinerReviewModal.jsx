@@ -5,6 +5,7 @@ import EmploymentRecordFields, {
   emptyEmploymentForm, employmentFormComplete, buildEmploymentRecord,
 } from './EmploymentRecordFields'
 import { EMPLOYEE_DOCUMENT_TYPES } from '../../data/hrData'
+import { todayISO } from '../../utils/date'
 
 // HR's half of the new-joiner flow: verify what the employee submitted, then
 // complete the employment record (shared fields with the direct "Add employee" path).
@@ -37,7 +38,7 @@ export default function NewJoinerReviewModal({ joiner, employees, onClose, onApp
       passport: null, visa: null, emiratesId: null,
       dependents: joiner.dependents.map((d) => ({ ...d, nationality: p.nationality, passport: null, visa: null, emiratesId: null, insurance: null })),
       accomplishments: joiner.engineerLicense?.held
-        ? [{ type: 'PE License', issuer: joiner.engineerLicense.organization || 'License body', date: new Date().toISOString().slice(0, 10), expiryDate: joiner.engineerLicense.expiryDate || null, verified: true }]
+        ? [{ type: 'PE License', issuer: joiner.engineerLicense.organization || 'License body', date: todayISO(), expiryDate: joiner.engineerLicense.expiryDate || null, verified: true }]
         : [],
       emergencyContact: p.emergencyContact,
       documents: joiner.documents,

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { TEAM_ROLES } from '../../../data/pmData'
+import { nextId } from '../../../utils/id'
 
 // Project team panel: PD → DPM/CPM → discipline leads → inspectors (extends the
 // existing DPM/CPM links). Members matching an HR employee open the HR profile;
@@ -16,7 +17,7 @@ export default function TeamView({ pm, onUpdate, employees, onViewEmployee }) {
     if (!name) return
     onUpdate({
       ...pm,
-      team: [...pm.team, { id: Math.max(0, ...pm.team.map((t) => t.id)) + 1, role: form.role, employeeId: emp ? emp.id : null, name }],
+      team: [...pm.team, { id: nextId(pm.team), role: form.role, employeeId: emp ? emp.id : null, name }],
     })
     setForm({ role: TEAM_ROLES[0], employeeId: '', name: '' }); setShowAdd(false)
   }

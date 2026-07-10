@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CalendarDays, Check, Pencil, Plus } from 'lucide-react'
+import { nextId } from '../../utils/id'
 
 const fmtRange = (h) => {
   const opts = { day: 'numeric', month: 'short' }
@@ -37,7 +38,7 @@ export default function HolidaysTab({ holidays, onUpdateHolidays }) {
     e.preventDefault()
     if (!form.name.trim() || !form.date) return
     onUpdateHolidays([...holidays, {
-      id: Math.max(...holidays.map((h) => h.id), 0) + 1,
+      id: nextId(holidays),
       name: form.name.trim(),
       date: form.date,
       endDate: form.endDate || null,

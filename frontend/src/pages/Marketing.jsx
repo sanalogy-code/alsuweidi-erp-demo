@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Inbox, CalendarDays, FolderKanban, Palette, LineChart, FileUser, Megaphone, BadgeCheck, Ticket, Trophy } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SidebarNav from '../components/SidebarNav'
 import MarketingInbox from '../components/marketing/MarketingInbox'
 import ContentCalendar from '../components/marketing/ContentCalendar'
 import PortfolioView from '../components/marketing/PortfolioView'
@@ -16,6 +17,7 @@ import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { CONTENT_ITEMS, CAMPAIGNS, MARKETING_EVENTS, AWARD_SUBMISSIONS, PACK_USAGE_LOG } from '../data/marketingData'
 import { EMPLOYEES } from '../data/hrData'
 import { MARKETING_VIEW_ROLES, HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
+import { nextId } from '../utils/id'
 
 // Marketing module — content calendar, portfolio, CVs, and analytics
 // are for marketing + top management only. Branding materials are the exception:
@@ -64,44 +66,12 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
     if (task) onCompleteTask(task.id, 'Description written from the Portfolio view.')
   }
 
-  const navButton = (item) => {
-    const Icon = item.icon
-    const active = view === item.key
-    return (
-      <button
-        key={item.key}
-        onClick={() => setView(item.key)}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
-      >
-        <Icon size={15} className="shrink-0" />
-        <span className="flex-1 truncate">{item.label}</span>
-        {item.badge > 0 && (
-          <span className="bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center shrink-0">
-            {item.badge}
-          </span>
-        )}
-      </button>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar user={user} onLogout={onLogout} title="Marketing" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <aside className="w-full sm:w-44 shrink-0 sm:sticky sm:top-6">
-          <div className="flex sm:flex-col flex-wrap gap-1">
-            {NAV_MAIN.map(navButton)}
-          </div>
-          {NAV_WORKSPACE.length > 0 && (
-            <>
-              <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 pt-4 pb-1 hidden sm:block">Marketing Workspace</div>
-              <div className="flex sm:flex-col flex-wrap gap-1 mt-1 sm:mt-0">
-                {NAV_WORKSPACE.map(navButton)}
-              </div>
-            </>
-          )}
-        </aside>
+        <SidebarNav groups={[{ items: NAV_MAIN }, { label: 'Marketing Workspace', items: NAV_WORKSPACE }]} active={view} onSelect={setView} />
 
         <main className="flex-1 min-w-0 w-full">
           {view === 'branding' && <BrandAssetsView />}
@@ -120,7 +90,7 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
               items={contentItems}
               projects={projects}
               user={user}
-              onAdd={(c) => setContentItems([...contentItems, { ...c, id: Math.max(...contentItems.map((x) => x.id), 0) + 1 }])}
+              onAdd={(c) => setContentItems([...contentItems, { ...c, id: nextId(contentItems) }])}
               onUpdate={(c) => setContentItems(contentItems.map((x) => (x.id === c.id ? c : x)))}
             />
           )}

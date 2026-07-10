@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Check, Truck, PlayCircle, CheckCircle2 } from 'lucide-react'
 import { PROJECTS } from '../../data/projectsData'
-import { parseLocalDate, todayLocal } from '../../utils/date'
+import { parseLocalDate, todayLocal, todayISO, fmtShortDate as fmtDate } from '../../utils/date'
 import { fmtAED, SUPPLIER_INVOICE_STATUSES, supplierInvoiceStatusMeta } from '../../data/financeData'
-
-const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
 
 // Supplier / payables ledger — subconsultant & supplier invoices IN.
 // Workflow: pending_approval → approved → scheduled (payment run) → paid.
@@ -15,7 +13,7 @@ export default function PayablesView({ supplierInvoices, onUpdate }) {
 
   const totalOf = (s) => s.amount + (s.vatAmount ?? 0)
   const approve = (s) => onUpdate({ ...s, status: 'approved' })
-  const markPaid = (s) => onUpdate({ ...s, status: 'paid', paidDate: new Date().toISOString().slice(0, 10) })
+  const markPaid = (s) => onUpdate({ ...s, status: 'paid', paidDate: todayISO() })
 
   const approved = supplierInvoices.filter((s) => s.status === 'approved')
   const scheduled = supplierInvoices.filter((s) => s.status === 'scheduled')

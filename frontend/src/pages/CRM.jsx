@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus, Home, TrendingUp, Building2, Users, CheckSquare, BarChart3, FileText, FileSignature } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SidebarNav from '../components/SidebarNav'
 import Modal from '../components/crm/Modal'
 import CreateProjectFromDealModal from '../components/projects/CreateProjectFromDealModal'
 import { EMPLOYEES } from '../data/hrData'
@@ -19,6 +20,7 @@ import ExportContactsModal from '../components/crm/ExportContactsModal'
 import { INITIAL_COMPANIES, INITIAL_CONTACTS, INITIAL_TASKS, INITIAL_INTERACTIONS, INTERACTION_TYPES, STAGES, todayISO } from '../data/crmData'
 import RfpView from '../components/crm/RfpView'
 import { INITIAL_RFPS } from '../data/rfpData'
+import { nextId } from '../utils/id'
 
 export default function CRM({ user, onLogout, projects = [], onAddProject, deals, setDeals, onRequestStaffing }) {
   const navigate = useNavigate()
@@ -50,7 +52,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
   const [showLogInteraction, setShowLogInteraction] = useState(false)
   const [addContactCompanyId, setAddContactCompanyId] = useState(null)
 
-  const [companyForm, setCompanyForm] = useState({ name: '', industry: '', location: '', status: 'Prospect' })
+  const [companyForm, setCompanyForm] = useState({ name: '', industry: '', location: '', status: 'Prospect', kind: 'company' })
   const [contactForm, setContactForm] = useState({ name: '', title: '', email: '', phone: '' })
   const [dealForm, setDealForm] = useState({ companyId: '', contactId: '', title: '', value: '', stage: 'Prospecting', probability: 25, closeDate: '' })
   const [taskForm, setTaskForm] = useState({ contactId: '', title: '', dueDate: '' })
@@ -114,9 +116,9 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
   function addCompany(e) {
     e.preventDefault()
     if (!companyForm.name.trim()) return
-    const id = Math.max(0, ...companies.map((c) => c.id)) + 1
+    const id = nextId(companies)
     setCompanies([...companies, { id, tags: [], services: [], keepInMind: [], projectHistory: [], ...companyForm }])
-    setCompanyForm({ name: '', industry: '', location: '', status: 'Prospect' })
+    setCompanyForm({ name: '', industry: '', location: '', status: 'Prospect', kind: 'company' })
     setShowAddCompany(false)
     setSelectedCompany(id)
     setTab('companies')
@@ -125,7 +127,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
   function addContact(e) {
     e.preventDefault()
     if (!contactForm.name.trim() || !addContactCompanyId) return
-    const id = Math.max(0, ...contacts.map((c) => c.id)) + 1
+    const id = nextId(contacts)
     setContacts([...contacts, { id, companyId: addContactCompanyId, ...contactForm, lastContact: todayISO(), notes: '' }])
     setContactForm({ name: '', title: '', email: '', phone: '' })
     setShowAddContact(false)
@@ -134,7 +136,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
   function addDeal(e) {
     e.preventDefault()
     if (!dealForm.title.trim() || !dealForm.companyId) return
-    const id = Math.max(0, ...deals.map((d) => d.id)) + 1
+    const id = nextId(deals)
     setDeals([...deals, {
       id,
       companyId: Number(dealForm.companyId),
@@ -152,7 +154,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
   function addTask(e) {
     e.preventDefault()
     if (!taskForm.title.trim() || !taskForm.contactId || !taskForm.dueDate) return
-    const id = Math.max(0, ...tasks.map((t) => t.id)) + 1
+    const id = nextId(tasks)
     setTasks([...tasks, { id, contactId: Number(taskForm.contactId), title: taskForm.title, dueDate: taskForm.dueDate, done: false }])
     setTaskForm({ contactId: '', title: '', dueDate: '' })
     setShowAddTask(false)
@@ -169,7 +171,7 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
   function addInteraction(e) {
     e.preventDefault()
     if (!interactionForm.contactId || !interactionForm.note.trim()) return
-    const id = Math.max(0, ...interactions.map((i) => i.id)) + 1
+    const id = nextId(interactions)
     const contactId = Number(interactionForm.contactId)
     const date = interactionForm.date || todayISO()
     setInteractions([...interactions, { id, contactId, type: interactionForm.type, note: interactionForm.note, date }])
@@ -215,44 +217,12 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
     },
   ]
 
-  const navButton = (item) => {
-    const Icon = item.icon
-    const active = tab === item.key
-    return (
-      <button
-        key={item.key}
-        onClick={() => setTab(item.key)}
-        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
-      >
-        <Icon size={15} className="shrink-0" />
-        <span className="flex-1 truncate">{item.label}</span>
-        {item.badge > 0 && (
-          <span className="bg-red-500 text-white text-[10px] font-semibold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center shrink-0">
-            {item.badge}
-          </span>
-        )}
-      </button>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar user={user} onLogout={onLogout} title="CRM" showBack />
 
       <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <aside className="w-full sm:w-44 shrink-0 sm:sticky sm:top-6">
-          <div className="flex sm:flex-col flex-wrap gap-1">
-            {NAV_MAIN.map(navButton)}
-          </div>
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label}>
-              <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 pt-4 pb-1 hidden sm:block">{group.label}</div>
-              <div className="flex sm:flex-col flex-wrap gap-1 mt-1 sm:mt-0">
-                {group.items.map(navButton)}
-              </div>
-            </div>
-          ))}
-        </aside>
+        <SidebarNav groups={[{ items: NAV_MAIN }, ...NAV_GROUPS]} active={tab} onSelect={setTab} />
 
         <main className="flex-1 min-w-0 w-full">
         <div className="flex justify-between items-center mb-4">
@@ -328,8 +298,18 @@ export default function CRM({ user, onLogout, projects = [], onAddProject, deals
       {showAddCompany && (
         <Modal title="New Client" onClose={() => setShowAddCompany(false)}>
           <form onSubmit={addCompany} className="space-y-3">
+            {/* Individuals-as-clients default (decision pending): a private client
+                is a record flagged kind: 'individual' — same pipeline/contacts. */}
+            <div className="flex gap-1.5">
+              {[{ k: 'company', label: 'Company' }, { k: 'individual', label: 'Individual' }].map(({ k, label }) => (
+                <button type="button" key={k} onClick={() => setCompanyForm({ ...companyForm, kind: k })}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${companyForm.kind === k ? 'bg-brand/10 text-brand border-brand/30' : 'border-gray-200 text-gray-500'}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Company name</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{companyForm.kind === 'individual' ? 'Client name' : 'Company name'}</label>
               <input required value={companyForm.name} onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand" />
             </div>

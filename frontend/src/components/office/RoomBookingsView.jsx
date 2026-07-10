@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { Plus, Users } from 'lucide-react'
 import { MEETING_ROOMS } from '../../data/officeData'
+import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 // Meeting-room bookings — day view per room with clash detection on the form.
 // The Office module is gated to admin staff for now; "any employee books their
 // own room" lands with the notifications/home phase (noted on-screen).
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => todayISO()
 
 export default function RoomBookingsView({ bookings, onChange, user }) {
   const [date, setDate] = useState(today())
@@ -27,7 +29,7 @@ export default function RoomBookingsView({ bookings, onChange, user }) {
       setError(`${room?.name} is already booked ${hit.from}–${hit.to} that day (${hit.bookedBy} — ${hit.purpose}). Pick another slot or room.`)
       return
     }
-    onChange([...bookings, { ...form, id: Math.max(0, ...bookings.map((b) => b.id)) + 1, roomId: Number(form.roomId) }])
+    onChange([...bookings, { ...form, id: nextId(bookings), roomId: Number(form.roomId) }])
     setError('')
     setShowAdd(false)
     setDate(form.date)

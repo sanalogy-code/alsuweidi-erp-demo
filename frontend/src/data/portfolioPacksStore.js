@@ -4,6 +4,8 @@
 // threading more props through App.jsx. Local state only, like everything else.
 import { useSyncExternalStore } from 'react'
 import { PORTFOLIO_PACKS } from './marketingData'
+import { todayISO } from '../utils/date'
+import { nextId } from '../utils/id'
 
 let packs = [...PORTFOLIO_PACKS]
 const listeners = new Set()
@@ -20,8 +22,8 @@ export function usePortfolioPacks() {
 }
 
 export function addPortfolioPack({ category, fileName }) {
-  const id = Math.max(0, ...packs.map((p) => p.id)) + 1
-  packs = [...packs, { id, category, fileName, uploadedDate: new Date().toISOString().slice(0, 10) }]
+  const id = nextId(packs)
+  packs = [...packs, { id, category, fileName, uploadedDate: todayISO() }]
   notify()
 }
 

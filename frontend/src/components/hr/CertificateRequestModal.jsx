@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Modal from '../crm/Modal'
 import { CERTIFICATE_TYPES, CERTIFICATE_LANGUAGES, ADDRESSEE_SUGGESTIONS } from '../../data/hrData'
+import { todayISO } from '../../utils/date'
 
 export default function CertificateRequestModal({ user, employees = [], onClose, onSubmit }) {
   const [type, setType] = useState(CERTIFICATE_TYPES[0].value)
@@ -32,7 +33,7 @@ export default function CertificateRequestModal({ user, employees = [], onClose,
       purpose: purpose.trim(),
       nocObject: nocObject.trim(),
       status: 'pending',
-      requestedDate: new Date().toISOString().slice(0, 10),
+      requestedDate: todayISO(),
       resolvedDate: null,
     })
     onClose()

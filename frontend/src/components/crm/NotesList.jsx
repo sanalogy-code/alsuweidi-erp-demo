@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { StickyNote, Plus } from 'lucide-react'
 import { todayISO } from '../../data/crmData'
+import { nextId } from '../../utils/id'
 
 // One consistent list style for free-text + date + author notes:
 // "keep in mind" on companies/contacts and "lessons learned" on projects.
@@ -14,7 +15,7 @@ export default function NotesList({ title = 'Keep in Mind', notes = [], onAdd, e
   function submit(e) {
     e.preventDefault()
     if (!text.trim()) return
-    const id = Math.max(0, ...notes.map((n) => n.id)) + 1
+    const id = nextId(notes)
     onAdd({ id, text: text.trim(), author: author.trim() || 'Unknown', date: todayISO() })
     setText('')
     setAuthor('')

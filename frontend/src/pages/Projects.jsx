@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge, FileBarChart, ShieldAlert } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SidebarNav from '../components/SidebarNav'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import ProjectsDashboard from '../components/projects/ProjectsDashboard'
@@ -33,7 +34,7 @@ const NAV_GROUPS = [
   ] },
 ]
 
-export default function Projects({ user, onLogout, projects = [], pmRecords = {}, timesheets = [], allocations = [], onUpdateAllocations, onUpdateProject, onAddProject, onAddMarketingTask }) {
+export default function Projects({ user, onLogout, projects = [], pmRecords = {}, timesheets = [], allocations = [], onUpdateAllocations, onUpdateProject, onAddProject, onAddMarketingTask, invoices, expenses }) {
   const location = useLocation()
   const navigate = useNavigate()
   // My Work is the daily-driver landing view (Batch 10) — the first thing a PM
@@ -62,7 +63,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
       <Navbar user={user} onLogout={onLogout} title="Projects" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <aside className="w-full sm:w-44 shrink-0 sm:sticky sm:top-6">
+        <SidebarNav groups={NAV_GROUPS} active={view} onSelect={setView}>
           {onAddProject && (
             <button
               onClick={() => setShowNewProject(true)}
@@ -71,37 +72,14 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
               <Plus size={15} /> New project
             </button>
           )}
-          <div className="space-y-3">
-            {NAV_GROUPS.map((group) => (
-              <div key={group.label}>
-                <div className="text-[10px] font-bold uppercase tracking-wide text-gray-400 px-3 mb-1">{group.label}</div>
-                <div className="flex sm:flex-col flex-wrap gap-1">
-                  {group.items.map((item) => {
-                    const Icon = item.icon
-                    const active = view === item.key
-                    return (
-                      <button
-                        key={item.key}
-                        onClick={() => setView(item.key)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}
-                      >
-                        <Icon size={15} className="shrink-0" />
-                        <span className="flex-1 truncate">{item.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </aside>
+        </SidebarNav>
 
         <main className="flex-1 min-w-0 w-full">
           {view === 'mywork' && (
             <MyWorkView user={user} projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'pmdash' && (
-            <PmDashboard projects={projects} pmRecords={pmRecords} timesheets={timesheets} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} />
+            <PmDashboard projects={projects} pmRecords={pmRecords} timesheets={timesheets} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} invoices={invoices} />
           )}
           {view === 'reviews' && (
             <div className="space-y-3">
@@ -110,8 +88,8 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
                 <button onClick={() => setReviewLens('construction')} className={`px-3 py-1.5 rounded-md border font-medium transition ${reviewLens === 'construction' ? 'border-brand text-brand bg-brand/5' : 'border-gray-200 text-gray-500 hover:border-gray-400'}`}>Construction review (monthly)</button>
               </div>
               {reviewLens === 'design'
-                ? <DmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
-                : <CmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} />}
+                ? <DmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} invoices={invoices} expenses={expenses} />
+                : <CmrView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} invoices={invoices} />}
             </div>
           )}
           {view === 'risks' && (
@@ -143,6 +121,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
           project={selectedProject}
           employees={EMPLOYEES}
           canViewSensitive={canViewSensitive}
+          invoices={invoices}
           onClose={() => setSelectedProject(null)}
           onViewEmployee={(emp) => setSelectedEmployee(emp)}
           onUpdateProject={(p) => { onUpdateProject?.(p); setSelectedProject(p) }}

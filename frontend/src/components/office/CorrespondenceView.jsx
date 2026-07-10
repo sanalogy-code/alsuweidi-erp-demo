@@ -3,6 +3,8 @@ import { Plus, ArrowDownLeft, ArrowUpRight, Paperclip, Search } from 'lucide-rea
 import { LETTER_TYPES, LETTER_STATUSES, letterStatusMeta } from '../../data/officeData'
 import { PROJECTS } from '../../data/projectsData'
 import { daysUntil } from '../../data/pmData'
+import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 // Correspondence register — the ODC's core tool: every incoming/outgoing letter
 // with its reference number, linked project, and reply-due tracking. Filters,
@@ -14,24 +16,24 @@ export default function CorrespondenceView({ letters, onChange }) {
   const [status, setStatus] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ direction: 'in', party: '', subject: '', type: LETTER_TYPES[0], projectId: '', date: new Date().toISOString().slice(0, 10), attachment: '', dueBy: '' })
+  const [form, setForm] = useState({ direction: 'in', party: '', subject: '', type: LETTER_TYPES[0], projectId: '', date: todayISO(), attachment: '', dueBy: '' })
 
   const nextRef = (dir) => {
     const prefix = dir === 'in' ? 'IN' : 'OUT'
-    const max = Math.max(0, ...letters.filter((l) => l.ref.startsWith(prefix)).map((l) => Number(l.ref.split('-')[2]) || 0))
+    const max = nextId(letters.filter((l) => l.ref.startsWith(prefix)).map((l) => Number(l.ref.split('-')[2]) || 0))
     return `${prefix}-2026-${String(max + 1).padStart(3, '0')}`
   }
 
   const add = () => {
     if (!form.party.trim() || !form.subject.trim()) return
     onChange([{
-      id: Math.max(0, ...letters.map((l) => l.id)) + 1,
+      id: Math.max(0, ...letters),
       ref: nextRef(form.direction), ...form,
       projectId: form.projectId ? Number(form.projectId) : null,
       attachment: form.attachment.trim() || null, dueBy: form.dueBy || null,
       status: form.direction === 'in' ? 'action_required' : 'filed',
     }, ...letters])
-    setForm({ direction: 'in', party: '', subject: '', type: LETTER_TYPES[0], projectId: '', date: new Date().toISOString().slice(0, 10), attachment: '', dueBy: '' })
+    setForm({ direction: 'in', party: '', subject: '', type: LETTER_TYPES[0], projectId: '', date: todayISO(), attachment: '', dueBy: '' })
     setShowAdd(false)
   }
 

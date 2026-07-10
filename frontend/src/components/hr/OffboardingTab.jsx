@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { UserMinus, CalendarX, ClipboardCheck } from 'lucide-react'
 import Modal from '../crm/Modal'
 import { OFFBOARDING_REASONS, OFFBOARDING_CHECKLIST_TEMPLATE } from '../../data/hrData'
-import { parseLocalDate, todayLocal } from '../../utils/date'
+import { parseLocalDate, todayLocal, todayISO } from '../../utils/date'
 
 const fmt = (d) => (d ? parseLocalDate(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—')
 
@@ -49,7 +49,7 @@ function StartOffboardingModal({ employees, offboardings, onClose, onStart }) {
                 employeeId: Number(form.employeeId),
                 employeeName: employee.name,
                 reason: form.reason,
-                startedDate: new Date().toISOString().slice(0, 10),
+                startedDate: todayISO(),
                 lastWorkingDay: form.lastWorkingDay,
                 exitInterviewDate: form.exitInterviewDate || null,
                 exitInterviewNotes: '',

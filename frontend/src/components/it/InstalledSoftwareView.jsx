@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronRight, Plus, AlertTriangle } from 'lucide-react'
+import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 // Software deployment per asset — which licensed software is installed where.
 // Flags any license whose install count exceeds its purchased seats.
@@ -16,8 +18,8 @@ export default function InstalledSoftwareView({ installs, onChange, assets, lice
   const addInstall = (assetId) => {
     if (!pick) return
     onChange([...installs, {
-      id: Math.max(0, ...installs.map((i) => i.id)) + 1,
-      assetId, licenseId: Number(pick), installedDate: new Date().toISOString().slice(0, 10),
+      id: nextId(installs),
+      assetId, licenseId: Number(pick), installedDate: todayISO(),
     }])
     setPick(''); setAddFor(null)
   }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { toLocalISO, weekStartOf } from '../../../data/timesheetData'
+import { nextId } from '../../../utils/id'
 
 // Weekly progress updates per phase (Batch 10): what moved, % complete, blockers.
 // The latest update feeds the phase overview and is the raw material for the
@@ -14,7 +15,7 @@ export default function WeeklyUpdatesView({ phase, onUpdate, currentUserName }) 
   const add = () => {
     if (!form.summary.trim()) return
     const entry = {
-      id: Math.max(0, ...phase.weeklyUpdates.map((u) => u.id)) + 1,
+      id: nextId(phase.weeklyUpdates),
       weekStart: toLocalISO(weekStartOf(new Date())),
       author: currentUserName || 'Me',
       pctComplete: Math.max(0, Math.min(100, Number(form.pctComplete) || 0)),

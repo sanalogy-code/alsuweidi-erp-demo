@@ -3,6 +3,8 @@ import { UserPlus, KeyRound, Ban, RotateCcw, Trash2, Pencil, Users, ShieldPlus, 
 import Modal from '../crm/Modal'
 import { ROLES } from '../../data/dashboardData'
 import { userStatusMeta, PERMISSION_MODULES } from '../../data/adminData'
+import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 const roleLabel = (value) => ROLES.find((r) => r.value === value)?.label || value
 
@@ -235,10 +237,10 @@ export default function UsersView({ users, onChange }) {
             if (editing === 'new') {
               const created = {
                 ...data,
-                id: Math.max(0, ...users.map((u) => u.id)) + 1,
+                id: nextId(users),
                 status: 'invited',
                 employeeId: null,
-                createdDate: new Date().toISOString().slice(0, 10),
+                createdDate: todayISO(),
                 lastLogin: null,
                 logins30d: 0,
                 note: 'Invitation email sent — awaiting password setup (mock)',

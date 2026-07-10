@@ -8,6 +8,7 @@ import { AUTHORITY_TEMPLATES, authorityStageMeta } from '../../../data/pmData'
 // data, not code; timelines are user-entered, never hardcoded (per research).
 
 import { todayISO } from '../../../utils/date'
+import { nextId } from '../../../utils/id'
 
 export default function AuthoritiesView({ pm, onUpdate }) {
   const [expanded, setExpanded] = useState(null)
@@ -18,7 +19,7 @@ export default function AuthoritiesView({ pm, onUpdate }) {
     onUpdate({
       ...pm,
       authorities: [...pm.authorities, {
-        id: Math.max(0, ...pm.authorities.map((a) => a.id)) + 1,
+        id: nextId(pm.authorities),
         authority: tpl.authority, type: tpl.type, portal: tpl.portal, notes: '',
         stages: tpl.stages.map((s) => ({ key: s, status: 'not_started', date: null })),
         cycles: [],
@@ -34,7 +35,7 @@ export default function AuthoritiesView({ pm, onUpdate }) {
       authorities: pm.authorities.map((a) => a.id === wf.id ? {
         ...a,
         stages: a.stages.map((s) => s.key === stageKey ? { ...s, status, date: todayISO() } : s),
-        cycles: [...a.cycles, { id: Math.max(0, ...a.cycles.map((c) => c.id)) + 1, date: todayISO(), event: `${stageKey} — ${event}` }],
+        cycles: [...a.cycles, { id: nextId(a.cycles), date: todayISO(), event: `${stageKey} — ${event}` }],
       } : a),
     })
   }

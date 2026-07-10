@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Landmark, EyeOff, Plus } from 'lucide-react'
+import { nextId } from '../../utils/id'
+import { fmtAED } from '../../data/financeData'
 
 // Authority & access (Management items from THE EVERYTHING LIST):
 // 1. Delegation-of-authority matrix — who signs what, up to what AED. The demo
@@ -8,8 +10,6 @@ import { Landmark, EyeOff, Plus } from 'lucide-react'
 // 2. Visibility rules — the "access-override depth" follow-on to per-user
 //    special access: rules that scope module visibility by grade or employment
 //    type. Display-only until Phase 2 auth enforces anything.
-
-const AED = (n) => `AED ${n.toLocaleString('en-AE')}`
 
 const INITIAL_DOA = [
   { id: 1, action: 'Approve expense', staff: 5000, dept: 25000, mgmt: 250000, board: null, note: 'Above management limit goes to the owner/board.' },
@@ -21,7 +21,7 @@ const INITIAL_DOA = [
   { id: 7, action: 'Commit to variation / VO', staff: null, dept: 50000, mgmt: 500000, board: null, note: 'Contract-admin follows FIDIC anyway.' },
 ]
 
-const LIMIT_LABEL = (v) => (v == null ? '—' : v === Infinity ? 'No limit' : AED(v))
+const LIMIT_LABEL = (v) => (v == null ? '—' : v === Infinity ? 'No limit' : fmtAED(v))
 
 const INITIAL_VIS_RULES = [
   { id: 1, module: 'Financials', rule: 'Grade ≥ G5 OR role in Management/Finance', level: 'view' },
@@ -44,7 +44,7 @@ export default function GovernanceView() {
 
   const addRule = () => {
     if (!ruleForm.module.trim() || !ruleForm.rule.trim()) return
-    setRules((prev) => [...prev, { ...ruleForm, id: Math.max(0, ...prev.map((r) => r.id)) + 1 }])
+    setRules((prev) => [...prev, { ...ruleForm, id: nextId(prev) }])
     setRuleForm({ module: '', rule: '', level: 'view' })
     setShowAddRule(false)
   }

@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { Plus, Banknote } from 'lucide-react'
-import { parseLocalDate } from '../../utils/date'
+import { parseLocalDate, todayISO, fmtShortDate as fmtDate } from '../../utils/date'
 import {
   fmtAED, invoiceOutstanding, invoiceTotal, CASH_ACCOUNTS,
 } from '../../data/financeData'
-
-const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
 
 // Receipts register — every payment received, with its allocation across invoice(s).
 // This register is the source of truth for "Paid" on invoices: recording a receipt
@@ -16,7 +14,7 @@ export default function ReceiptsView({ receipts, invoices, onAddReceipt }) {
   const [range, setRange] = useState({ from: '', to: '' })
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({
-    date: new Date().toISOString().slice(0, 10), reference: '',
+    date: todayISO(), reference: '',
     bankAccount: CASH_ACCOUNTS[0]?.name || '', clientName: '',
   })
   const [allocs, setAllocs] = useState([]) // [{ invoiceId, amount }]
@@ -52,7 +50,7 @@ export default function ReceiptsView({ receipts, invoices, onAddReceipt }) {
       bankAccount: form.bankAccount, clientName: form.clientName,
       amount: clamped.reduce((s, a) => s + a.amount, 0), allocations: clamped,
     })
-    setForm({ date: new Date().toISOString().slice(0, 10), reference: '', bankAccount: CASH_ACCOUNTS[0]?.name || '', clientName: '' })
+    setForm({ date: todayISO(), reference: '', bankAccount: CASH_ACCOUNTS[0]?.name || '', clientName: '' })
     setAllocs([]); setShowAdd(false)
   }
 

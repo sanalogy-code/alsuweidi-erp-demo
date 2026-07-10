@@ -1,3 +1,5 @@
+import { nextId } from '../../../utils/id'
+import { todayISO } from '../../../utils/date'
 import { useState } from 'react'
 import { Plus, ChevronDown, ChevronUp, MessageSquare, Link2, CornerDownRight, Clock3, Lock, LayoutList, Table2 } from 'lucide-react'
 import TaskTable from './TaskTable'
@@ -12,7 +14,7 @@ import {
 // (dependsOn → blocked until predecessors done), and LOG HOURS (writes straight
 // into the assignee's weekly timesheet for this project).
 
-const todayIso = () => new Date().toISOString().slice(0, 10)
+const todayIso = () => todayISO()
 
 // `compact` = board-column layout: title + chips stacked, no fixed-width columns.
 export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, onLogHours, depth = 0, defaultOpen = false, compact = false }) {
@@ -36,12 +38,12 @@ export function TaskCard({ t, patch, allTasks, currentUserName, onAddSubtask, on
   const toggleItem = (id) => patch({ checklist: t.checklist.map((c) => c.id === id ? { ...c, done: !c.done } : c) })
   const addItem = () => {
     if (!newItem.trim()) return
-    patch({ checklist: [...(t.checklist || []), { id: Math.max(0, ...(t.checklist || []).map((c) => c.id)) + 1, text: newItem.trim(), done: false }] })
+    patch({ checklist: [...(t.checklist || []), { id: nextId((t.checklist || [])), text: newItem.trim(), done: false }] })
     setNewItem('')
   }
   const addComment = (text) => {
     if (!text.trim()) return
-    patch({ comments: [...(t.comments || []), { id: Math.max(0, ...(t.comments || []).map((c) => c.id)) + 1, author: currentUserName || 'Me', date: todayIso(), text: text.trim() }] })
+    patch({ comments: [...(t.comments || []), { id: nextId((t.comments || [])), author: currentUserName || 'Me', date: todayIso(), text: text.trim() }] })
   }
   const logHours = () => {
     const h = Number(hoursForm.hours)
@@ -254,7 +256,7 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
     onUpdate({
       ...phase,
       tasks: [...phase.tasks, {
-        id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1,
+        id: nextId(phase.tasks),
         parentId: parent.id, title, assignee: parent.assignee, createdBy: currentUserName || null,
         startDate: todayIso(), due: parent.due || null, effortHours: 0, pctComplete: 0,
         sprintId: parent.sprintId ?? null, priority: parent.priority, status: 'open',
@@ -264,7 +266,7 @@ export default function PmTasksView({ phase, onUpdate, currentUserName, onLogHou
   }
   const add = () => {
     if (!form.title.trim()) return
-    onUpdate({ ...phase, tasks: [...phase.tasks, { id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1, ...form, createdBy: currentUserName || null, effortHours: 0, pctComplete: 0, sprintId: null, status: 'open', checklist: [], comments: [] }] })
+    onUpdate({ ...phase, tasks: [...phase.tasks, { id: nextId(phase.tasks), ...form, createdBy: currentUserName || null, effortHours: 0, pctComplete: 0, sprintId: null, status: 'open', checklist: [], comments: [] }] })
     setForm({ title: '', assignee: teamNames[0] || '', startDate: todayIso(), due: '', priority: 'normal' }); setShowAdd(false)
   }
 

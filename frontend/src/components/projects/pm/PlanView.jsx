@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Plus, Diamond, Lock } from 'lucide-react'
 import PmTasksView, { TaskCard, TaskCardTree } from './PmTasksView'
 import { PM_METHODS, TASK_STATUSES, taskIsLate, taskBlocked, phaseProgress, daysUntil } from '../../../data/pmData'
-import { parseLocalDate, todayLocal } from '../../../utils/date'
+import { parseLocalDate, todayLocal, todayISO } from '../../../utils/date'
+import { nextId } from '../../../utils/id'
 
 // "Plan & tasks" — the working plan for a phase (Batch 11, Sana's feedback).
 // Methodology is a per-project choice: WATERFALL renders the plan as a
@@ -156,7 +157,7 @@ function MilestoneEditor({ phase, onUpdatePhase }) {
   const [form, setForm] = useState({ label: '', baseline: '', forecast: '' })
   const add = () => {
     if (!form.label.trim() || !form.baseline) return
-    onUpdatePhase({ ...phase, milestones: [...phase.milestones, { id: Math.max(0, ...phase.milestones.map((m) => m.id)) + 1, label: form.label.trim(), baseline: form.baseline, forecast: form.forecast || form.baseline, actual: null }] })
+    onUpdatePhase({ ...phase, milestones: [...phase.milestones, { id: nextId(phase.milestones), label: form.label.trim(), baseline: form.baseline, forecast: form.forecast || form.baseline, actual: null }] })
     setForm({ label: '', baseline: '', forecast: '' }); setShowAdd(false)
   }
   const patch = (id, changes) => onUpdatePhase({ ...phase, milestones: phase.milestones.map((m) => m.id === id ? { ...m, ...changes } : m) })
@@ -186,7 +187,7 @@ function MilestoneEditor({ phase, onUpdatePhase }) {
               {!m.actual ? (
                 <>
                   <label className="text-gray-500">forecast <input type="date" value={m.forecast || ''} onChange={(e) => patch(m.id, { forecast: e.target.value || null })} className={`border rounded-md px-1.5 py-0.5 ml-1 ${slipped ? 'border-red-300 text-red-600' : ''}`} /></label>
-                  <button onClick={() => patch(m.id, { actual: new Date().toISOString().slice(0, 10) })} className="px-2 py-0.5 rounded-md border border-green-300 text-green-700 hover:bg-green-50">Achieved today</button>
+                  <button onClick={() => patch(m.id, { actual: todayISO() })} className="px-2 py-0.5 rounded-md border border-green-300 text-green-700 hover:bg-green-50">Achieved today</button>
                 </>
               ) : (
                 <span className="text-green-700">achieved {m.actual} <button onClick={() => patch(m.id, { actual: null })} className="text-gray-400 hover:underline ml-1">undo</button></span>
@@ -212,9 +213,9 @@ function SprintBoard({ pm, phase, onUpdatePhase, onUpdatePm, currentUserName, on
   const addSubtask = (parent, title) => onUpdatePhase({
     ...phase,
     tasks: [...phase.tasks, {
-      id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1,
+      id: nextId(phase.tasks),
       parentId: parent.id, title, assignee: parent.assignee, createdBy: currentUserName || null,
-      startDate: new Date().toISOString().slice(0, 10), due: parent.due || null,
+      startDate: todayISO(), due: parent.due || null,
       effortHours: 0, pctComplete: 0, sprintId: parent.sprintId ?? null,
       priority: parent.priority, status: 'open', checklist: [], comments: [],
     }],
@@ -225,12 +226,12 @@ function SprintBoard({ pm, phase, onUpdatePhase, onUpdatePm, currentUserName, on
 
   const addSprint = () => {
     if (!sprintForm.name.trim()) return
-    onUpdatePm({ ...pm, sprints: [...pm.sprints, { id: Math.max(0, ...pm.sprints.map((s) => s.id)) + 1, ...sprintForm, status: 'planned' }] })
+    onUpdatePm({ ...pm, sprints: [...pm.sprints, { id: nextId(pm.sprints), ...sprintForm, status: 'planned' }] })
     setSprintForm({ name: '', startDate: '', endDate: '', goal: '' }); setShowAddSprint(false)
   }
   const addTask = () => {
     if (!taskTitle.trim()) return
-    onUpdatePhase({ ...phase, tasks: [...phase.tasks, { id: Math.max(0, ...phase.tasks.map((t) => t.id)) + 1, title: taskTitle.trim(), assignee: phase.team[0]?.name || '', createdBy: currentUserName || null, startDate: null, due: sprint?.endDate || null, effortHours: 0, pctComplete: 0, sprintId, priority: 'normal', status: 'open', checklist: [], comments: [] }] })
+    onUpdatePhase({ ...phase, tasks: [...phase.tasks, { id: nextId(phase.tasks), title: taskTitle.trim(), assignee: phase.team[0]?.name || '', createdBy: currentUserName || null, startDate: null, due: sprint?.endDate || null, effortHours: 0, pctComplete: 0, sprintId, priority: 'normal', status: 'open', checklist: [], comments: [] }] })
     setTaskTitle('')
   }
 

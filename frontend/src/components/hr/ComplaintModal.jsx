@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lock } from 'lucide-react'
 import Modal from '../crm/Modal'
 import { COMPLAINT_CATEGORIES } from '../../data/hrData'
+import { todayISO } from '../../utils/date'
 
 export default function ComplaintModal({ user, onClose, onSubmit }) {
   const [category, setCategory] = useState(COMPLAINT_CATEGORIES[0])
@@ -18,7 +19,7 @@ export default function ComplaintModal({ user, onClose, onSubmit }) {
       description: description.trim(),
       anonymous,
       submittedBy: anonymous ? null : user?.username,
-      submittedDate: new Date().toISOString().slice(0, 10),
+      submittedDate: todayISO(),
       status: 'submitted',
     })
     onClose()

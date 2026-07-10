@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { Plus, Wallet, Scale, ArrowDownLeft, ArrowUpRight } from 'lucide-react'
-import { parseLocalDate } from '../../utils/date'
+import { parseLocalDate, todayISO, fmtShortDate as fmtDate } from '../../utils/date'
 import { fmtAED, PETTY_CASH_OPENING } from '../../data/financeData'
-
-const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
 
 // Petty cash log — float top-ups and small cash spends with a running balance,
 // plus a monthly count-vs-book reconciliation. Demo-grade; the cash box would
@@ -11,7 +9,7 @@ const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', 
 export default function PettyCashView({ entries, reconciliations, onAddEntry, onReconcile, currentUserName }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showRec, setShowRec] = useState(false)
-  const [form, setForm] = useState({ date: new Date().toISOString().slice(0, 10), description: '', direction: 'out', amount: '' })
+  const [form, setForm] = useState({ date: todayISO(), description: '', direction: 'out', amount: '' })
   const [recForm, setRecForm] = useState({ month: '2026-07', counted: '', note: '' })
 
   // Running balance oldest → newest, from the opening float.
@@ -37,7 +35,7 @@ export default function PettyCashView({ entries, reconciliations, onAddEntry, on
     const amt = Number(form.amount)
     if (!form.description.trim() || !amt || amt <= 0) return
     onAddEntry({ date: form.date, description: form.description.trim(), direction: form.direction, amount: amt, who: currentUserName || 'Finance' })
-    setForm({ date: new Date().toISOString().slice(0, 10), description: '', direction: 'out', amount: '' })
+    setForm({ date: todayISO(), description: '', direction: 'out', amount: '' })
     setShowAdd(false)
   }
 
@@ -45,7 +43,7 @@ export default function PettyCashView({ entries, reconciliations, onAddEntry, on
     const counted = Number(recForm.counted)
     if (!recForm.month || Number.isNaN(counted)) return
     onReconcile({
-      month: recForm.month, date: new Date().toISOString().slice(0, 10),
+      month: recForm.month, date: todayISO(),
       countedBy: currentUserName || 'Finance', reviewedBy: null,
       counted, book: bookAsOfMonthEnd(recForm.month), note: recForm.note.trim() || null,
     })

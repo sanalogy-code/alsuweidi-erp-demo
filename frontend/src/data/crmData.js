@@ -1,3 +1,4 @@
+import { todayISO, daysUntil } from '../utils/date'
 // Dummy CRM data for the proof-of-concept. Flat, relational-shaped arrays
 // so Companies / Contacts / Pipeline views all read from one source of truth.
 
@@ -36,6 +37,10 @@ export const INITIAL_COMPANIES = [
   { id: 8, name: 'Lumina Lighting Studio', industry: 'Specialist Design', location: 'Dubai', status: 'Active', website: 'https://www.luminastudio.ae', size: '11–50', tags: ['Subconsultant', 'Partner'], services: ['Lighting Design', 'Facade Lighting'], keepInMind: [], projectHistory: [
     { id: 1, projectId: 5, scope: 'External & landscape lighting design', note: 'Strong concepts, integrated well with our BIM workflow. Fee was on the high side.', date: '2024-11-05' },
   ] },
+  // Individuals-as-clients default (decision still pending with Sana): a private
+  // client is the same record shape flagged kind: 'individual' — website/size
+  // don't apply, everything else (contacts, deals, pipeline) works unchanged.
+  { id: 9, name: 'Khalid Al Marzooqi (private client)', kind: 'individual', industry: 'Private Villa', location: 'Abu Dhabi', status: 'Active', website: '', size: '', tags: ['Client'], services: [], keepInMind: [{ id: 1, text: 'Prefers WhatsApp over email; all approvals go through his son Rashid.', date: '2026-06-15', author: 'Sana Diab' }], projectHistory: [] },
 ]
 
 // Two-tier contact taxonomy. relationship = tier 1, subType = tier 2 (scoped to a relationship).
@@ -151,16 +156,11 @@ export function daysSince(date) {
   return `${days} days ago`
 }
 
-export function todayISO() {
-  return new Date().toISOString().slice(0, 10)
-}
+// Re-exported so existing `from '../data/crmData'` imports keep working.
+export { todayISO }
 
 // Whole calendar days until a date (negative = overdue, 0 = due today).
-export function daysUntil(date) {
-  const today = new Date(todayISO())
-  const target = new Date(date)
-  return Math.round((target - today) / (1000 * 60 * 60 * 24))
-}
+export { daysUntil }
 
 export function formatDueLabel(date) {
   const d = daysUntil(date)

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CheckCircle, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import DocumentChecklist, { missingRequiredDocs } from '../DocumentChecklist'
 import { EMPLOYEE_DOCUMENT_TYPES, NATIONALITIES, UAE_BANKS, RELATIONSHIP_TYPES } from '../../data/hrData'
+import { todayISO } from '../../utils/date'
 
 // The employee-facing half of the redesigned "Register New Employee" flow.
 // Four short steps asking only what the employee knows; everything HR decides
@@ -48,7 +49,7 @@ export default function NewJoinerWizard({ user, onSubmit }) {
   const handleSubmit = () => {
     onSubmit({
       status: 'submitted',
-      submittedDate: new Date().toISOString().slice(0, 10),
+      submittedDate: todayISO(),
       personal, qualifications, engineerLicense, documents, bank, dependents,
       positionTitle: null,
     })

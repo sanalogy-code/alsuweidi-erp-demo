@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Trophy, Plus } from 'lucide-react'
 import { AWARD_STATUSES } from '../../data/marketingData'
+import { nextId } from '../../utils/id'
 
 // Award submissions register — every industry award the company enters,
 // which project it entered, and how it went.
@@ -15,7 +16,7 @@ export default function AwardsView({ awards, onUpdate, projects = [] }) {
     if (!form.award.trim()) return
     const project = projects.find((p) => p.id === Number(form.projectId))
     onUpdate([...awards, {
-      id: Math.max(0, ...awards.map((a) => a.id)) + 1,
+      id: nextId(awards),
       award: form.award.trim(), organiser: form.organiser.trim(), category: form.category.trim(),
       projectId: project?.id ?? null, projectName: project ? `${project.projectNo} — ${project.name}` : '',
       deadline: form.deadline, status: 'considering', owner: form.owner.trim() || 'Marketing', notes: form.notes.trim(),

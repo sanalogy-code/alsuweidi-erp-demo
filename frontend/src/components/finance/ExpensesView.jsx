@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { Check, X, ReceiptText, Plus, Paperclip } from 'lucide-react'
 import { PROJECTS } from '../../data/projectsData'
-import { parseLocalDate } from '../../utils/date'
+import { parseLocalDate, todayISO, fmtShortDate as fmtDate } from '../../utils/date'
 import {
   EXPENSE_CATEGORIES, EXPENSE_STATUSES, expenseStatusMeta, fmtAED, VAT_RATE,
 } from '../../data/financeData'
-
-const fmtDate = (iso) => (iso ? parseLocalDate(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' }) : '—')
 
 export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserName }) {
   const [statusFilter, setStatusFilter] = useState('all')
@@ -14,7 +12,7 @@ export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserNam
   const [search, setSearch] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
   const [showAdd, setShowAdd] = useState(false)
-  const emptyForm = { date: new Date().toISOString().slice(0, 10), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', vatAmount: '', vatTouched: false, vatNonRecoverable: false, projectId: '', attachment: '' }
+  const emptyForm = { date: todayISO(), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', vatAmount: '', vatTouched: false, vatNonRecoverable: false, projectId: '', attachment: '' }
   const [form, setForm] = useState(emptyForm)
   const projectOf = (id) => PROJECTS.find((p) => p.id === id)
 

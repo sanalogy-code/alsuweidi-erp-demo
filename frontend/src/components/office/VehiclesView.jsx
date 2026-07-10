@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Plus, Car } from 'lucide-react'
 import { VEHICLES } from '../../data/officeData'
+import { todayISO } from '../../utils/date'
+import { nextId } from '../../utils/id'
 
 // Company vehicles — booking log (with km out/in) and a Salik/fines register
 // per vehicle. Payroll deduction is display-only; the RTA/Salik feed is
@@ -9,28 +11,28 @@ import { VEHICLES } from '../../data/officeData'
 export default function VehiclesView({ bookings, onChangeBookings, salik, onChangeSalik, user }) {
   const [tab, setTab] = useState('bookings')
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ vehicleId: VEHICLES[0].id, driver: user?.name || '', date: new Date().toISOString().slice(0, 10), purpose: '', kmOut: '' })
-  const [salikForm, setSalikForm] = useState({ vehicleId: VEHICLES[0].id, date: new Date().toISOString().slice(0, 10), type: 'salik', amountAed: 4, driver: '', deductFromPayroll: false, note: '' })
+  const [form, setForm] = useState({ vehicleId: VEHICLES[0].id, driver: user?.name || '', date: todayISO(), purpose: '', kmOut: '' })
+  const [salikForm, setSalikForm] = useState({ vehicleId: VEHICLES[0].id, date: todayISO(), type: 'salik', amountAed: 4, driver: '', deductFromPayroll: false, note: '' })
 
   const vehicle = (id) => VEHICLES.find((v) => v.id === id)
 
   const addBooking = () => {
     if (!form.driver.trim() || !form.purpose.trim()) return
     onChangeBookings([{
-      id: Math.max(0, ...bookings.map((b) => b.id)) + 1,
+      id: nextId(bookings),
       ...form, vehicleId: Number(form.vehicleId), kmOut: form.kmOut ? Number(form.kmOut) : null, kmIn: null,
     }, ...bookings])
-    setForm({ vehicleId: VEHICLES[0].id, driver: user?.name || '', date: new Date().toISOString().slice(0, 10), purpose: '', kmOut: '' })
+    setForm({ vehicleId: VEHICLES[0].id, driver: user?.name || '', date: todayISO(), purpose: '', kmOut: '' })
     setShowAdd(false)
   }
 
   const addSalik = () => {
     if (!salikForm.driver.trim() || !salikForm.amountAed) return
     onChangeSalik([{
-      id: Math.max(0, ...salik.map((s) => s.id)) + 1,
+      id: nextId(salik),
       ...salikForm, vehicleId: Number(salikForm.vehicleId), amountAed: Number(salikForm.amountAed), note: salikForm.note.trim() || null,
     }, ...salik])
-    setSalikForm({ vehicleId: VEHICLES[0].id, date: new Date().toISOString().slice(0, 10), type: 'salik', amountAed: 4, driver: '', deductFromPayroll: false, note: '' })
+    setSalikForm({ vehicleId: VEHICLES[0].id, date: todayISO(), type: 'salik', amountAed: 4, driver: '', deductFromPayroll: false, note: '' })
     setShowAdd(false)
   }
 

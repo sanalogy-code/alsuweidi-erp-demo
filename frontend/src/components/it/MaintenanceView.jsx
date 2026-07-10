@@ -1,6 +1,6 @@
 import { Wrench, AlertTriangle } from 'lucide-react'
 import { daysUntil } from '../../data/pmData'
-import { parseLocalDate } from '../../utils/date'
+import { parseLocalDate, todayISO } from '../../utils/date'
 
 // Preventive-maintenance schedule for site/survey equipment — calibration and
 // service intervals with next-due tracking. "Mark done" stamps today and
@@ -14,7 +14,7 @@ const addMonths = (iso, months) => {
 
 export default function MaintenanceView({ items, onChange }) {
   const markDone = (item) => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = todayISO()
     onChange(items.map((x) => (x.id === item.id ? { ...x, lastDone: today, nextDue: addMonths(today, x.everyMonths) } : x)))
   }
 

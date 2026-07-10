@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Download, Landmark, FileSpreadsheet, ReceiptText } from 'lucide-react'
-import { fmtAED, invoiceTotal, invoiceOutstanding, VAT_RATE } from '../../data/financeData'
+import { fmtAED, invoiceTotal, invoiceOutstandingNet, VAT_RATE } from '../../data/financeData'
 import { parseLocalDate, todayLocal } from '../../utils/date'
 
 // Accountant reports (Batch 16-early, Sana 7 Jul: "financials doesn't really work
@@ -33,12 +33,15 @@ const downloadCsv = (name, rows) => {
 }
 
 function AgingTab({ invoices, creditNotes = [] }) {
-  const cnTotal = creditNotes.reduce((s, c) => s + c.amount, 0)
-  const open = invoices.filter((i) => i.status !== 'draft' && invoiceOutstanding(i) > 0)
+  // Per-invoice CN netting: each invoice's bucket amount is total − receipts −
+  // credit notes linked to that invoice, so aging and statements agree.
+  const outstanding = (i) => invoiceOutstandingNet(i, creditNotes)
+  const unlinkedCnTotal = creditNotes.filter((c) => c.invoiceId == null).reduce((s, c) => s + c.amount, 0)
+  const open = invoices.filter((i) => i.status !== 'draft' && outstanding(i) > 0)
   const clients = [...new Set(open.map((i) => i.clientName))]
   const rows = clients.map((client) => {
     const theirs = open.filter((i) => i.clientName === client)
-    const buckets = BUCKETS.map((b) => theirs.filter((i) => b.test(daysPastDue(i))).reduce((s, i) => s + invoiceOutstanding(i), 0))
+    const buckets = BUCKETS.map((b) => theirs.filter((i) => b.test(daysPastDue(i))).reduce((s, i) => s + outstanding(i), 0))
     return { client, buckets, total: buckets.reduce((s, v) => s + v, 0) }
   }).sort((a, b) => b.total - a.total)
   const totals = BUCKETS.map((_, bi) => rows.reduce((s, r) => s + r.buckets[bi], 0))
@@ -87,12 +90,10 @@ function AgingTab({ invoices, creditNotes = [] }) {
           </tfoot>
         </table>
       </div>
-      {cnTotal > 0 && (
-        <p className="text-[11px] text-gray-400">
-          {fmtAED(cnTotal)} of credit notes are outstanding against these balances (see the client statements) —
-          netting them into the aging buckets per invoice lands with the Phase 2 GL.
-        </p>
-      )}
+      <p className="text-[11px] text-gray-400">
+        Credit notes linked to an invoice are netted into its bucket.
+        {unlinkedCnTotal > 0 && ` ${fmtAED(unlinkedCnTotal)} of unallocated credit notes sit outside the buckets (see the client statements).`}
+      </p>
     </div>
   )
 }
@@ -104,19 +105,22 @@ function StatementsTab({ invoices, creditNotes = [] }) {
     .sort((a, b) => (a.issueDate || '').localeCompare(b.issueDate || ''))
   const theirCNs = creditNotes.filter((c) => c.clientName === client)
   const cnTotal = theirCNs.reduce((s, c) => s + c.amount, 0)
+  // Per-invoice netting: an invoice's balance reflects the credit notes linked to
+  // it; CNs without an invoice link net off the statement total only.
+  const balance = (i) => invoiceOutstandingNet(i, theirCNs)
+  const unlinkedCnTotal = theirCNs.filter((c) => c.invoiceId == null).reduce((s, c) => s + c.amount, 0)
   const totals = theirs.reduce((acc, i) => ({
     invoiced: acc.invoiced + invoiceTotal(i),
     paid: acc.paid + Math.min(i.amountPaid ?? 0, invoiceTotal(i)),
-    balance: acc.balance + invoiceOutstanding(i),
+    balance: acc.balance + balance(i),
   }), { invoiced: 0, paid: 0, balance: 0 })
-  // Statement balance nets off credit notes issued to this client.
-  const netBalance = Math.max(0, totals.balance - cnTotal)
+  const netBalance = Math.max(0, totals.balance - unlinkedCnTotal)
 
   const exportCsv = () => downloadCsv(`statement-${client.replace(/\W+/g, '-')}.csv`, [
     [`Statement of account — ${client}`], [],
-    ['Date', 'Ref', 'Description', 'Invoiced (incl. VAT)', 'Paid / credited', 'Balance', 'Due date', 'Status'],
-    ...theirs.map((i) => [i.issueDate, i.invoiceNo, i.description, invoiceTotal(i), Math.min(i.amountPaid ?? 0, invoiceTotal(i)), invoiceOutstanding(i), i.dueDate, i.status]),
-    ...theirCNs.map((c) => [c.date, c.creditNoteNo, `Credit note — ${c.reason}`, -c.amount, '', -c.amount, '', 'credit note']),
+    ['Date', 'Ref', 'Description', 'Invoiced (incl. VAT)', 'Paid / credited', 'Balance (net of CNs)', 'Due date', 'Status'],
+    ...theirs.map((i) => [i.issueDate, i.invoiceNo, i.description, invoiceTotal(i), Math.min(i.amountPaid ?? 0, invoiceTotal(i)), balance(i), i.dueDate, i.status]),
+    ...theirCNs.map((c) => [c.date, c.creditNoteNo, `Credit note — ${c.reason}${c.invoiceId != null ? ` (against invoice #${c.invoiceId})` : ''}`, -c.amount, '', '', '', 'credit note']),
     [], ['Totals', '', '', totals.invoiced - cnTotal, totals.paid, netBalance],
   ])
 
@@ -148,7 +152,7 @@ function StatementsTab({ invoices, creditNotes = [] }) {
                 <td className="px-4 py-2.5 text-gray-700 max-w-[280px] truncate" title={i.description}>{i.description}</td>
                 <td className="px-4 py-2.5 text-right text-gray-700">{fmtAED(invoiceTotal(i), { compact: true })}</td>
                 <td className="px-4 py-2.5 text-right text-green-700">{fmtAED(Math.min(i.amountPaid ?? 0, invoiceTotal(i)), { compact: true })}</td>
-                <td className={`px-4 py-2.5 text-right font-medium ${invoiceOutstanding(i) > 0 ? 'text-red-600' : 'text-gray-300'}`}>{invoiceOutstanding(i) ? fmtAED(invoiceOutstanding(i), { compact: true }) : '—'}</td>
+                <td className={`px-4 py-2.5 text-right font-medium ${balance(i) > 0 ? 'text-red-600' : 'text-gray-300'}`}>{balance(i) ? fmtAED(balance(i), { compact: true }) : '—'}</td>
               </tr>
             ))}
             {theirCNs.map((c) => (
@@ -157,8 +161,8 @@ function StatementsTab({ invoices, creditNotes = [] }) {
                 <td className="px-4 py-2.5 font-mono text-xs text-purple-700">{c.creditNoteNo}</td>
                 <td className="px-4 py-2.5 text-gray-700 max-w-[280px] truncate" title={c.reason}>Credit note — {c.reason}</td>
                 <td className="px-4 py-2.5 text-right text-purple-700">−{fmtAED(c.amount, { compact: true })}</td>
+                <td className="px-4 py-2.5 text-right text-[11px] text-purple-600">{c.invoiceId != null ? `against #${c.invoiceId}` : 'unallocated'}</td>
                 <td className="px-4 py-2.5" />
-                <td className="px-4 py-2.5 text-right text-purple-700">−{fmtAED(c.amount, { compact: true })}</td>
               </tr>
             ))}
           </tbody>
@@ -172,7 +176,7 @@ function StatementsTab({ invoices, creditNotes = [] }) {
           </tfoot>
         </table>
       </div>
-      <p className="text-[11px] text-gray-400">Paid amounts trace to the Receipts register (per-receipt dates and bank references). Credit notes net off the statement balance here; posting them through the GL and VAT return is Phase 2.</p>
+      <p className="text-[11px] text-gray-400">Paid amounts trace to the Receipts register (per-receipt dates and bank references). Credit notes linked to an invoice net off that invoice&apos;s balance; unallocated ones net off the statement total. Posting them through the GL and VAT return is Phase 2.</p>
     </div>
   )
 }

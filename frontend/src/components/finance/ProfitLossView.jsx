@@ -1,5 +1,14 @@
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { MONTHLY_PL, fmtAED } from '../../data/financeData'
+import { EMPLOYEES } from '../../data/hrData'
+
+// The P&L payroll line comes from the HR/WPS employee records (gross = basic +
+// allowances for active staff), not a mock figure — the good-to-have from
+// BACKLOG.md. Per-month pro-rating (joiners/leavers) still lives in the HR
+// payroll run; this uses the standing monthly gross.
+const wpsMonthlyGross = () => EMPLOYEES
+  .filter((e) => e.status === 'active' && e.compensation)
+  .reduce((s, e) => s + (e.compensation.basicSalary || 0) + (e.compensation.housingAllowance || 0) + (e.compensation.transportAllowance || 0), 0)
 
 const monthLabel = (ym) => {
   const [y, m] = ym.split('-').map(Number)
@@ -9,7 +18,11 @@ const monthLabel = (ym) => {
 const netOf = (r) => r.revenue - r.directCosts - r.payroll - r.overhead
 
 export default function ProfitLossView({ invoices, expenses }) {
-  const rows = MONTHLY_PL.map((r) => ({ ...r, net: netOf(r) }))
+  const payroll = wpsMonthlyGross()
+  const rows = MONTHLY_PL.map((r) => {
+    const withPayroll = { ...r, payroll: payroll || r.payroll }
+    return { ...withPayroll, net: netOf(withPayroll) }
+  })
   const totals = rows.reduce(
     (t, r) => ({
       revenue: t.revenue + r.revenue,
@@ -136,7 +149,7 @@ export default function ProfitLossView({ invoices, expenses }) {
       </div>
 
       <p className="text-[11px] text-gray-400">
-        Illustrative income statement — payroll ties to the HR/WPS run in a real build, direct costs to the expense ledger, revenue to recognised fees. VAT, accruals, WIP and cost-of-sales allocation are Phase 2.
+        Income statement with the payroll line drawn from the HR employee records (standing monthly gross: basic + allowances for active staff — per-month pro-rating stays in the HR payroll run). Revenue/direct/overhead remain illustrative; VAT, accruals, WIP and cost-of-sales allocation are Phase 2.
       </p>
     </div>
   )

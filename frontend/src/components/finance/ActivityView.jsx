@@ -1,10 +1,10 @@
 import { History } from 'lucide-react'
 
-// Audit trail (demo scope) — a lightweight in-session log of financial actions.
-// Finance.jsx appends {when, who, what} on the main create/edit paths (invoice
-// created/sent, payment recorded, receipt recorded, credit note issued, expense
-// added/approved, payables actions, petty cash, month-end ticks). Not every
-// legacy code path is instrumented — a real immutable audit log is Phase 2.
+// Audit trail (demo scope) — the app-wide audit log (state/auditLog.js) filtered
+// to Financials. Wired create/edit paths append entries (invoice created/sent,
+// payment recorded, receipt recorded, credit note issued, expense added/approved,
+// payables actions, petty cash, month-end ticks). Not every legacy code path is
+// instrumented — a real immutable audit log is Phase 2.
 export default function ActivityView({ log }) {
   return (
     <div className="space-y-4">
@@ -16,11 +16,9 @@ export default function ActivityView({ log }) {
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm divide-y divide-gray-50">
         {log.map((e) => (
           <div key={e.id} className="px-4 py-2.5 flex items-baseline gap-3 text-sm">
-            <span className="text-[11px] text-gray-400 tabular-nums whitespace-nowrap w-32 shrink-0">
-              {new Date(e.when).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-            </span>
-            <span className="text-xs font-medium text-gray-600 w-28 shrink-0 truncate">{e.who}</span>
-            <span className="text-gray-700">{e.what}</span>
+            <span className="text-[11px] text-gray-400 tabular-nums whitespace-nowrap w-32 shrink-0">{e.ts}</span>
+            <span className="text-xs font-medium text-gray-600 w-28 shrink-0 truncate">{e.user}</span>
+            <span className="text-gray-700">{e.detail}</span>
           </div>
         ))}
         {log.length === 0 && (

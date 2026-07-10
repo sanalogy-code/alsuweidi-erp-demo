@@ -42,7 +42,7 @@ import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 // Contract administration (claims, monthly reports, authorities) is project-level.
 // PM state lives in App.jsx so edits survive navigation and feed "My Work".
 
-export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, timesheets = [], onLogTaskHours, onUpdatePm, onUpdateProject, onAddMarketingTask }) {
+export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, timesheets = [], onLogTaskHours, onUpdatePm, onUpdateProject, onAddMarketingTask, invoices = INVOICES }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -195,7 +195,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
 
           <main className="flex-1 min-w-0 w-full">
             {sel.view === 'alltasks' && !sel.phase && <AllTasksView pm={pm} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} onLogHours={onLogTaskHours ? (assignee, hours, date) => onLogTaskHours(assignee, project.id, hours, date) : null} />}
-            {sel.view === 'overview' && !sel.phase && <PmOverview pm={pm} project={project} invoices={INVOICES} onJump={jump} canViewSensitive={canViewSensitive} />}
+            {sel.view === 'overview' && !sel.phase && <PmOverview pm={pm} project={project} invoices={invoices} onJump={jump} canViewSensitive={canViewSensitive} />}
 
             {activePhase && (<>
               {sel.view === 'tasks' && <PlanView pm={pm} phase={activePhase} onUpdatePhase={(next) => updatePhase(activePhase.key, next)} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} onLogHours={onLogTaskHours ? (assignee, hours, date) => onLogTaskHours(assignee, project.id, hours, date) : null} />}
@@ -209,7 +209,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
               {sel.view === 'rfis' && activePhase.wirs && <RfiView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
               {sel.view === 'hse' && activePhase.wirs && <SafetyLogView phase={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} currentUserName={user?.username} />}
               {sel.view === 'schedule' && <ScheduleView pm={activePhase} />}
-              {sel.view === 'fees' && <FeesView pm={activePhase} project={project} invoices={INVOICES} timesheets={timesheets} totalManhourBudget={pm.phases.reduce((s, ph) => s + (ph.fees.manhourBudget || 0), 0)} canViewSensitive={canViewSensitive} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
+              {sel.view === 'fees' && <FeesView pm={activePhase} project={project} invoices={invoices} timesheets={timesheets} totalManhourBudget={pm.phases.reduce((s, ph) => s + (ph.fees.manhourBudget || 0), 0)} canViewSensitive={canViewSensitive} onUpdate={(next) => updatePhase(activePhase.key, next)} />}
               {sel.view === 'team' && <TeamView pm={activePhase} onUpdate={(next) => updatePhase(activePhase.key, next)} employees={EMPLOYEES} onViewEmployee={setSelectedEmployee} />}
             </>)}
 
@@ -228,7 +228,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
 
       {showDetails && (
         <ProjectDetailModal
-          project={project} employees={EMPLOYEES} canViewSensitive={canViewSensitive}
+          project={project} employees={EMPLOYEES} canViewSensitive={canViewSensitive} invoices={invoices}
           onClose={() => setShowDetails(false)} onViewEmployee={setSelectedEmployee}
           onUpdateProject={onUpdateProject} onAddMarketingTask={onAddMarketingTask}
         />
