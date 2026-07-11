@@ -2,18 +2,18 @@
 
 The "how long did this actually take" log — numbers pulled from git history, for sharing with management. Refreshed on each docs sync.
 
-**As of:** 8 July 2026
+**As of:** 11 July 2026
 
 ## The headline
 
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Latest (8 Jul: Batch 19 — in-app Guide/help system, on top of the 7 Jul persona sweep)** | 8 July 2026 |
-| **Elapsed time** | ~8 working days |
-| **Commits** | 158 |
-| **Deploys to the live site** | every push auto-deploys — ~151 |
-| **App code** | ~30,200 lines across 137 components + 12 pages |
+| **Latest (11 Jul: Batch 20 — the whole non-Phase-2 backlog cleared in one pass — plus the home page redesign)** | 11 July 2026 |
+| **Elapsed time** | ~9 working days |
+| **Commits** | 165 |
+| **Deploys to the live site** | every push auto-deploys — ~158 |
+| **App code** | ~30,400 lines across 140 components + 12 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 4 days
@@ -40,6 +40,7 @@ The "how long did this actually take" log — numbers pulled from git history, f
 - **Nine current-ERP screens absorbed in one evening** (day 6, Batches 13–15, from Sana's screenshots — information kept, design rethought, data linked): the DMR and CMR became composed *Project reviews* (discipline hours vs R0 with profitability P&L, construction facts + deployment + composed notes); the RFP form became a CRM *Proposals* register linked to companies and delivery projects; the CDM allocation plan became a Months rollup of the same weekly allocations; the attendance punch grid became a summarized *Period report*; the timesheet cost dashboard and Employee Efforts Review became *Timesheet insights* + a single workload index; the revenue report pages became one *Revenue reports* view; and the licensing tracker became an expiry radar that shipped already flagging the ADCD/CFPE 1-Sept-2026 hard gate
 - **THE EVERYTHING LIST cleared in one night** (day 7 night, Batches 16d + 18a–g — the whole persona-sweep backlog built in parallel): attendance punch drill-down; search/status/date filters across ~24 registers; a cross-module **notifications center** (bell + unread badge in every navbar, composed live from approvals/deadlines/timesheets/queues); **global search** (Ctrl+K over people, live projects, companies, contacts, RFPs, screens); a **My Week** strip and a management **Company KPI panel** (utilization, win rate, receivables, project RAG) with board-pack print on the home page; delegation-of-authority matrix + visibility rules in Admin; the **accountant's working month** (receipts allocated across invoices, credit notes, per-expense VAT with a real VAT working paper, petty cash with reconciliation, supplier/payables ledger with payment runs, retention view, month-end close checklist, session audit trail); **HR talent suite** (appraisals with a default 3-step model, training catalogue → enrollment → auto-accomplishment, disciplinary register with letterhead print, exit interviews + analytics, headcount & attrition dashboard, optional grades/bands); **Marketing + BD** (campaigns, content approval records, pack usage log, events, award submissions; bid/no-bid gate with recorded rationale, tender checklists, bid cost tracking, competitor register, lost-RFP debriefs); **Office/ODC + IT** (meeting rooms with clash detection, supplies, courier log, vehicles + Salik, document-numbering reference; SLA timers, installed software with seat-overrun flags, preventive maintenance, access requests, system status board); and **PM/site field tools** (drawing transmittals, RFI register, per-gate coordination checklists, 4.21 photo-report builder, HSE safety log, mobile-first quick daily entry)
 - **In-app Guide** (day 8, Batch 19) — a contextual `?` in every top bar opens one help hub: per-role orientation, ~50 "How do I…" task recipes that deep-link straight to the right screen, and a module map — role-gated, maintained from a single content file
+- **Backlog cleared + home redesign** (day 9, Batches 20–21) — every non-Phase-2 backlog item shipped in one pass: the code-quality consolidation (shared sidebar/filter/id/date infrastructure, finance state lifted app-wide, one audit log, per-invoice credit-note netting), auto-drafted mobilization invoices, billing progress on project records, payroll-fed P&L, a PRO dashboard, individuals-as-clients; then the home page was redesigned as a search-first launcher — live status lines on every module tile, a single attention line, photo news cards, holidays card — chosen from three mocked-up directions and verified on mobile
 - **Role-based views** — employees, HR, management, marketing, IT, admin staff, and PRO company each see different navigation and data
 - **Home dashboard** — module launcher, announcements, holidays tile, build-number card; day 3 added probation-ending-soon card
 

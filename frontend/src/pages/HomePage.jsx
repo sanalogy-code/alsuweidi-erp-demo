@@ -102,11 +102,13 @@ export default function HomePage({ user, onLogout, holidays = [], projects = [],
           {attention.length > 0 && (
             <button
               onClick={() => navigate(timesheetDue && attention.length === 1 ? '/hr' : '/projects')}
-              className="mt-4 inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-2 hover:bg-amber-100 transition"
+              className="mt-4 w-full max-w-xl mx-auto flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-2.5 hover:bg-amber-100 transition text-left"
             >
-              <AlertTriangle size={14} className="shrink-0 text-amber-600" />
-              <span>{attention.join(' · ')}</span>
-              <span className="font-semibold underline underline-offset-2 whitespace-nowrap">{timesheetDue && attention.length === 1 ? 'Fill timesheet →' : 'Go to My Work →'}</span>
+              <AlertTriangle size={15} className="shrink-0 text-amber-600 mt-0.5" />
+              <span className="flex-1 min-w-0 leading-snug">
+                {attention.join(' · ')}{' '}
+                <span className="font-semibold underline underline-offset-2 whitespace-nowrap">{timesheetDue && attention.length === 1 ? 'Fill timesheet →' : 'Go to My Work →'}</span>
+              </span>
             </button>
           )}
         </div>
