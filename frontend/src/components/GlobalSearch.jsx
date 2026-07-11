@@ -32,8 +32,11 @@ export default function GlobalSearch() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setOpen(true) }
       if (e.key === 'Escape') setOpen(false)
     }
+    // The home page's big search bar opens this palette via a custom event.
+    const onOpen = () => setOpen(true)
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('open-global-search', onOpen)
+    return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('open-global-search', onOpen) }
   }, [])
 
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 0) }, [open])

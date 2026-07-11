@@ -20,6 +20,33 @@ export const ANNOUNCEMENTS = [
   },
 ]
 
+// Home page news cards (2026-07 redesign) — each carries a media image (stock
+// placeholders from Unsplash for now; Phase 2 storage swaps in real company
+// photos). The gradient + emoji render as the fallback if an image fails.
+export const NEWS = [
+  {
+    id: 1, kicker: 'Event', title: 'Q3 Planning Meeting — 15 July',
+    body: 'All departments attending · lunch provided · Boardroom A',
+    by: 'Leadership', when: '3 days ago', emoji: '🗓️',
+    image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=60&auto=format&fit=crop',
+    media: 'linear-gradient(135deg, #8f0f10 0%, #c81516 55%, #e04a3a 100%)',
+  },
+  {
+    id: 2, kicker: 'Policy', title: 'Flexible office hours are live',
+    body: 'Work when you’re most productive — details in the HR policy hub.',
+    by: 'HR', when: '2 days ago', emoji: '⏰',
+    image: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&q=60&auto=format&fit=crop',
+    media: 'linear-gradient(135deg, #1f2937 0%, #374151 60%, #4b5563 100%)',
+  },
+  {
+    id: 3, kicker: 'Award', title: 'Design Excellence — Marina Tower',
+    body: 'Congratulations to the whole team on the win.',
+    by: 'Marketing', when: '5 days ago', emoji: '🏆',
+    image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=60&auto=format&fit=crop',
+    media: 'linear-gradient(135deg, #115e59 0%, #0d9488 60%, #2dd4bf 100%)',
+  },
+]
+
 export const COMPANY_UPDATES = [
   { title: 'New office hours policy', by: 'HR', when: '2 days ago' },
   { title: 'Q3 planning meeting scheduled', by: 'Leadership', when: '3 days ago' },

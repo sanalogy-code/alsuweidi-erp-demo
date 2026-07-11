@@ -207,8 +207,8 @@ export default function App() {
       <FeedbackButton user={user} onSubmit={addFeedback} />
       <Routes>
       <Route path="/dev" element={<DevDashboard />} />
-      <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} invoices={finance.invoices} />} />
-      <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} invoices={finance.invoices} />} />
+      <Route path="/" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} invoices={finance.invoices} deals={deals} marketingTasks={marketingTasks} systemFeedback={systemFeedback} />} />
+      <Route path="/home" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} invoices={finance.invoices} deals={deals} marketingTasks={marketingTasks} systemFeedback={systemFeedback} />} />
       <Route path="/crm" element={<CRM user={user} onLogout={handleLogout} projects={projects} onAddProject={addProject} deals={deals} setDeals={setDeals} onRequestStaffing={addStaffingRequest} />} />
       <Route path="/projects" element={<Projects user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} onUpdateAllocations={setAllocations} onUpdateProject={updateProject} onAddProject={addProject} onAddMarketingTask={addMarketingTask} invoices={finance.invoices} expenses={finance.expenses} />} />
       <Route path="/projects/:id" element={<ProjectWorkspace user={user} onLogout={handleLogout} projects={projects} pmRecords={pmRecords} timesheets={timesheets} onLogTaskHours={logTaskHours} onUpdatePm={updatePmRecord} onUpdateProject={updateProject} onAddMarketingTask={addMarketingTask} invoices={finance.invoices} />} />
@@ -219,7 +219,7 @@ export default function App() {
       <Route path="/content" element={<Marketing user={user} onLogout={handleLogout} projects={projects} onUpdateProject={updateProject} deals={deals} marketingTasks={marketingTasks} onCompleteTask={completeMarketingTask} />} />
       <Route path="/admin" element={<Admin user={user} onLogout={handleLogout} feedback={systemFeedback} onUpdateFeedback={setSystemFeedback} auditLog={audit.entries} />} />
       <Route path="/office" element={<Office user={user} onLogout={handleLogout} />} />
-      <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} />} />
+      <Route path="*" element={<HomePage user={user} onLogout={handleLogout} holidays={holidays} projects={projects} pmRecords={pmRecords} timesheets={timesheets} invoices={finance.invoices} deals={deals} marketingTasks={marketingTasks} systemFeedback={systemFeedback} />} />
       </Routes>
     </NotificationsProvider>
     </ErrorBoundary>
