@@ -247,17 +247,21 @@ export const BRAND_QUICK_GUIDELINES = {
     { variant: 'Primary (horizontal)', when: 'The default. Letterheads, reports, presentations, website header — anywhere with normal horizontal space.' },
     { variant: 'Vertical (stacked)', when: 'Narrow or portrait formats only: site hoardings, roll-up banners, social story formats.' },
     { variant: 'Symbol (mark only)', when: 'Tiny spaces where the wordmark would be illegible: avatars, favicons, app icons, document stamps. Never as the main logo on client-facing documents.' },
-    { variant: 'Colour rule', when: 'Full colour on white/light backgrounds; white/reversed on dark backgrounds and photos. Never place the full-colour logo on a busy photo without a scrim.' },
+    { variant: 'Colour rule', when: 'Full colour (ALSUWEIDI Red) on white/light backgrounds; white/reversed on dark backgrounds and photos. Never place the full-colour logo on a busy photo without a scrim.' },
   ],
   fonts: [
-    { name: 'Archivo (English)', when: 'All English material. SemiBold for headings, Regular for body. Arial is the fallback in plain Office documents.' },
-    { name: 'GE SS Two (Arabic)', when: 'All Arabic material, and the Arabic half of bilingual layouts. Match visual weight to the paired Archivo, not the point size.' },
+    // Placeholder pairing until Marketing confirms the official typefaces.
+    { name: 'Archivo (English)', when: 'All English material. SemiBold for headings, Regular for body. Arial is the fallback in plain Office documents. (Placeholder — confirm official typeface with Marketing.)' },
+    { name: 'GE SS Two (Arabic)', when: 'All Arabic material, and the Arabic half of bilingual layouts. Match visual weight to the paired Archivo, not the point size. (Placeholder — confirm with Marketing.)' },
   ],
+  // The real palette, anchored on the logo red (#c81516 — the same `brand`
+  // colour the whole app is themed with). Neutrals support it; secondary/accent
+  // colours to be confirmed against the official Brand Guidelines PDF.
   colors: [
-    { name: 'Engineering Navy', hex: '#1B3A5C', when: 'Primary brand colour — headings, covers, the logo itself.' },
-    { name: 'Structure Grey', hex: '#5B6770', when: 'Body text and secondary elements.' },
-    { name: 'Site Amber', hex: '#E8A33D', when: 'Accent only — highlights, callouts, charts. Never for large surfaces.' },
-    { name: 'Blueprint White', hex: '#F7F9FA', when: 'Backgrounds and negative space — keep layouts light.' },
+    { name: 'ALSUWEIDI Red', hex: '#c81516', when: 'Primary brand colour — the logo, headings, covers, primary buttons and highlights.' },
+    { name: 'Deep Red', hex: '#8f0f10', when: 'Hover states and dark accents supporting the primary red — never as its own headline colour.' },
+    { name: 'Charcoal', hex: '#1f2937', when: 'Body text and dark UI elements.' },
+    { name: 'Light Grey', hex: '#f8fafc', when: 'Backgrounds and negative space — keep layouts light so the red stays strong.' },
   ],
 }
 
