@@ -4,7 +4,21 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-11 — **Batch 20 shipped: everything non-Phase-2 on this list.** The
+**Last updated:** 2026-07-13.
+
+## Next batch — from Sana's IA review (13 Jul 2026)
+
+- [ ] **HR: separate "my HR" from the HRMS properly.** The sidebar's top section mixes true
+  self-service (My HR, My timesheet, My appraisal, My requests) with things that are really
+  workspace/manager functions (People directory, Team timesheets/leave/appraisals, Training,
+  Careers) — Sana: "the tabs for HRMS and personal HR things are mixed up and I think that's
+  what's confusing." Proposed shape to react to: three sidebar sections — **Me** (My HR,
+  My timesheet, My appraisal, My requests, my training), **My team** (manager-only: team
+  timesheets/leave/appraisals), and the existing **HR Workspace** groups; People + Careers
+  probably belong with the workspace or their own "Company" section. Decide the grouping with
+  Sana before building.
+
+Earlier: 2026-07-11 — **Batch 20 shipped: everything non-Phase-2 on this list.** The
 entire code-quality consolidation section, all four good-to-have ideas, the PRO dashboard
 default, and an individuals-as-clients default (needs sign-off) — see the struck sections
 below. What remains open: decision items awaiting Sana/management (Campaigns scope, grades,
