@@ -15,7 +15,7 @@ import { INITIAL_RFPS } from '../data/rfpData'
 const MODULE_SCREENS = [
   { label: 'CRM — Pipeline', to: '/crm' }, { label: 'CRM — Companies', to: '/crm' }, { label: 'CRM — Proposals (RFPs)', to: '/crm' },
   { label: 'HR — People', to: '/hr' }, { label: 'HR — My timesheet', to: '/hr' }, { label: 'HR — Leave planner', to: '/hr' }, { label: 'HR — Payroll', to: '/hr' },
-  { label: 'Projects — My Work', to: '/projects' }, { label: 'Projects — Management dashboard', to: '/projects' }, { label: 'Projects — Resource planner', to: '/projects' },
+  { label: 'Projects — My Work', to: '/projects' }, { label: 'Projects — Active projects', to: '/projects' }, { label: 'Projects — Resource planner', to: '/projects' },
   { label: 'IT & Assets', to: '/it' }, { label: 'Marketing', to: '/marketing' }, { label: 'Financials', to: '/finance' },
   { label: 'Office Administration — Correspondence', to: '/office' }, { label: 'Admin Center', to: '/admin' },
 ]

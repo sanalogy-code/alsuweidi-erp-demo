@@ -23,7 +23,7 @@ import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 const NAV_GROUPS = [
   { label: 'Project Management', items: [
     { key: 'mywork', label: 'My Work', icon: Inbox },
-    { key: 'pmdash', label: 'Management', icon: Gauge },
+    { key: 'pmdash', label: 'Active projects', icon: Gauge },
     { key: 'reviews', label: 'Project reviews', icon: FileBarChart },
     { key: 'risks', label: 'Risk report', icon: ShieldAlert },
     { key: 'resources', label: 'Resources', icon: UsersRound },
