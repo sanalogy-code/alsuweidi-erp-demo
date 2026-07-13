@@ -9,11 +9,11 @@ The "how long did this actually take" log — numbers pulled from git history, f
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Latest (13 Jul: Batch 22 — IA restructure: intent-grouped navigation + verb-first Finance actions)** | 13 July 2026 |
+| **Latest (13 Jul: Batches 22–23 — IA restructure across every module, the PMO portfolio dashboard, Portfolio analytics, honest branding + favicon)** | 13 July 2026 |
 | **Elapsed time** | ~10 working days |
-| **Commits** | 167 |
-| **Deploys to the live site** | every push auto-deploys — ~160 |
-| **App code** | ~30,600 lines across 141 components + 12 pages |
+| **Commits** | 179 |
+| **Deploys to the live site** | every push auto-deploys — ~170 |
+| **App code** | ~31,100 lines across 142 components + 12 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 4 days
@@ -41,7 +41,8 @@ The "how long did this actually take" log — numbers pulled from git history, f
 - **THE EVERYTHING LIST cleared in one night** (day 7 night, Batches 16d + 18a–g — the whole persona-sweep backlog built in parallel): attendance punch drill-down; search/status/date filters across ~24 registers; a cross-module **notifications center** (bell + unread badge in every navbar, composed live from approvals/deadlines/timesheets/queues); **global search** (Ctrl+K over people, live projects, companies, contacts, RFPs, screens); a **My Week** strip and a management **Company KPI panel** (utilization, win rate, receivables, project RAG) with board-pack print on the home page; delegation-of-authority matrix + visibility rules in Admin; the **accountant's working month** (receipts allocated across invoices, credit notes, per-expense VAT with a real VAT working paper, petty cash with reconciliation, supplier/payables ledger with payment runs, retention view, month-end close checklist, session audit trail); **HR talent suite** (appraisals with a default 3-step model, training catalogue → enrollment → auto-accomplishment, disciplinary register with letterhead print, exit interviews + analytics, headcount & attrition dashboard, optional grades/bands); **Marketing + BD** (campaigns, content approval records, pack usage log, events, award submissions; bid/no-bid gate with recorded rationale, tender checklists, bid cost tracking, competitor register, lost-RFP debriefs); **Office/ODC + IT** (meeting rooms with clash detection, supplies, courier log, vehicles + Salik, document-numbering reference; SLA timers, installed software with seat-overrun flags, preventive maintenance, access requests, system status board); and **PM/site field tools** (drawing transmittals, RFI register, per-gate coordination checklists, 4.21 photo-report builder, HSE safety log, mobile-first quick daily entry)
 - **In-app Guide** (day 8, Batch 19) — a contextual `?` in every top bar opens one help hub: per-role orientation, ~50 "How do I…" task recipes that deep-link straight to the right screen, and a module map — role-gated, maintained from a single content file
 - **Backlog cleared + home redesign** (day 9, Batches 20–21) — every non-Phase-2 backlog item shipped in one pass: the code-quality consolidation (shared sidebar/filter/id/date infrastructure, finance state lifted app-wide, one audit log, per-invoice credit-note netting), auto-drafted mobilization invoices, billing progress on project records, payroll-fed P&L, a PRO dashboard, individuals-as-clients; then the home page was redesigned as a search-first launcher — live status lines on every module tile, a single attention line, photo news cards, holidays card — chosen from three mocked-up directions and verified on mobile
-- **Navigation restructure** (day 10, Batch 22, from the founder's own usability review) — module sidebars reorganized from flat register lists into intent groups with sub-view tabs (Finance 12→5, HR workspace 16→6, Office 7→3, IT 8→3, Marketing 9→4, Admin 6→3), plus verb-first action cards on the Finance overview that open the right form in one click
+- **Navigation restructure** (day 10, Batches 22–23, from the founder's own usability review) — every sidebar in the app reorganized from flat register lists into intent groups with sub-view tabs (Finance 12→5, HR workspace 16→6, Office 7→3, IT 8→3, Marketing 9→4, Admin 6→3, and the per-project workspace ~25→~15), verb-first action cards on the Finance overview, and the in-app Guide rewritten to match
+- **PMO portfolio dashboard + Portfolio analytics** (day 10, Batch 23) — a show-first PMO screen (RAG donut, exception tiles with reason badges, cross-project resource heatmap, 30-day deadline timeline, All/Mine scope) and an analytics page over the project record (claims/NCR clusters by type, hours vs estimate, billing lag, supervision slip — with clearly-labelled illustrative sections awaiting the Phase 2 history import)
 - **Role-based views** — employees, HR, management, marketing, IT, admin staff, and PRO company each see different navigation and data
 - **Home dashboard** — module launcher, announcements, holidays tile, build-number card; day 3 added probation-ending-soon card
 
