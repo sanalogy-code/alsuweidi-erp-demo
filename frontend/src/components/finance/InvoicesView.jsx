@@ -6,11 +6,11 @@ import {
   INVOICE_STATUSES, invoiceStatusMeta, invoiceTotal, invoiceOutstanding, fmtAED, VAT_RATE,
 } from '../../data/financeData'
 
-export default function InvoicesView({ invoices, onUpdate, onAdd, creditNotes = [], onAddCreditNote, onPayment }) {
+export default function InvoicesView({ invoices, onUpdate, onAdd, creditNotes = [], onAddCreditNote, onPayment, initialAdd = false }) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
-  const [showAdd, setShowAdd] = useState(false)
+  const [showAdd, setShowAdd] = useState(initialAdd)
   const [payingId, setPayingId] = useState(null)
   const [payAmount, setPayAmount] = useState('')
   const [creditingId, setCreditingId] = useState(null)

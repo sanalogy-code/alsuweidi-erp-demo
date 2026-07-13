@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, FileText, ReceiptText, TrendingUp, Lock, CalendarRange, Calculator,
-  Banknote, Wallet, Truck, ShieldCheck, CalendarCheck, History,
+  LayoutDashboard, ReceiptText, TrendingUp, Lock, Banknote, CalendarCheck,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
+import SubViewTabs from '../components/SubViewTabs'
 import FinanceOverview from '../components/finance/FinanceOverview'
 import InvoicesView from '../components/finance/InvoicesView'
 import ExpensesView from '../components/finance/ExpensesView'
@@ -36,6 +36,9 @@ export default function Finance({ user, onLogout, finance, auditEntries = [] }) 
   const canView = FINANCE_VIEW_ROLES.includes(user?.role)
   const location = useLocation()
   const [view, setView] = useState(location.state?.view || 'overview')
+  // Set when an Overview action card jumps to a register — tells the target view
+  // to open its add-form immediately. Cleared on any manual navigation.
+  const [addIntent, setAddIntent] = useState(false)
   const {
     invoices, expenses, receipts, creditNotes, pettyCash, pettyRecs,
     supplierInvoices, checklists,
@@ -47,7 +50,7 @@ export default function Finance({ user, onLogout, finance, auditEntries = [] }) 
   const activity = auditEntries.filter((e) => e.module === 'Financials')
 
   useEffect(() => {
-    if (location.state?.view) setView(location.state.view)
+    if (location.state?.view) { setView(location.state.view); setAddIntent(false) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key])
 
@@ -57,20 +60,45 @@ export default function Finance({ user, onLogout, finance, auditEntries = [] }) 
   const pendingExpenses = expenses.filter((e) => e.status === 'pending').length
   const pendingPayables = supplierInvoices.filter((s) => s.status === 'pending_approval').length
 
-  const NAV = [
-    { key: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { key: 'invoices', label: 'Invoices', icon: FileText, badge: outstandingCount },
-    { key: 'receipts', label: 'Receipts', icon: Banknote },
-    { key: 'expenses', label: 'Expenses', icon: ReceiptText, badge: pendingExpenses },
-    { key: 'payables', label: 'Payables', icon: Truck, badge: pendingPayables },
-    { key: 'petty', label: 'Petty cash', icon: Wallet },
-    { key: 'retention', label: 'Retention', icon: ShieldCheck },
-    { key: 'pl', label: 'P&L summary', icon: TrendingUp },
-    { key: 'revenue', label: 'Revenue reports', icon: CalendarRange },
-    { key: 'accountant', label: 'Accountant', icon: Calculator },
-    { key: 'monthend', label: 'Month-end close', icon: CalendarCheck },
-    { key: 'activity', label: 'Activity', icon: History },
+  // IA restructure (Jul 2026): the sidebar groups by intent instead of listing all
+  // 12 registers flat. Each group owns its old view keys as tabs, so HelpHub
+  // deep-links (location.state.view = 'receipts' etc.) still land exactly right.
+  const GROUPS = [
+    { key: 'overview', label: 'Overview', icon: LayoutDashboard, views: [{ key: 'overview' }] },
+    {
+      key: 'moneyin', label: 'Money in', icon: Banknote, badge: outstandingCount,
+      views: [
+        { key: 'invoices', label: 'Invoices', badge: outstandingCount },
+        { key: 'receipts', label: 'Receipts' },
+        { key: 'retention', label: 'Retention' },
+      ],
+    },
+    {
+      key: 'moneyout', label: 'Money out', icon: ReceiptText, badge: pendingExpenses + pendingPayables,
+      views: [
+        { key: 'expenses', label: 'Expenses', badge: pendingExpenses },
+        { key: 'payables', label: 'Payables', badge: pendingPayables },
+        { key: 'petty', label: 'Petty cash' },
+      ],
+    },
+    {
+      key: 'reports', label: 'Reports', icon: TrendingUp,
+      views: [
+        { key: 'pl', label: 'P&L summary' },
+        { key: 'revenue', label: 'Revenue' },
+        { key: 'accountant', label: 'Accountant' },
+      ],
+    },
+    {
+      key: 'close', label: 'Close & activity', icon: CalendarCheck,
+      views: [
+        { key: 'monthend', label: 'Month-end close' },
+        { key: 'activity', label: 'Activity' },
+      ],
+    },
   ]
+  const activeGroup = GROUPS.find((g) => g.views.some((v) => v.key === view)) || GROUPS[0]
+  const goTo = (v, { add = false } = {}) => { setView(v); setAddIntent(add) }
 
   if (!canView) {
     return (
@@ -96,7 +124,9 @@ export default function Finance({ user, onLogout, finance, auditEntries = [] }) 
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
         <SidebarNav
-          groups={[{ items: NAV }]} active={view} onSelect={setView}
+          groups={[{ items: GROUPS.map(({ key, label, icon, badge }) => ({ key, label, icon, badge })) }]}
+          active={activeGroup.key}
+          onSelect={(key) => goTo(GROUPS.find((g) => g.key === key).views[0].key)}
           footer={(
             <div className="hidden sm:block mt-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] leading-snug text-amber-700">
               Demo data — illustrative figures. Real accounting integration is Phase 2.
@@ -105,11 +135,14 @@ export default function Finance({ user, onLogout, finance, auditEntries = [] }) 
         />
 
         <main className="flex-1 min-w-0 w-full">
+          <SubViewTabs views={activeGroup.views} active={view} onSelect={goTo} />
+
           {view === 'overview' && (
-            <FinanceOverview invoices={invoices} expenses={expenses} onJump={setView} />
+            <FinanceOverview invoices={invoices} expenses={expenses} onJump={goTo} />
           )}
           {view === 'invoices' && (
             <InvoicesView
+              initialAdd={addIntent}
               invoices={invoices}
               onUpdate={(inv) => updateInvoice(inv, inv.status === 'sent' ? `Invoice ${inv.invoiceNo} sent — ${inv.clientName}` : null)}
               onAdd={addInvoice}
@@ -119,10 +152,11 @@ export default function Finance({ user, onLogout, finance, auditEntries = [] }) 
             />
           )}
           {view === 'receipts' && (
-            <ReceiptsView receipts={receipts} invoices={invoices} onAddReceipt={addReceipt} />
+            <ReceiptsView receipts={receipts} invoices={invoices} onAddReceipt={addReceipt} initialAdd={addIntent} />
           )}
           {view === 'expenses' && (
             <ExpensesView
+              initialAdd={addIntent}
               expenses={expenses}
               onUpdate={updateExpense}
               onAdd={addExpense}
@@ -134,6 +168,7 @@ export default function Finance({ user, onLogout, finance, auditEntries = [] }) 
           )}
           {view === 'petty' && (
             <PettyCashView
+              initialAdd={addIntent}
               entries={pettyCash}
               reconciliations={pettyRecs}
               onAddEntry={addPettyEntry}

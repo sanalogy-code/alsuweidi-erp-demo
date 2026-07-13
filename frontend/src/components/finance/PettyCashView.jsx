@@ -6,8 +6,8 @@ import { fmtAED, PETTY_CASH_OPENING } from '../../data/financeData'
 // Petty cash log — float top-ups and small cash spends with a running balance,
 // plus a monthly count-vs-book reconciliation. Demo-grade; the cash box would
 // post into the GL as a cash account in Phase 2.
-export default function PettyCashView({ entries, reconciliations, onAddEntry, onReconcile, currentUserName }) {
-  const [showAdd, setShowAdd] = useState(false)
+export default function PettyCashView({ entries, reconciliations, onAddEntry, onReconcile, currentUserName, initialAdd = false }) {
+  const [showAdd, setShowAdd] = useState(initialAdd)
   const [showRec, setShowRec] = useState(false)
   const [form, setForm] = useState({ date: todayISO(), description: '', direction: 'out', amount: '' })
   const [recForm, setRecForm] = useState({ month: '2026-07', counted: '', note: '' })

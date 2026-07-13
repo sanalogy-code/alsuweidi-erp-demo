@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
   ArrowRight, Users, Building2, UserPlus, List, Network, Award, AlertTriangle,
-  Home, ClipboardList, Briefcase, GraduationCap, Inbox, CalendarRange,
-  CalendarClock, Fingerprint, Banknote, CalendarDays, Plane, FileText, ShieldAlert,
-  UserMinus, Landmark, LineChart, TrendingUp, FileUser, Clock, ClipboardCheck, CreditCard,
-  Star, LogOut, BarChart3, Layers,
+  Home, ClipboardList, Briefcase, GraduationCap, Inbox,
+  Banknote, CalendarDays, Plane, FileText, ShieldAlert,
+  Landmark, TrendingUp, FileUser, Clock, ClipboardCheck, CreditCard,
+  Star, LogOut,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
+import SubViewTabs from '../components/SubViewTabs'
 import OnboardingChecklist from '../components/hr/OnboardingChecklist'
 import EmployeeList from '../components/hr/EmployeeList'
 import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
@@ -204,29 +205,65 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
     ] : []),
   ]
 
-  const NAV_HR = [
-    ...(isHrStaff ? [{ key: 'inbox', label: 'Inbox', icon: Inbox, badge: inboxCount }] : []),
+  // HR workspace, grouped by intent (same IA pattern as Finance: sidebar groups →
+  // sub-view tabs). Old view keys are unchanged so HelpHub deep-links still land.
+  const offboardingCount = offboardings.filter((o) => o.status === 'in_progress').length
+  const proOpenCount = proTasks.filter((t) => t.status !== 'done').length
+  const WS_GROUPS = [
+    ...(isHrStaff ? [{
+      key: 'g-inbox', label: 'Inbox', icon: Inbox, badge: inboxCount,
+      views: [{ key: 'inbox' }],
+    }] : []),
     ...(canViewSensitive ? [
-      { key: 'leaveplanner', label: 'Leave planner', icon: CalendarRange },
-      { key: 'renewals', label: 'Renewals', icon: CalendarClock, badge: overdueCount },
-      { key: 'timesheets', label: 'Timesheets', icon: ClipboardCheck, badge: submittedTimesheets },
-      { key: 'tsinsights', label: 'Timesheet insights', icon: LineChart },
-      { key: 'attendance', label: 'Attendance', icon: Fingerprint },
-      { key: 'payroll', label: 'Payroll', icon: Banknote },
-      { key: 'staffplan', label: 'Staff planning', icon: LineChart },
-      { key: 'headcount', label: 'Headcount & attrition', icon: BarChart3 },
-      { key: 'gradesbands', label: 'Grades & bands', icon: Layers },
+      {
+        key: 'g-time', label: 'Time & leave', icon: ClipboardCheck, badge: submittedTimesheets,
+        views: [
+          { key: 'timesheets', label: 'Timesheets', badge: submittedTimesheets },
+          { key: 'tsinsights', label: 'Insights' },
+          { key: 'attendance', label: 'Attendance' },
+          { key: 'leaveplanner', label: 'Leave planner' },
+        ],
+      },
+      {
+        key: 'g-pay', label: 'Pay & planning', icon: Banknote,
+        views: [
+          { key: 'payroll', label: 'Payroll' },
+          { key: 'staffplan', label: 'Staff planning' },
+          { key: 'headcount', label: 'Headcount & attrition' },
+          { key: 'gradesbands', label: 'Grades & bands' },
+        ],
+      },
     ] : []),
     ...(isHrStaff ? [
-      { key: 'appraisalcycle', label: 'Appraisal cycle', icon: Star, badge: hrSignoffPending },
-      { key: 'trainingapprovals', label: 'Training approvals', icon: GraduationCap, badge: trainingPending },
-      { key: 'warnings', label: 'Disciplinary', icon: ShieldAlert },
-      { key: 'exitinterviews', label: 'Exit interviews', icon: LogOut },
-      { key: 'offboarding', label: 'Offboarding', icon: UserMinus, badge: offboardings.filter((o) => o.status === 'in_progress').length },
-      { key: 'protasks', label: 'PRO tasks', icon: Landmark, badge: proTasks.filter((t) => t.status !== 'done').length },
-      { key: 'holidays', label: 'Holidays', icon: CalendarDays },
+      {
+        key: 'g-perf', label: 'Performance', icon: Star, badge: hrSignoffPending + trainingPending,
+        views: [
+          { key: 'appraisalcycle', label: 'Appraisal cycle', badge: hrSignoffPending },
+          { key: 'trainingapprovals', label: 'Training approvals', badge: trainingPending },
+          { key: 'warnings', label: 'Disciplinary' },
+        ],
+      },
+      {
+        key: 'g-exits', label: 'Exits', icon: LogOut, badge: offboardingCount,
+        views: [
+          { key: 'offboarding', label: 'Offboarding', badge: offboardingCount },
+          { key: 'exitinterviews', label: 'Exit interviews' },
+        ],
+      },
     ] : []),
+    ...(canViewSensitive || isHrStaff ? [{
+      key: 'g-admin', label: 'Compliance & admin', icon: Landmark,
+      badge: (canViewSensitive ? overdueCount : 0) + (isHrStaff ? proOpenCount : 0),
+      views: [
+        ...(canViewSensitive ? [{ key: 'renewals', label: 'Renewals', badge: overdueCount }] : []),
+        ...(isHrStaff ? [
+          { key: 'protasks', label: 'PRO tasks', badge: proOpenCount },
+          { key: 'holidays', label: 'Holidays' },
+        ] : []),
+      ],
+    }] : []),
   ]
+  const activeWsGroup = WS_GROUPS.find((g) => g.views.some((v) => v.key === view))
 
   const handleAddDependent = (employeeId, dependent) => {
     setEmployees(employees.map((e) => (e.id === employeeId ? { ...e, dependents: [...e.dependents, dependent] } : e)))
@@ -333,9 +370,20 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
       <Navbar user={user} onLogout={onLogout} title="HR" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <SidebarNav groups={[{ items: NAV_MAIN }, { label: 'HR Workspace', items: NAV_HR }]} active={view} onSelect={setView} />
+        <SidebarNav
+          groups={[
+            { items: NAV_MAIN },
+            { label: 'HR Workspace', items: WS_GROUPS.map(({ key, label, icon, badge }) => ({ key, label, icon, badge })) },
+          ]}
+          active={activeWsGroup ? activeWsGroup.key : view}
+          onSelect={(key) => {
+            const group = WS_GROUPS.find((g) => g.key === key)
+            setView(group ? group.views[0].key : key)
+          }}
+        />
 
         <main className="flex-1 min-w-0 w-full">
+          <SubViewTabs views={activeWsGroup?.views} active={view} onSelect={setView} />
           {view === 'myhr' && (
             <div className="space-y-6">
               {canViewSensitive && (

@@ -9,10 +9,10 @@ import {
 // This register is the source of truth for "Paid" on invoices: recording a receipt
 // here (or via the quick Record-payment button on the Invoices view, which creates
 // a simple receipt behind the scenes) drives the invoice paid / partially-paid status.
-export default function ReceiptsView({ receipts, invoices, onAddReceipt }) {
+export default function ReceiptsView({ receipts, invoices, onAddReceipt, initialAdd = false }) {
   const [search, setSearch] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
-  const [showAdd, setShowAdd] = useState(false)
+  const [showAdd, setShowAdd] = useState(initialAdd)
   const [form, setForm] = useState({
     date: todayISO(), reference: '',
     bankAccount: CASH_ACCOUNTS[0]?.name || '', clientName: '',

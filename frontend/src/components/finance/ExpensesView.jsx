@@ -6,12 +6,12 @@ import {
   EXPENSE_CATEGORIES, EXPENSE_STATUSES, expenseStatusMeta, fmtAED, VAT_RATE,
 } from '../../data/financeData'
 
-export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserName }) {
+export default function ExpensesView({ expenses, onUpdate, onAdd, currentUserName, initialAdd = false }) {
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [range, setRange] = useState({ from: '', to: '' })
-  const [showAdd, setShowAdd] = useState(false)
+  const [showAdd, setShowAdd] = useState(initialAdd)
   const emptyForm = { date: todayISO(), category: EXPENSE_CATEGORIES[0], vendor: '', description: '', amount: '', vatAmount: '', vatTouched: false, vatNonRecoverable: false, projectId: '', attachment: '' }
   const [form, setForm] = useState(emptyForm)
   const projectOf = (id) => PROJECTS.find((p) => p.id === id)

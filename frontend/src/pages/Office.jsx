@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Mails, BadgeCheck, Lock, CalendarClock, Package, Truck, Car, Hash } from 'lucide-react'
+import { Mails, BadgeCheck, Lock, CalendarClock } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
+import SubViewTabs from '../components/SubViewTabs'
 import CorrespondenceView from '../components/office/CorrespondenceView'
 import RoomBookingsView from '../components/office/RoomBookingsView'
 import SuppliesView from '../components/office/SuppliesView'
@@ -40,15 +41,31 @@ export default function Office({ user, onLogout }) {
   const awaiting = letters.filter((l) => l.status === 'action_required').length
   const suppliesOpen = supplies.filter((s) => s.status === 'requested').length
 
-  const NAV = [
-    { key: 'correspondence', label: 'Correspondence', icon: Mails, badge: awaiting },
-    { key: 'licenses', label: 'Registrations & licenses', icon: BadgeCheck },
-    { key: 'rooms', label: 'Meeting rooms', icon: CalendarClock },
-    { key: 'supplies', label: 'Office supplies', icon: Package, badge: suppliesOpen },
-    { key: 'couriers', label: 'Courier & dispatch', icon: Truck },
-    { key: 'vehicles', label: 'Vehicles & Salik', icon: Car },
-    { key: 'numbering', label: 'Document numbering', icon: Hash },
+  // Grouped by intent (same IA pattern as Finance/HR: sidebar groups → sub-view
+  // tabs). Old view keys unchanged so HelpHub deep-links still land.
+  const GROUPS = [
+    {
+      key: 'g-docs', label: 'Documents & mail', icon: Mails, badge: awaiting,
+      views: [
+        { key: 'correspondence', label: 'Correspondence', badge: awaiting },
+        { key: 'couriers', label: 'Courier & dispatch' },
+        { key: 'numbering', label: 'Document numbering' },
+      ],
+    },
+    {
+      key: 'g-facilities', label: 'Facilities', icon: CalendarClock, badge: suppliesOpen,
+      views: [
+        { key: 'rooms', label: 'Meeting rooms' },
+        { key: 'supplies', label: 'Office supplies', badge: suppliesOpen },
+        { key: 'vehicles', label: 'Vehicles & Salik' },
+      ],
+    },
+    {
+      key: 'g-licenses', label: 'Registrations & licenses', icon: BadgeCheck,
+      views: [{ key: 'licenses' }],
+    },
   ]
+  const activeGroup = GROUPS.find((g) => g.views.some((v) => v.key === view)) || GROUPS[0]
 
   if (!canView) {
     return (
@@ -74,7 +91,10 @@ export default function Office({ user, onLogout }) {
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
         <SidebarNav
-          groups={[{ items: NAV }]} active={view} onSelect={setView} width="sm:w-48"
+          groups={[{ items: GROUPS.map(({ key, label, icon, badge }) => ({ key, label, icon, badge })) }]}
+          active={activeGroup.key}
+          onSelect={(key) => setView(GROUPS.find((g) => g.key === key).views[0].key)}
+          width="sm:w-48"
           footer={(
             <div className="hidden sm:block mt-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] leading-snug text-amber-700">
               Demo data. Room bookings + supply requests open to all employees with the notifications/home phase (Phase 2).
@@ -83,6 +103,7 @@ export default function Office({ user, onLogout }) {
         />
 
         <main className="flex-1 min-w-0 w-full">
+          <SubViewTabs views={activeGroup.views} active={view} onSelect={setView} />
           {view === 'correspondence' && <CorrespondenceView letters={letters} onChange={setLetters} />}
           {view === 'licenses' && <LicensesView items={licenses} onChange={setLicenses} />}
           {view === 'rooms' && <RoomBookingsView bookings={roomBookings} onChange={setRoomBookings} user={user} />}

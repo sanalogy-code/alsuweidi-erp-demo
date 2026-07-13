@@ -1,4 +1,7 @@
-import { Wallet, ArrowDownCircle, ArrowUpCircle, AlertTriangle, ArrowRight } from 'lucide-react'
+import {
+  Wallet, ArrowDownCircle, ArrowUpCircle, AlertTriangle, ArrowRight,
+  FileText, ReceiptText, Banknote, Plus,
+} from 'lucide-react'
 import { PROJECTS, PROJECT_TYPES } from '../../data/projectsData'
 import {
   CASH_ACCOUNTS, fmtAED, invoiceOutstanding, invoiceStatusMeta, expenseStatusMeta,
@@ -56,6 +59,30 @@ export default function FinanceOverview({ invoices, expenses, onJump }) {
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Financial overview</h2>
         <p className="text-sm text-gray-500">Cash, receivables and revenue at a glance — demo figures.</p>
+      </div>
+
+      {/* Verb-first action cards — the fastest path to the four everyday tasks.
+          Each jumps to its register with the add-form already open. */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { view: 'invoices', icon: FileText, label: 'Record an invoice', sub: 'Bill a client / project' },
+          { view: 'expenses', icon: ReceiptText, label: 'Log an expense', sub: 'With VAT & job-costing' },
+          { view: 'receipts', icon: Banknote, label: 'Record a payment', sub: 'Money received in bank' },
+          { view: 'petty', icon: Wallet, label: 'Petty cash entry', sub: 'Cash box in / out' },
+        ].map((a) => (
+          <button
+            key={a.view}
+            onClick={() => onJump?.(a.view, { add: true })}
+            className="group bg-white rounded-lg border border-gray-200 shadow-sm p-4 text-left hover:border-brand hover:shadow transition"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <a.icon size={18} className="text-brand" />
+              <Plus size={14} className="text-gray-300 group-hover:text-brand transition" />
+            </div>
+            <div className="text-sm font-semibold text-gray-800">{a.label}</div>
+            <div className="text-[11px] text-gray-400 mt-0.5">{a.sub}</div>
+          </button>
+        ))}
       </div>
 
       {/* Stat cards */}
