@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
-import ProjectsDashboard from '../components/projects/ProjectsDashboard'
+import PortfolioAnalyticsView from '../components/projects/PortfolioAnalyticsView'
 import NewProjectModal from '../components/projects/NewProjectModal'
 import ResourcePlannerView from '../components/projects/pm/ResourcePlannerView'
 import MyWorkView from '../components/projects/pm/MyWorkView'
@@ -32,7 +32,7 @@ const NAV_GROUPS = [
   ] },
   { label: 'Database', items: [
     { key: 'portfolio', label: 'Portfolio', icon: FolderKanban },
-    { key: 'dashboard', label: 'Record stats', icon: LayoutDashboard },
+    { key: 'dashboard', label: 'Analytics', icon: LayoutDashboard },
   ] },
 ]
 
@@ -81,7 +81,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
             <MyWorkView user={user} projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'pmo' && (
-            <PmoView projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} invoices={invoices} canViewSensitive={canViewSensitive} onOpenWorkspace={openWorkspace} onJumpView={setView} />
+            <PmoView projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} invoices={invoices} canViewSensitive={canViewSensitive} onOpenWorkspace={openWorkspace} onJumpView={setView} user={user} />
           )}
           {view === 'pmdash' && (
             <PmDashboard projects={projects} pmRecords={pmRecords} timesheets={timesheets} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} invoices={invoices} />
@@ -101,7 +101,7 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
             <RiskReportView projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}
           {view === 'dashboard' && (
-            <ProjectsDashboard projects={projects} pmRecords={pmRecords} canViewSensitive={canViewSensitive} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />
+            <PortfolioAnalyticsView projects={projects} pmRecords={pmRecords} invoices={invoices} />
           )}
           {view === 'portfolio' && (
             <ProjectList projects={projects} employees={EMPLOYEES} user={user} onViewProject={setSelectedProject} onOpenWorkspace={openWorkspace} />
