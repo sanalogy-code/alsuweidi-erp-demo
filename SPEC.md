@@ -10,6 +10,8 @@ If you're a developer, an AI agent, or anyone picking this project up cold: read
 >
 > **11 Jul 2026 — Batch 20 (backlog cleared) + home page redesign.** The whole non-Phase-2 backlog shipped in one pass. New shared infrastructure: `components/SidebarNav.jsx` (the grouped module sidebar, used by all 8 module pages), `components/RegisterFilter.jsx` (`useRegisterFilter` hook + `RegisterFilterBar` — the search/status/date-range trio), `utils/id.js` (`nextId`), `utils/date.js` grew `fmtShortDate` + the single `daysUntil` (re-exported by pmData/crmData). **Finance state is lifted to App** via `state/financeState.js` — Home KPIs, PmDashboard, DMR/CMR and the workspace read live session invoices/expenses; **one audit log** via `state/auditLog.js` (canonical shape `{ts, user, module, kind, detail}`; Finance actions appear in Admin → Activity log, Finance → Activity is the module filter). Functional additions: auto-drafted 10% mobilization invoice on project creation, Billing-progress block on the project record (sensitive roles), P&L payroll line from HR employee gross, PRO dashboard (velocity/overdue/by-type + `doneDate` stamping), individuals-as-clients (`kind: 'individual'` on COMPANY — needs sign-off), leave denials stamp `decidedDate` not `approvedDate`. **Home page redesigned** ("launcher"): centered greeting + a search bar that opens the Ctrl+K palette (custom `open-global-search` event), one amber attention line composed from live personal load, module tiles with live one-line statuses, management KPI panel, news as three stock-photo media cards (`NEWS` in dashboardData; Unsplash placeholders with gradient+emoji fallback — the app's one external asset dependency) + an Upcoming Holidays card; carousel/quick-actions/mock team members removed.
 >
+> **13 Jul 2026 — Batch 22: IA restructure (intent-grouped sidebars + verb-first Finance actions).** Came out of Sana's "I feel lost in there / people are overwhelmed" conversation — the diagnosis was flat, equal-weight navigation (Finance had grown to 12 sidebar items, the HR workspace to 16). The pattern: **sidebar entries are now intent groups; the registers inside a group render as pill tabs** (new shared `components/SubViewTabs.jsx`). Old view keys are unchanged, so HelpHub deep-links (`location.state.view`) still land on the exact sub-view. Applied to: **Finance** (Overview / Money in [Invoices·Receipts·Retention] / Money out [Expenses·Payables·Petty cash] / Reports [P&L·Revenue·Accountant] / Close & activity [Month-end·Activity]), **HR workspace** (Inbox / Time & leave / Pay & planning / Performance / Exits / Compliance & admin — role gates preserved per view), and **Office** (Documents & mail / Facilities / Registrations & licenses). Badge counts roll up from tabs onto their group. Finance Overview additionally gained **four verb-first action cards** (Record an invoice / Log an expense / Record a payment / Petty cash entry) that jump to the register **with the add-form already open** (`initialAdd` prop on the four views + an `addIntent` flag in `Finance.jsx`, cleared on any manual navigation). CRM was left as-is (already grouped); Projects/IT/Marketing/Admin are small enough not to need it yet.
+>
 > **8 Jul 2026 — Batch 19: in-app Guide (help system).** `components/HelpHub.jsx` adds a `?` to every Navbar (beside search + bell) that opens a single help hub, contextual to the current module (`moduleForPath` maps the pathname). Three lenses — per-role orientation, ~50 "How do I…" task recipes (steps + a deep-link "Take me there"), and a module map — all from one file, `data/helpData.js`, maintained at module granularity. To make the deep-links land on an exact sub-view, every module page (Finance/CRM/IT/Marketing/Office/Admin/Projects) now reads `location.state?.view` at init **and** re-applies it via a `useEffect` on `location.key` (so a jump works even when you're already inside that module — a same-path navigation doesn't remount). Design decision: contextual `?` backed by module-level content rather than a per-page `?` with page-specific text (which would be a maintenance treadmill while screens still churn); per-field tooltips are deferred until screens stabilise.
 
 ---
@@ -259,7 +261,7 @@ Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `la
 
 ### HR (`pages/HR.jsx`)
 
-Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, which had grown to 11 tabs). Employees see self-service; HR staff additionally see an "HR Workspace" group; management sees the workspace minus Inbox and Holidays (complaint handling is HR-only).
+Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, which had grown to 11 tabs). Employees see self-service; HR staff additionally see an "HR Workspace" group; management sees the workspace minus Inbox and Holidays (complaint handling is HR-only). **Since Batch 22 the workspace is six intent groups** — Inbox / Time & leave / Pay & planning / Performance / Exits / Compliance & admin — with the individual registers as pill tabs (`SubViewTabs`), each view keeping its original role gate.
 
 **Everyone:**
 
@@ -424,7 +426,10 @@ Content sits *inside* Marketing (the separate "Content" home tile was removed). 
 First-pass, demo-grade UI proof-of-concept — **not real accounting**. The whole module is
 sensitive: gated to `FINANCE_VIEW_ROLES` (management + admin); other roles get a "Restricted
 module" screen and the home tile is hidden (`MODULES` entries can carry an optional `roles`
-filter, applied in `HomePage`). Sidebar nav matching the other modules:
+filter, applied in `HomePage`). **Since Batch 22 the sidebar is five intent groups** — Overview /
+Money in / Money out / Reports / Close & activity — with the registers as pill tabs inside each
+group (`SubViewTabs`), and the Overview opens with four verb-first action cards that jump to a
+register with its add-form pre-opened. The views themselves (Batches 7 + 17 + 18d):
 
 1. **Overview** (`FinanceOverview`) — cash position (mock `CASH_ACCOUNTS`), receivables
    outstanding, payables (approved + pending expenses), overdue total; revenue by project type
@@ -480,6 +485,7 @@ actually control who can sign in — user management becomes real in Phase 2 (au
 - **Never build a Tailwind class name via string concatenation at runtime** (e.g. `` `bg-${color}-400` ``) — Tailwind's JIT scanner only picks up classes that appear as complete literal strings in source. This bit us once (`STAGE_BAR_COLOR` in `crmData.js` exists specifically as a literal lookup table to avoid this).
 - Page components (`pages/*.jsx`) own state and data mutation handlers; they pass data + callbacks down to view/section components (`components/crm/*.jsx`, `components/hr/*.jsx`). View components don't call `setState` on data they don't own.
 - Every add/edit flow is a form inside `Modal`; every list view has search where it makes sense (Companies, Contacts).
+- **Module IA (Batch 22): sidebars list intent groups, not registers.** When a module accumulates more than ~6 views, group them by intent (do / check / find) in the sidebar and render the group's views as pill tabs (`components/SubViewTabs.jsx`). Keep the original view keys so HelpHub deep-links keep working, and roll badge counts up onto the group. Finance, the HR workspace, and Office follow this; apply it to any module that grows past the threshold.
 
 ---
 
