@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge, FileBarChart, ShieldAlert, Radar } from 'lucide-react'
+import { FolderKanban, Plus, UsersRound, Inbox, Gauge, Radar } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
+import SubViewTabs from '../components/SubViewTabs'
 import ProjectList from '../components/projects/ProjectList'
 import ProjectDetailModal from '../components/projects/ProjectDetailModal'
 import PortfolioAnalyticsView from '../components/projects/PortfolioAnalyticsView'
@@ -18,23 +19,35 @@ import EmployeeDetailModal from '../components/hr/EmployeeDetailModal'
 import { EMPLOYEES } from '../data/hrData'
 import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 
-// Two areas (Batch 11, Sana's structure): PROJECT MANAGEMENT is the working tool
-// (my work, management dashboard, resources); DATABASE is the records side
-// (portfolio list + record stats).
-const NAV_GROUPS = [
-  { label: 'Project Management', items: [
-    { key: 'mywork', label: 'My Work', icon: Inbox },
-    { key: 'pmo', label: 'PMO', icon: Radar },
-    { key: 'pmdash', label: 'Active projects', icon: Gauge },
-    { key: 'reviews', label: 'Project reviews', icon: FileBarChart },
-    { key: 'risks', label: 'Risk report', icon: ShieldAlert },
-    { key: 'resources', label: 'Resources', icon: UsersRound },
+// Two areas (Batch 11, Sana's structure): PROJECT MANAGEMENT is the working tool;
+// DATABASE is the records side. Batch 23: same intent-groups + sub-view tabs
+// pattern as the other modules (SPEC §4) — monitoring lenses fold into
+// "Oversight", the records side folds into one "Database" entry.
+const SECTIONS = [
+  { label: 'Project Management', groups: [
+    { key: 'mywork', label: 'My Work', icon: Inbox, views: [{ key: 'mywork' }] },
+    { key: 'pmo', label: 'PMO', icon: Radar, views: [{ key: 'pmo' }] },
+    {
+      key: 'g-oversight', label: 'Oversight', icon: Gauge,
+      views: [
+        { key: 'pmdash', label: 'Active projects' },
+        { key: 'reviews', label: 'Project reviews' },
+        { key: 'risks', label: 'Risk report' },
+      ],
+    },
+    { key: 'resources', label: 'Resources', icon: UsersRound, views: [{ key: 'resources' }] },
   ] },
-  { label: 'Database', items: [
-    { key: 'portfolio', label: 'Portfolio', icon: FolderKanban },
-    { key: 'dashboard', label: 'Analytics', icon: LayoutDashboard },
+  { label: 'Database', groups: [
+    {
+      key: 'g-db', label: 'Database', icon: FolderKanban,
+      views: [
+        { key: 'portfolio', label: 'Portfolio' },
+        { key: 'dashboard', label: 'Analytics' },
+      ],
+    },
   ] },
 ]
+const ALL_GROUPS = SECTIONS.flatMap((s) => s.groups)
 
 export default function Projects({ user, onLogout, projects = [], pmRecords = {}, timesheets = [], allocations = [], onUpdateAllocations, onUpdateProject, onAddProject, onAddMarketingTask, invoices, expenses }) {
   const location = useLocation()
@@ -65,7 +78,11 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
       <Navbar user={user} onLogout={onLogout} title="Projects" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <SidebarNav groups={NAV_GROUPS} active={view} onSelect={setView}>
+        <SidebarNav
+          groups={SECTIONS.map((s) => ({ label: s.label, items: s.groups.map(({ key, label, icon }) => ({ key, label, icon })) }))}
+          active={(ALL_GROUPS.find((g) => g.views.some((v) => v.key === view)) || ALL_GROUPS[0]).key}
+          onSelect={(key) => setView(ALL_GROUPS.find((g) => g.key === key).views[0].key)}
+        >
           {onAddProject && (
             <button
               onClick={() => setShowNewProject(true)}
@@ -77,6 +94,11 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
         </SidebarNav>
 
         <main className="flex-1 min-w-0 w-full">
+          <SubViewTabs
+            views={(ALL_GROUPS.find((g) => g.views.some((v) => v.key === view)) || ALL_GROUPS[0]).views}
+            active={view}
+            onSelect={setView}
+          />
           {view === 'mywork' && (
             <MyWorkView user={user} projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
           )}

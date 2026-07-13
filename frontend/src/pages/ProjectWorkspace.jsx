@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
-  LayoutDashboard, FileText, Layers, HardHat, CalendarRange, ListTodo,
-  Banknote, Scale, ClipboardList, Landmark, Users, ArrowLeft, CalendarCheck2, Info,
-  ShieldAlert, MessagesSquare, Receipt, PackageCheck, MessageSquareQuote,
-  Send, ListChecks, HelpCircle, ShieldCheck, Camera, Smartphone,
+  LayoutDashboard, FileText, Layers, HardHat, ListTodo,
+  Banknote, Scale, Landmark, Users, ArrowLeft, Info,
+  ShieldAlert, Receipt,
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
+import SubViewTabs from '../components/SubViewTabs'
 import PmOverview from '../components/projects/pm/PmOverview'
 import AllTasksView from '../components/projects/pm/AllTasksView'
 import DeliverablesView from '../components/projects/pm/DeliverablesView'
@@ -73,22 +73,52 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
   const updatePhase = (key, next) => onUpdatePm(project.id, { ...pm, phases: pm.phases.map((ph) => (ph.key === key ? next : ph)) })
   const jump = ({ phase = null, view }) => setSel({ phase, view })
 
-  // Section list per phase, shaped by what that phase actually is.
-  const phaseSections = (ph) => [
-    { key: 'tasks', label: 'Plan & tasks', icon: ListTodo, badge: (ph.tasks || []).filter((t) => t.status !== 'done').length },
-    { key: 'updates', label: 'Weekly updates', icon: CalendarCheck2 },
-    ...(ph.deliverables ? [{ key: 'deliverables', label: 'Deliverables', icon: FileText, badge: ph.deliverables.filter((d) => d.status === 'comments' || d.status === 'internal_review').length }] : []),
-    ...(ph.deliverables ? [{ key: 'transmittals', label: 'Transmittals', icon: Send }] : []),
-    ...(ph.designStages ? [{ key: 'design', label: 'Design gates', icon: Layers }] : []),
-    ...(ph.designStages ? [{ key: 'gatecoord', label: 'Gate coordination', icon: ListChecks }] : []),
-    ...(ph.wirs ? [{ key: 'site', label: 'Site', icon: HardHat, badge: ph.wirs.filter((w) => w.status !== 'approved' && w.status !== 'approved_as_noted').length + (ph.ncrs || []).filter((n) => n.status !== 'closed').length }] : []),
-    ...(ph.wirs ? [{ key: 'quickdaily', label: 'Quick daily entry', icon: Smartphone }] : []),
-    ...(ph.wirs ? [{ key: 'rfis', label: 'RFIs', icon: HelpCircle, badge: (ph.rfis || []).filter((r) => r.status === 'open').length }] : []),
-    ...(ph.wirs ? [{ key: 'hse', label: 'Safety log', icon: ShieldCheck, badge: (ph.safetyObservations || []).filter((o) => o.status === 'open').length }] : []),
-    { key: 'schedule', label: 'Schedule', icon: CalendarRange },
-    ...(canViewSensitive ? [{ key: 'fees', label: 'Fees & cost', icon: Banknote }] : []),
-    { key: 'team', label: 'Team', icon: Users },
-  ]
+  // Intent groups per phase (Batch 23 — same sidebar-groups + sub-view-tabs
+  // pattern as the module pages, SPEC §4). A Design+Supervision project had
+  // grown to ~25 sidebar items; groups take a phase from up to 11 rows to 4–6.
+  // View keys unchanged so My Work / notification deep-links still land.
+  const phaseGroups = (ph) => {
+    const openTasks = (ph.tasks || []).filter((t) => t.status !== 'done').length
+    const delivBadge = ph.deliverables ? ph.deliverables.filter((d) => d.status === 'comments' || d.status === 'internal_review').length : 0
+    const siteBadge = ph.wirs ? ph.wirs.filter((w) => w.status !== 'approved' && w.status !== 'approved_as_noted').length + (ph.ncrs || []).filter((n) => n.status !== 'closed').length : 0
+    const rfiBadge = (ph.rfis || []).filter((r) => r.status === 'open').length
+    const hseBadge = (ph.safetyObservations || []).filter((o) => o.status === 'open').length
+    return [
+      {
+        key: 'g-plan', label: 'Plan & progress', icon: ListTodo, badge: openTasks,
+        views: [
+          { key: 'tasks', label: 'Tasks', badge: openTasks },
+          { key: 'updates', label: 'Weekly updates' },
+          { key: 'schedule', label: 'Schedule' },
+        ],
+      },
+      ...(ph.deliverables ? [{
+        key: 'g-docs', label: 'Deliverables', icon: FileText, badge: delivBadge,
+        views: [
+          { key: 'deliverables', label: 'Register', badge: delivBadge },
+          { key: 'transmittals', label: 'Transmittals' },
+        ],
+      }] : []),
+      ...(ph.designStages ? [{
+        key: 'g-gates', label: 'Design gates', icon: Layers,
+        views: [
+          { key: 'design', label: 'Gates' },
+          { key: 'gatecoord', label: 'Coordination' },
+        ],
+      }] : []),
+      ...(ph.wirs ? [{
+        key: 'g-site', label: 'Site', icon: HardHat, badge: siteBadge + rfiBadge + hseBadge,
+        views: [
+          { key: 'site', label: 'Registers', badge: siteBadge },
+          { key: 'rfis', label: 'RFIs', badge: rfiBadge },
+          { key: 'hse', label: 'Safety log', badge: hseBadge },
+          { key: 'quickdaily', label: 'Quick daily' },
+        ],
+      }] : []),
+      ...(canViewSensitive ? [{ key: 'g-fees', label: 'Fees & cost', icon: Banknote, views: [{ key: 'fees' }] }] : []),
+      { key: 'g-team', label: 'Team', icon: Users, views: [{ key: 'team' }] },
+    ]
+  }
 
   const claimAlertCount = pm.claims.filter((c) => {
     const { noticeDue, detailedDue } = claimDeadlines(c, pm.fidicEdition)
@@ -102,27 +132,47 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
   const openActions = (pm.meetings || []).reduce((s, m) => s + m.actions.filter((a) => a.status !== 'done').length, 0)
   const openRisks = (pm.risks || []).filter((r) => r.status === 'open' || r.status === 'mitigating').length
 
-  const contractSections = [
-    { key: 'claims', label: 'Claims & EOT', icon: Scale, badge: claimAlertCount },
-    { key: 'reports', label: 'Progress reports', icon: ClipboardList, badge: reportsDue },
-    ...(hasSupervision ? [{ key: 'photoreport', label: 'Photo report (4.21)', icon: Camera }] : []),
-    { key: 'authorities', label: 'Authorities', icon: Landmark },
-    { key: 'risks', label: 'Risks', icon: ShieldAlert, badge: openRisks },
-    { key: 'meetings', label: 'Meetings & actions', icon: MessagesSquare, badge: openActions },
-    ...(hasSupervision ? [
-      { key: 'payments', label: 'Payments (IPC)', icon: Receipt },
-      { key: 'handover', label: 'Handover', icon: PackageCheck },
-      { key: 'cfeedback', label: 'Site feedback', icon: MessageSquareQuote, badge: (pm.constructionFeedback || []).filter((f) => f.status !== 'completed').length },
-    ] : []),
+  const feedbackBadge = (pm.constructionFeedback || []).filter((f) => f.status !== 'completed').length
+  const contractGroups = [
+    {
+      key: 'g-claims', label: 'Claims & reports', icon: Scale, badge: claimAlertCount + reportsDue,
+      views: [
+        { key: 'claims', label: 'Claims & EOT', badge: claimAlertCount },
+        { key: 'reports', label: 'Progress reports', badge: reportsDue },
+        ...(hasSupervision ? [{ key: 'photoreport', label: 'Photo report (4.21)' }] : []),
+      ],
+    },
+    { key: 'g-auth', label: 'Authorities', icon: Landmark, views: [{ key: 'authorities' }] },
+    {
+      key: 'g-gov', label: 'Risks & meetings', icon: ShieldAlert, badge: openRisks + openActions,
+      views: [
+        { key: 'risks', label: 'Risks', badge: openRisks },
+        { key: 'meetings', label: 'Meetings & actions', badge: openActions },
+      ],
+    },
+    ...(hasSupervision ? [{
+      key: 'g-closeout', label: 'Commercial & close-out', icon: Receipt, badge: feedbackBadge,
+      views: [
+        { key: 'payments', label: 'Payments (IPC)' },
+        { key: 'handover', label: 'Handover' },
+        { key: 'cfeedback', label: 'Site feedback', badge: feedbackBadge },
+      ],
+    }] : []),
   ]
 
   const activePhase = sel.phase ? pm.phases.find((ph) => ph.key === sel.phase) : null
 
+  // The sidebar group the current selection lives in (drives the tab row).
+  const activeGroup = sel.phase
+    ? (activePhase ? phaseGroups(activePhase).find((g) => g.views.some((v) => v.key === sel.view)) : null)
+    : contractGroups.find((g) => g.views.some((v) => v.key === sel.view)) || null
+
+  // item = a group: clicking selects its first view; active when it owns sel.view.
   const navBtn = (item, phaseKey = null) => {
     const Icon = item.icon
-    const active = sel.view === item.key && sel.phase === phaseKey
+    const active = sel.phase === phaseKey && item.views.some((v) => v.key === sel.view)
     return (
-      <button key={`${phaseKey || 'project'}-${item.key}`} onClick={() => setSel({ phase: phaseKey, view: item.key })}
+      <button key={`${phaseKey || 'project'}-${item.key}`} onClick={() => setSel({ phase: phaseKey, view: item.views[0].key })}
         className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition text-left ${active ? 'bg-brand/10 text-brand' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'}`}>
         <Icon size={14} className="shrink-0" />
         <span className="flex-1 truncate">{item.label}</span>
@@ -165,8 +215,8 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
         <div className="flex flex-col sm:flex-row gap-6 items-start">
           <aside className="w-full sm:w-52 shrink-0 sm:sticky sm:top-6 space-y-3">
             <div className="flex sm:flex-col flex-wrap gap-1">
-              {navBtn({ key: 'overview', label: 'Overview', icon: LayoutDashboard })}
-              {navBtn({ key: 'alltasks', label: 'All tasks', icon: ListTodo, badge: pm.phases.reduce((s, ph) => s + ph.tasks.filter((t) => t.status !== 'done').length, 0) })}
+              {navBtn({ key: 'overview', label: 'Overview', icon: LayoutDashboard, views: [{ key: 'overview' }] })}
+              {navBtn({ key: 'alltasks', label: 'All tasks', icon: ListTodo, views: [{ key: 'alltasks' }], badge: pm.phases.reduce((s, ph) => s + ph.tasks.filter((t) => t.status !== 'done').length, 0) })}
             </div>
 
             {pm.phases.map((ph) => {
@@ -175,7 +225,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
                 <div key={ph.key}>
                   <div className={`text-[10px] font-bold uppercase tracking-wide px-3 py-1 rounded ${meta.chip}`}>{ph.label}</div>
                   <div className="flex sm:flex-col flex-wrap gap-0.5 mt-1">
-                    {phaseSections(ph).map((s) => navBtn(s, ph.key))}
+                    {phaseGroups(ph).map((g) => navBtn(g, ph.key))}
                   </div>
                 </div>
               )
@@ -184,7 +234,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
             <div>
               <div className="text-[10px] font-bold uppercase tracking-wide px-3 py-1 rounded bg-gray-100 text-gray-500">Contract admin</div>
               <div className="flex sm:flex-col flex-wrap gap-0.5 mt-1">
-                {contractSections.map((s) => navBtn(s))}
+                {contractGroups.map((g) => navBtn(g))}
               </div>
             </div>
 
@@ -194,6 +244,7 @@ export default function ProjectWorkspace({ user, onLogout, projects, pmRecords, 
           </aside>
 
           <main className="flex-1 min-w-0 w-full">
+            <SubViewTabs views={activeGroup?.views} active={sel.view} onSelect={(v) => setSel({ phase: sel.phase, view: v })} />
             {sel.view === 'alltasks' && !sel.phase && <AllTasksView pm={pm} onUpdatePm={(next) => onUpdatePm(project.id, next)} currentUserName={user?.username} onLogHours={onLogTaskHours ? (assignee, hours, date) => onLogTaskHours(assignee, project.id, hours, date) : null} />}
             {sel.view === 'overview' && !sel.phase && <PmOverview pm={pm} project={project} invoices={invoices} onJump={jump} canViewSensitive={canViewSensitive} />}
 
