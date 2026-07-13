@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { ClipboardList, Inbox, Laptop, KeyRound, Timer, PackageCheck, Wrench, ShieldCheck, Activity } from 'lucide-react'
+import { ClipboardList, Inbox, Laptop, Activity } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
+import SubViewTabs from '../components/SubViewTabs'
 import ItRequestsView from '../components/it/ItRequestsView'
 import AssetRegistry from '../components/it/AssetRegistry'
 import LicensesView from '../components/it/LicensesView'
@@ -57,25 +58,52 @@ export default function IT({ user, onLogout }) {
   const NAV_MAIN = [
     { key: 'mine', label: 'My requests', icon: ClipboardList },
   ]
-  const NAV_WORKSPACE = canManage ? [
-    { key: 'queue', label: 'Request queue', icon: Inbox, badge: pendingCount },
-    { key: 'sla', label: 'SLA timers', icon: Timer, badge: overSla },
-    { key: 'assets', label: 'Assets', icon: Laptop },
-    { key: 'licenses', label: 'Licenses', icon: KeyRound, badge: licensesDue },
-    { key: 'software', label: 'Installed software', icon: PackageCheck },
-    { key: 'maintenance', label: 'Maintenance', icon: Wrench, badge: maintOverdue },
-    { key: 'access', label: 'Access requests', icon: ShieldCheck, badge: accessPending },
-    { key: 'status', label: 'System status', icon: Activity },
+  // Workspace grouped by intent (Batch 22 IA pattern: sidebar groups → sub-view
+  // tabs, see SPEC §4). Old view keys unchanged so HelpHub deep-links still land.
+  const WS_GROUPS = canManage ? [
+    {
+      key: 'g-helpdesk', label: 'Helpdesk', icon: Inbox, badge: pendingCount + overSla,
+      views: [
+        { key: 'queue', label: 'Request queue', badge: pendingCount },
+        { key: 'sla', label: 'SLA timers', badge: overSla },
+        { key: 'access', label: 'Access requests', badge: accessPending },
+      ],
+    },
+    {
+      key: 'g-assets', label: 'Assets & software', icon: Laptop, badge: licensesDue + maintOverdue,
+      views: [
+        { key: 'assets', label: 'Assets' },
+        { key: 'licenses', label: 'Licenses', badge: licensesDue },
+        { key: 'software', label: 'Installed software' },
+        { key: 'maintenance', label: 'Maintenance', badge: maintOverdue },
+      ],
+    },
+    {
+      key: 'g-status', label: 'System status', icon: Activity,
+      views: [{ key: 'status' }],
+    },
   ] : []
+  const activeWsGroup = WS_GROUPS.find((g) => g.views.some((v) => v.key === view))
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar user={user} onLogout={onLogout} title="IT & Assets" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <SidebarNav groups={[{ items: NAV_MAIN }, { label: 'IT Workspace', items: NAV_WORKSPACE }]} active={view} onSelect={setView} />
+        <SidebarNav
+          groups={[
+            { items: NAV_MAIN },
+            { label: 'IT Workspace', items: WS_GROUPS.map(({ key, label, icon, badge }) => ({ key, label, icon, badge })) },
+          ]}
+          active={activeWsGroup ? activeWsGroup.key : view}
+          onSelect={(key) => {
+            const group = WS_GROUPS.find((g) => g.key === key)
+            setView(group ? group.views[0].key : key)
+          }}
+        />
 
         <main className="flex-1 min-w-0 w-full">
+          <SubViewTabs views={activeWsGroup?.views} active={view} onSelect={setView} />
           {view === 'mine' && (
             <ItRequestsView
               requests={requests}

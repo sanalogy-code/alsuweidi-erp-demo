@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, ShieldCheck, ScrollText, Lock, MessageSquareWarning, Landmark } from 'lucide-react'
+import { LayoutDashboard, Users, ScrollText, Lock } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
+import SubViewTabs from '../components/SubViewTabs'
 import AdminOverview from '../components/admin/AdminOverview'
 import UsersView from '../components/admin/UsersView'
 import RolesPermissionsView from '../components/admin/RolesPermissionsView'
@@ -32,14 +33,29 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback,
 
   const invitedCount = users.filter((u) => u.status === 'invited').length
 
-  const NAV = [
-    { key: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { key: 'users', label: 'Users', icon: Users, badge: invitedCount },
-    { key: 'roles', label: 'Roles & permissions', icon: ShieldCheck },
-    { key: 'governance', label: 'Authority & access', icon: Landmark },
-    { key: 'feedback', label: 'System feedback', icon: MessageSquareWarning, badge: feedback.filter((f) => f.status === 'new').length },
-    { key: 'log', label: 'Activity log', icon: ScrollText },
+  const newFeedback = feedback.filter((f) => f.status === 'new').length
+
+  // Grouped by intent (Batch 22 IA pattern: sidebar groups → sub-view tabs, see
+  // SPEC §4). Old view keys unchanged so HelpHub deep-links still land.
+  const GROUPS = [
+    { key: 'overview', label: 'Overview', icon: LayoutDashboard, views: [{ key: 'overview' }] },
+    {
+      key: 'g-access', label: 'Users & access', icon: Users, badge: invitedCount,
+      views: [
+        { key: 'users', label: 'Users', badge: invitedCount },
+        { key: 'roles', label: 'Roles & permissions' },
+        { key: 'governance', label: 'Authority & access' },
+      ],
+    },
+    {
+      key: 'g-oversight', label: 'Oversight', icon: ScrollText, badge: newFeedback,
+      views: [
+        { key: 'feedback', label: 'System feedback', badge: newFeedback },
+        { key: 'log', label: 'Activity log' },
+      ],
+    },
   ]
+  const activeGroup = GROUPS.find((g) => g.views.some((v) => v.key === view)) || GROUPS[0]
 
   if (!canView) {
     return (
@@ -65,7 +81,9 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback,
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
         <SidebarNav
-          groups={[{ items: NAV }]} active={view} onSelect={setView}
+          groups={[{ items: GROUPS.map(({ key, label, icon, badge }) => ({ key, label, icon, badge })) }]}
+          active={activeGroup.key}
+          onSelect={(key) => setView(GROUPS.find((g) => g.key === key).views[0].key)}
           footer={(
             <div className="hidden sm:block mt-4 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] leading-snug text-amber-700">
               Demo data — no real auth behind this yet. Real user management and RBAC are Phase 2.
@@ -74,6 +92,7 @@ export default function Admin({ user, onLogout, feedback = [], onUpdateFeedback,
         />
 
         <main className="flex-1 min-w-0 w-full">
+          <SubViewTabs views={activeGroup.views} active={view} onSelect={setView} />
           {view === 'overview' && (
             <AdminOverview users={users} log={auditLog} onJump={setView} />
           )}

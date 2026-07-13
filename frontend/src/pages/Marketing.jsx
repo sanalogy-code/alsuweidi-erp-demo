@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Inbox, CalendarDays, FolderKanban, Palette, LineChart, FileUser, Megaphone, BadgeCheck, Ticket, Trophy } from 'lucide-react'
+import { Inbox, CalendarDays, FolderKanban, Palette, LineChart } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
+import SubViewTabs from '../components/SubViewTabs'
 import MarketingInbox from '../components/marketing/MarketingInbox'
 import ContentCalendar from '../components/marketing/ContentCalendar'
 import PortfolioView from '../components/marketing/PortfolioView'
@@ -47,17 +48,38 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
   const NAV_MAIN = [
     { key: 'branding', label: 'Branding', icon: Palette },
   ]
-  const NAV_WORKSPACE = canManage ? [
-    { key: 'inbox', label: 'Inbox', icon: Inbox, badge: openTasks },
-    { key: 'calendar', label: 'Content calendar', icon: CalendarDays },
-    { key: 'campaigns', label: 'Campaigns', icon: Megaphone },
-    { key: 'approvals', label: 'Approvals', icon: BadgeCheck, badge: pendingApprovals },
-    { key: 'portfolio', label: 'Portfolio', icon: FolderKanban, badge: missingDesc },
-    { key: 'events', label: 'Events', icon: Ticket },
-    { key: 'awards', label: 'Awards', icon: Trophy },
-    { key: 'cvs', label: 'CV search', icon: FileUser },
-    { key: 'analytics', label: 'Analytics', icon: LineChart },
+  // Workspace grouped by intent (Batch 22 IA pattern: sidebar groups → sub-view
+  // tabs, see SPEC §4). Old view keys unchanged so HelpHub deep-links still land.
+  const WS_GROUPS = canManage ? [
+    {
+      key: 'g-inbox', label: 'Inbox', icon: Inbox, badge: openTasks,
+      views: [{ key: 'inbox' }],
+    },
+    {
+      key: 'g-content', label: 'Content', icon: CalendarDays, badge: pendingApprovals,
+      views: [
+        { key: 'calendar', label: 'Calendar' },
+        { key: 'campaigns', label: 'Campaigns' },
+        { key: 'approvals', label: 'Approvals', badge: pendingApprovals },
+      ],
+    },
+    {
+      key: 'g-showcase', label: 'Showcase', icon: FolderKanban, badge: missingDesc,
+      views: [
+        { key: 'portfolio', label: 'Portfolio', badge: missingDesc },
+        { key: 'events', label: 'Events' },
+        { key: 'awards', label: 'Awards' },
+      ],
+    },
+    {
+      key: 'g-tools', label: 'Tools & insights', icon: LineChart,
+      views: [
+        { key: 'cvs', label: 'CV search' },
+        { key: 'analytics', label: 'Analytics' },
+      ],
+    },
   ] : []
+  const activeWsGroup = WS_GROUPS.find((g) => g.views.some((v) => v.key === view))
 
   // When Marketing writes a description from the Portfolio view (not via the inbox),
   // any open description task for that project completes automatically.
@@ -71,9 +93,20 @@ export default function Marketing({ user, onLogout, projects = [], onUpdateProje
       <Navbar user={user} onLogout={onLogout} title="Marketing" showBack />
 
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
-        <SidebarNav groups={[{ items: NAV_MAIN }, { label: 'Marketing Workspace', items: NAV_WORKSPACE }]} active={view} onSelect={setView} />
+        <SidebarNav
+          groups={[
+            { items: NAV_MAIN },
+            { label: 'Marketing Workspace', items: WS_GROUPS.map(({ key, label, icon, badge }) => ({ key, label, icon, badge })) },
+          ]}
+          active={activeWsGroup ? activeWsGroup.key : view}
+          onSelect={(key) => {
+            const group = WS_GROUPS.find((g) => g.key === key)
+            setView(group ? group.views[0].key : key)
+          }}
+        />
 
         <main className="flex-1 min-w-0 w-full">
+          <SubViewTabs views={activeWsGroup?.views} active={view} onSelect={setView} />
           {view === 'branding' && <BrandAssetsView />}
 
           {view === 'inbox' && canManage && (
