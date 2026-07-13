@@ -228,8 +228,8 @@ export const BRAND_ASSETS = [
   { id: 4, name: 'Primary logo — white / reversed', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Horizontal lockup for dark backgrounds and report covers.' },
   { id: 5, name: 'Vertical logo — full colour', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Stacked lockup for narrow/portrait formats — hoarding panels, roll-ups, pull-up banners.' },
   { id: 6, name: 'Vertical logo — white / reversed', category: 'Logos', format: 'SVG + PNG', sizeLabel: '2 MB', updatedDate: '2026-01-10', description: 'Stacked lockup for dark portrait formats.' },
-  { id: 7, name: 'English typeface — Archivo family', category: 'Fonts', format: 'OTF + WOFF2', sizeLabel: '3 MB', updatedDate: '2026-02-14', description: 'All English-language material: headings in Archivo SemiBold, body in Archivo Regular.' },
-  { id: 8, name: 'Arabic typeface — GE SS Two family', category: 'Fonts', format: 'OTF', sizeLabel: '2 MB', updatedDate: '2026-02-14', description: 'All Arabic-language material — pairs with Archivo in bilingual layouts.' },
+  { id: 7, name: 'English typeface — pending', category: 'Fonts', format: 'OTF + WOFF2', sizeLabel: '—', updatedDate: '2026-07-13', description: 'Official English typeface not yet supplied — Marketing to provide the font files and usage rules.' },
+  { id: 8, name: 'Arabic typeface — pending', category: 'Fonts', format: 'OTF', sizeLabel: '—', updatedDate: '2026-07-13', description: 'Official Arabic typeface not yet supplied — Marketing to provide the font files and usage rules.' },
   { id: 9, name: 'PowerPoint template', category: 'Templates', format: 'PPTX', sizeLabel: '8 MB', updatedDate: '2026-03-02', description: 'Client presentations — includes cover, divider, and project-sheet layouts.' },
   { id: 10, name: 'Word report template', category: 'Templates', format: 'DOCX', sizeLabel: '1 MB', updatedDate: '2026-03-02', description: 'Technical reports and design statements.' },
   { id: 11, name: 'Proposal cover pages', category: 'Templates', format: 'INDD + PDF', sizeLabel: '14 MB', updatedDate: '2026-05-18', description: 'Fee proposal and EOI covers, English and Arabic.' },
@@ -249,19 +249,17 @@ export const BRAND_QUICK_GUIDELINES = {
     { variant: 'Symbol (mark only)', when: 'Tiny spaces where the wordmark would be illegible: avatars, favicons, app icons, document stamps. Never as the main logo on client-facing documents.' },
     { variant: 'Colour rule', when: 'Full colour (ALSUWEIDI Red) on white/light backgrounds; white/reversed on dark backgrounds and photos. Never place the full-colour logo on a busy photo without a scrim.' },
   ],
+  // HONESTY RULE (13 Jul, Sana): the brand section must contain ONLY facts with a
+  // real source. The logo file is the single source of truth today (#c81516 red,
+  // white reversed). Fonts and any secondary palette are NOT known — they must
+  // come from Marketing's official guidelines, not be invented as demo data.
   fonts: [
-    // Placeholder pairing until Marketing confirms the official typefaces.
-    { name: 'Archivo (English)', when: 'All English material. SemiBold for headings, Regular for body. Arial is the fallback in plain Office documents. (Placeholder — confirm official typeface with Marketing.)' },
-    { name: 'GE SS Two (Arabic)', when: 'All Arabic material, and the Arabic half of bilingual layouts. Match visual weight to the paired Archivo, not the point size. (Placeholder — confirm with Marketing.)' },
+    { name: 'Not yet provided', when: 'The official English and Arabic typefaces have not been supplied to the system yet. Marketing: send the brand guidelines (or font files) and they will be listed here. Until then, use whatever your current templates use — do not guess from this page.' },
   ],
-  // The real palette, anchored on the logo red (#c81516 — the same `brand`
-  // colour the whole app is themed with). Neutrals support it; secondary/accent
-  // colours to be confirmed against the official Brand Guidelines PDF.
   colors: [
-    { name: 'ALSUWEIDI Red', hex: '#c81516', when: 'Primary brand colour — the logo, headings, covers, primary buttons and highlights.' },
-    { name: 'Deep Red', hex: '#8f0f10', when: 'Hover states and dark accents supporting the primary red — never as its own headline colour.' },
-    { name: 'Charcoal', hex: '#1f2937', when: 'Body text and dark UI elements.' },
-    { name: 'Light Grey', hex: '#f8fafc', when: 'Backgrounds and negative space — keep layouts light so the red stays strong.' },
+    { name: 'ALSUWEIDI Red', hex: '#c81516', when: 'From the logo file — the one confirmed brand colour. The logo, and what this whole system is themed with.' },
+    { name: 'White (reversed)', hex: '#ffffff', when: 'From the logo file — the wordmark/emblem on red, and the reversed logo on dark backgrounds.' },
+    { name: 'Secondary palette', hex: '#e5e7eb', when: 'Not yet defined. Any accent or support colours must come from the official Brand Guidelines — pending from Marketing.' },
   ],
 }
 

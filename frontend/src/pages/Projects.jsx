@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge, FileBarChart, ShieldAlert } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Plus, UsersRound, Inbox, Gauge, FileBarChart, ShieldAlert, Radar } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
 import ProjectList from '../components/projects/ProjectList'
@@ -10,6 +10,7 @@ import NewProjectModal from '../components/projects/NewProjectModal'
 import ResourcePlannerView from '../components/projects/pm/ResourcePlannerView'
 import MyWorkView from '../components/projects/pm/MyWorkView'
 import PmDashboard from '../components/projects/pm/PmDashboard'
+import PmoView from '../components/projects/pm/PmoView'
 import DmrView from '../components/projects/pm/DmrView'
 import CmrView from '../components/projects/pm/CmrView'
 import RiskReportView from '../components/projects/pm/RiskReportView'
@@ -23,6 +24,7 @@ import { HR_STAFF_ROLES, SENSITIVE_VIEW_ROLES } from '../data/dashboardData'
 const NAV_GROUPS = [
   { label: 'Project Management', items: [
     { key: 'mywork', label: 'My Work', icon: Inbox },
+    { key: 'pmo', label: 'PMO', icon: Radar },
     { key: 'pmdash', label: 'Active projects', icon: Gauge },
     { key: 'reviews', label: 'Project reviews', icon: FileBarChart },
     { key: 'risks', label: 'Risk report', icon: ShieldAlert },
@@ -77,6 +79,9 @@ export default function Projects({ user, onLogout, projects = [], pmRecords = {}
         <main className="flex-1 min-w-0 w-full">
           {view === 'mywork' && (
             <MyWorkView user={user} projects={projects} pmRecords={pmRecords} onOpenWorkspace={openWorkspace} />
+          )}
+          {view === 'pmo' && (
+            <PmoView projects={projects} pmRecords={pmRecords} timesheets={timesheets} allocations={allocations} invoices={invoices} canViewSensitive={canViewSensitive} onOpenWorkspace={openWorkspace} onJumpView={setView} />
           )}
           {view === 'pmdash' && (
             <PmDashboard projects={projects} pmRecords={pmRecords} timesheets={timesheets} onOpenWorkspace={openWorkspace} canViewSensitive={canViewSensitive} invoices={invoices} />
