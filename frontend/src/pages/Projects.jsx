@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { FolderKanban, Plus, UsersRound, Inbox, Gauge, Radar } from 'lucide-react'
+import { FolderKanban, Plus, UsersRound, Inbox, Gauge, Radar, BarChart3 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import SidebarNav from '../components/SidebarNav'
 import SubViewTabs from '../components/SubViewTabs'
@@ -28,7 +28,7 @@ const SECTIONS = [
     { key: 'mywork', label: 'My Work', icon: Inbox, views: [{ key: 'mywork' }] },
     { key: 'pmo', label: 'PMO', icon: Radar, views: [{ key: 'pmo' }] },
     {
-      key: 'g-oversight', label: 'Oversight', icon: Gauge,
+      key: 'g-active', label: 'Active Projects', icon: Gauge,
       views: [
         { key: 'pmdash', label: 'Active projects' },
         { key: 'reviews', label: 'Project reviews' },
@@ -38,13 +38,8 @@ const SECTIONS = [
     { key: 'resources', label: 'Resources', icon: UsersRound, views: [{ key: 'resources' }] },
   ] },
   { label: 'Database', groups: [
-    {
-      key: 'g-db', label: 'Database', icon: FolderKanban,
-      views: [
-        { key: 'portfolio', label: 'Portfolio' },
-        { key: 'dashboard', label: 'Analytics' },
-      ],
-    },
+    { key: 'g-db', label: 'All Projects', icon: FolderKanban, views: [{ key: 'portfolio' }] },
+    { key: 'g-analytics', label: 'Analytics', icon: BarChart3, views: [{ key: 'dashboard' }] },
   ] },
 ]
 const ALL_GROUPS = SECTIONS.flatMap((s) => s.groups)
