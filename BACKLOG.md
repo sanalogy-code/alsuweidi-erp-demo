@@ -29,15 +29,13 @@ one-off small changes. Add items here as they come up; strike them when they shi
 
 ## Next batch — from Sana's IA review (13 Jul 2026)
 
-- [ ] **HR: separate "my HR" from the HRMS properly.** The sidebar's top section mixes true
-  self-service (My HR, My timesheet, My appraisal, My requests) with things that are really
-  workspace/manager functions (People directory, Team timesheets/leave/appraisals, Training,
-  Careers) — Sana: "the tabs for HRMS and personal HR things are mixed up and I think that's
-  what's confusing." Proposed shape to react to: three sidebar sections — **Me** (My HR,
-  My timesheet, My appraisal, My requests, my training), **My team** (manager-only: team
-  timesheets/leave/appraisals), and the existing **HR Workspace** groups; People + Careers
-  probably belong with the workspace or their own "Company" section. Decide the grouping with
-  Sana before building.
+- [x] ~~HR: separate "my HR" from the HRMS properly~~ — **Shipped Batch 24 (14 Jul), grouping
+  decided with Sana same day:** four sidebar sections — **Me** (My HR, My timesheet,
+  My appraisal, Training, My requests, + new-hire profile/onboarding), **My team**
+  (manager-only, unchanged views: team timesheets/leave/appraisals), **Company** (People,
+  Careers — org-wide, visible to everyone), and the existing **HR Workspace** groups. No view
+  keys changed, so Guide deep-links still land. Verified: manager login (Osama) sees all four
+  sections with badges; plain employee (Priya/sales) sees only Me + Company.
 
 Earlier: 2026-07-11 — **Batch 20 shipped: everything non-Phase-2 on this list.** The
 entire code-quality consolidation section, all four good-to-have ideas, the PRO dashboard

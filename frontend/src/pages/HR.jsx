@@ -186,23 +186,28 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
         !timesheets.some((t) => t.employeeId === e.id && t.weekStart === lastWeekISO && (t.status === 'submitted' || t.status === 'approved'))).length
     : 0
 
-  const NAV_MAIN = [
+  // Sidebar sections (Sana, 14 Jul): Me = pure self-service, My team = manager
+  // functions (only exists when you have reports), Company = org-wide things
+  // everyone can see. Keeps personal HR visibly separate from the HRMS below.
+  const NAV_ME = [
     { key: 'myhr', label: 'My HR', icon: Home },
-    { key: 'people', label: 'People', icon: Users },
     { key: 'mytimesheet', label: 'My timesheet', icon: Clock },
-    ...(isManager ? [
-      { key: 'teamtimesheets', label: 'Team timesheets', icon: ClipboardCheck, badge: teamTimesheets.filter((t) => t.status === 'submitted').length },
-      { key: 'teamleave', label: 'Team leave', icon: Plane, badge: teamLeavePending.length },
-      { key: 'teamappraisals', label: 'Team appraisals', icon: Star, badge: teamAppraisalsPending },
-    ] : []),
     { key: 'myappraisal', label: 'My appraisal', icon: Star, badge: myAppraisalPending },
     { key: 'training', label: 'Training', icon: GraduationCap },
     { key: 'requests', label: 'My requests', icon: ClipboardList, badge: myPendingCount },
-    { key: 'careers', label: 'Careers', icon: Briefcase },
     ...(isNewHire ? [
       { key: 'profile', label: 'My profile setup', icon: UserPlus },
       { key: 'onboarding', label: 'Onboarding', icon: GraduationCap },
     ] : []),
+  ]
+  const NAV_TEAM = isManager ? [
+    { key: 'teamtimesheets', label: 'Team timesheets', icon: ClipboardCheck, badge: teamTimesheets.filter((t) => t.status === 'submitted').length },
+    { key: 'teamleave', label: 'Team leave', icon: Plane, badge: teamLeavePending.length },
+    { key: 'teamappraisals', label: 'Team appraisals', icon: Star, badge: teamAppraisalsPending },
+  ] : []
+  const NAV_COMPANY = [
+    { key: 'people', label: 'People', icon: Users },
+    { key: 'careers', label: 'Careers', icon: Briefcase },
   ]
 
   // HR workspace, grouped by intent (same IA pattern as Finance: sidebar groups →
@@ -372,7 +377,9 @@ export default function HR({ user, onLogout, holidays = [], onUpdateHolidays, pr
       <div className="max-w-6xl mx-auto px-6 py-6 flex flex-col sm:flex-row gap-6 items-start">
         <SidebarNav
           groups={[
-            { items: NAV_MAIN },
+            { label: 'Me', items: NAV_ME },
+            { label: 'My team', items: NAV_TEAM },
+            { label: 'Company', items: NAV_COMPANY },
             { label: 'HR Workspace', items: WS_GROUPS.map(({ key, label, icon, badge }) => ({ key, label, icon, badge })) },
           ]}
           active={activeWsGroup ? activeWsGroup.key : view}
