@@ -2,18 +2,18 @@
 
 The "how long did this actually take" log — numbers pulled from git history, for sharing with management. Refreshed on each docs sync.
 
-**As of:** 13 July 2026
+**As of:** 14 July 2026
 
 ## The headline
 
 | | |
 |---|---|
 | **First commit** | 1 July 2026, 07:41 |
-| **Latest (13 Jul: Batches 22–23 — IA restructure across every module, the PMO portfolio dashboard, Portfolio analytics, honest branding + favicon)** | 13 July 2026 |
-| **Elapsed time** | ~10 working days |
-| **Commits** | 179 |
-| **Deploys to the live site** | every push auto-deploys — ~170 |
-| **App code** | ~31,100 lines across 142 components + 12 pages |
+| **Latest (14 Jul: Batch 24 — HR sidebar split into Me / My team / Company / HR Workspace)** | 14 July 2026 |
+| **Elapsed time** | ~11 working days |
+| **Commits** | 183 |
+| **Deploys to the live site** | every push auto-deploys — ~175 |
+| **App code** | ~31,200 lines across 142 components + 12 pages |
 | **Infrastructure cost** | AED 0/month (Cloudflare Pages free tier, no servers, no licenses) |
 
 ## What got built in those 4 days
@@ -43,6 +43,7 @@ The "how long did this actually take" log — numbers pulled from git history, f
 - **Backlog cleared + home redesign** (day 9, Batches 20–21) — every non-Phase-2 backlog item shipped in one pass: the code-quality consolidation (shared sidebar/filter/id/date infrastructure, finance state lifted app-wide, one audit log, per-invoice credit-note netting), auto-drafted mobilization invoices, billing progress on project records, payroll-fed P&L, a PRO dashboard, individuals-as-clients; then the home page was redesigned as a search-first launcher — live status lines on every module tile, a single attention line, photo news cards, holidays card — chosen from three mocked-up directions and verified on mobile
 - **Navigation restructure** (day 10, Batches 22–23, from the founder's own usability review) — every sidebar in the app reorganized from flat register lists into intent groups with sub-view tabs (Finance 12→5, HR workspace 16→6, Office 7→3, IT 8→3, Marketing 9→4, Admin 6→3, and the per-project workspace ~25→~15), verb-first action cards on the Finance overview, and the in-app Guide rewritten to match
 - **PMO portfolio dashboard + Portfolio analytics** (day 10, Batch 23) — a show-first PMO screen (RAG donut, exception tiles with reason badges, cross-project resource heatmap, 30-day deadline timeline, All/Mine scope) and an analytics page over the project record (claims/NCR clusters by type, hours vs estimate, billing lag, supervision slip — with clearly-labelled illustrative sections awaiting the Phase 2 history import)
+- **HR sidebar split** (day 11, Batch 24) — the founder's follow-up IA point: HR's mixed top section became three labelled groups (Me / My team [managers only] / Company) above the HR Workspace, cleanly separating personal self-service from manager functions and the HRMS
 - **Role-based views** — employees, HR, management, marketing, IT, admin staff, and PRO company each see different navigation and data
 - **Home dashboard** — module launcher, announcements, holidays tile, build-number card; day 3 added probation-ending-soon card
 

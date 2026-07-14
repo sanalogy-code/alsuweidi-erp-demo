@@ -263,7 +263,7 @@ Shared modals: `Modal.jsx` (base — supports `wide` and `layered` variants; `la
 
 ### HR (`pages/HR.jsx`)
 
-Grouped **sidebar navigation with two lenses** (replaced the old flat tab bar, which had grown to 11 tabs). Employees see self-service; HR staff additionally see an "HR Workspace" group; management sees the workspace minus Inbox and Holidays (complaint handling is HR-only). **Since Batch 22 the workspace is six intent groups** — Inbox / Time & leave / Pay & planning / Performance / Exits / Compliance & admin — with the individual registers as pill tabs (`SubViewTabs`), each view keeping its original role gate.
+Grouped **sidebar navigation** (replaced the old flat tab bar, which had grown to 11 tabs). **Since Batch 24 (14 Jul) the top of the sidebar is three labelled sections** — **Me** (My HR, My timesheet, My appraisal, Training, My requests, plus the new-hire profile-setup/onboarding items), **My team** (rendered only for users with direct reports: Team timesheets, Team leave, Team appraisals), and **Company** (People, Careers — org-wide, visible to everyone) — separating pure self-service from manager functions and from the HRMS below (Sana: "the tabs for HRMS and personal HR things are mixed up"). HR staff additionally see the "HR Workspace" section; management sees the workspace minus Inbox and Holidays (complaint handling is HR-only). **Since Batch 22 the workspace is six intent groups** — Inbox / Time & leave / Pay & planning / Performance / Exits / Compliance & admin — with the individual registers as pill tabs (`SubViewTabs`), each view keeping its original role gate. View keys are unchanged throughout, so Guide deep-links land.
 
 **Everyone:**
 
