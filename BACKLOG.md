@@ -4,7 +4,28 @@ The agreed to-do list. We work this in **batches** — pick a set, build, deploy
 one-off small changes. Add items here as they come up; strike them when they ship.
 `/erp` reads this at session start; `/update-erp` keeps it in sync after a session.
 
-**Last updated:** 2026-07-13.
+**Last updated:** 2026-07-14.
+
+## Under consideration — task-based timesheets (Sana, 14 Jul 2026)
+
+- [ ] **Task-based timesheet approval.** The company is considering evaluating timesheets
+  by TASK rather than only by line manager: a person's tasks can sit under different
+  supervisors, and the direct supervisor often doesn't know enough about a given task to
+  judge the hours. Whoever supervises the task should approve that timesheet line. This is
+  a known pattern (matrix / per-task approval — SAP CATS, Oracle Projects etc. do it).
+  Implication: approval moves from one manager-per-week to per-line (or per-task-group)
+  routing — each timesheet line routes to its task's supervisor (task `createdBy` / phase
+  lead already exist as hooks, and task-hours→timesheet already links lines to tasks); the
+  week is fully approved when all lines are. Needs a decision on the model first: who is a
+  task's "supervisor" (assigner? phase lead?), what happens to lines with no task link
+  (overhead codes → line manager?), and whether line-manager approval remains as a
+  second/overall step.
+- [ ] **Resource allocation per project TASK, not just per project.** The resource planner
+  currently allocates person × project × week; the company may want allocations at the
+  task level (person × task × week), so planned hours tie to specific pieces of work —
+  which would also feed the task-based approval above and make plan-vs-actual comparable
+  per task. Needs a decision on granularity (every task vs only major/phase-level tasks)
+  before building.
 
 ## Next batch — from Sana's IA review (13 Jul 2026)
 
